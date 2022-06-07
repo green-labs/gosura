@@ -19,8 +19,7 @@
             [gosura.schema :as schema]
             [malli.core :as m]
             [malli.error :as me]
-            [medley.core :as medley]
-            [util.resolver-helper :as rh]))
+            [medley.core :as medley]))
 
 (defn- ->kebab-case
   [kebab-case? args parent]
@@ -158,7 +157,7 @@
                                                                 added-params (cond-> params
                                                                                (map? auth-map) (assoc :additional-filter-opts auth-result))]
                                                                (cond-> (resolver-fn ctx args parent added-params)
-                                                                 return-camel-case? (rh/update-resolver-result transform-keys->camelCaseKeyword))
+                                                                 return-camel-case? (util/update-resolver-result transform-keys->camelCaseKeyword))
                                                                (f/when-failed [e]
                                                                               (resolve-as nil {:resolver (format "%s/%s" (str target-ns) (name resolver))
                                                                                                :message  (f/message e)}))))))))
