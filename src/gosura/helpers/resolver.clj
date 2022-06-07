@@ -11,8 +11,7 @@
             [gosura.util :as util]
             [medley.core :as medley]
             [promesa.core :as prom]
-            [superlifter.api :as superlifter-api]
-            [util.resolver-helper :refer [update-resolver-result]]))
+            [superlifter.api :as superlifter-api]))
 
 (defmacro keys-not-found
   [parent required-keys-in-parent]
@@ -46,7 +45,7 @@
        (if ~authorized?
          (let [~result (do (let ~let-mapping ~@body))]
            (cond-> ~result
-             ~return-camel-case? (update-resolver-result util/transform-keys->camelCaseKeyword)))
+             ~return-camel-case? (util/update-resolver-result util/transform-keys->camelCaseKeyword)))
          (resolve-as nil {:message "Unauthorized"})))))
 
 (defn parse-fdecl
