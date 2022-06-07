@@ -157,7 +157,7 @@
                                                                 added-params (cond-> params
                                                                                (map? auth-map) (assoc :additional-filter-opts auth-result))]
                                                                (cond-> (resolver-fn ctx args parent added-params)
-                                                                 return-camel-case? (util/update-resolver-result transform-keys->camelCaseKeyword))
+                                                                 return-camel-case? (util/update-resolver-result util/transform-keys->camelCaseKeyword))
                                                                (f/when-failed [e]
                                                                               (resolve-as nil {:resolver (format "%s/%s" (str target-ns) (name resolver))
                                                                                                :message  (f/message e)}))))))))
