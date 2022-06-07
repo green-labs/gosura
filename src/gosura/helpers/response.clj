@@ -1,4 +1,4 @@
-(ns helpers.response
+(ns gosura.helpers.response
   (:require [clojure.string :as string]
             [com.walmartlabs.lacinia.schema :refer [tag-with-type]]
             [gosura.helpers.relay :as relay]
