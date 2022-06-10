@@ -4,9 +4,11 @@
             [honey.sql.helpers :as sql-helper]))
 
 (def ^:private col-with-table-name-pattern #"[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*")
+
 (defn col-with-table-name?
   [col-name]
   (boolean (re-find col-with-table-name-pattern (name col-name))))
+
 (defn col-with-table-name
   "column에 table 이름을 명시한다
    input: table-name :g, col-name :col1
