@@ -1,0 +1,9 @@
+{:target-ns        test-namespace
+ :node-type        :test-type
+ :db-key           :db
+ :post-process-row farmmorning-bridge.graphql.resolver.bulk-sale-application/post-process-row
+ :resolvers        {:resolve-connection {:settings      {:auth clojure.core/identity}
+                                         :table-fetcher clojure.core/identity}
+                    :resolve-by-fk      {:settings     {:auth clojure.core/identity}
+                                         :superfetcher clojure.core/identity
+                                         :fk-in-parent :test-id}}}

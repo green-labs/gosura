@@ -15,8 +15,8 @@
             [gosura.auth :as auth]
             [gosura.helpers.relay :as relay]
             [gosura.helpers.resolver :as r]
-            [gosura.util :as util]
             [gosura.schema :as schema]
+            [gosura.util :as util]
             [malli.core :as m]
             [malli.error :as me]
             [medley.core :as medley]))
@@ -70,6 +70,7 @@
     (let [[_auth-fn auth-map] auth]
       auth-map)))
 
+
 (defn generate-one
   "GraphQL relay spec에 맞는 기본적인 resolver들을 자동 생성한다.
    제공하고 있는 resolvers의 종류는 아래와 같다.
@@ -112,7 +113,6 @@
             {:keys [table-fetcher node-type post-process-row db-key settings fk-in-parent pk-list-name-in-parent]} params]
         (if (= :resolve-node resolver)
           (intern target-ns (symbol resolver) (defmethod relay/node-resolver node-type [this ctx _args _parent]
-                                                #_{:clj-kondo/ignore [:unresolved-symbol]}
                                                 (f/attempt-all
                                                  [{:keys [auth]} settings
                                                   auth-map (extract-auth-map auth)
@@ -136,7 +136,6 @@
                                                                 (resolve-as nil {:resolver (format "%s/%s" (str target-ns) (name resolver))
                                                                                  :message  (f/message e)})))))
           (intern target-ns (symbol resolver) (fn [ctx args parent]
-                                                #_{:clj-kondo/ignore [:unresolved-symbol]}
                                                 (f/attempt-all [{:keys [auth
                                                                         kebab-case?
                                                                         return-camel-case?]
