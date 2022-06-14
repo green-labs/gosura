@@ -110,11 +110,11 @@
                                                 (f/attempt-all
                                                   [{:keys [auth]} settings
                                                    auth-filter-opts (auth/auth-filter-opts auth ctx)
-                                                   filter-options (merge {:id (or (:db-id this)
-                                                                                  (:id this))}
-                                                                         auth-filter-opts
-                                                                         {country-key  (get-in ctx [:identity country-key])
-                                                                          language-key (get-in ctx [:identity language-key])})
+                                                   filter-options (cond-> (merge {:id (or (:db-id this)
+                                                                                          (:id this))}
+                                                                                 auth-filter-opts)
+                                                                    country-key (merge {country-key (get-in ctx [:identity country-key])})
+                                                                    language-key (merge {language-key (get-in ctx [:identity language-key])}))
                                                    rows (table-fetcher (get ctx db-key) filter-options {})
                                                    _ (when (empty? rows)
                                                        (f/fail "NotExistData"))]
@@ -139,9 +139,9 @@
                                                    _ (when (seq required-keys)
                                                        (f/fail (format "%s keys are needed in parent" required-keys)))
                                                    resolver-fn (match-resolve-fn resolver)
-                                                   additional-filter-opts (merge auth-filter-opts
-                                                                                 {country-key  (get-in ctx [:identity country-key])
-                                                                                  language-key (get-in ctx [:identity language-key])})
+                                                   additional-filter-opts (cond-> auth-filter-opts
+                                                                            country-key (merge {country-key (get-in ctx [:identity country-key])})
+                                                                            language-key (merge {language-key (get-in ctx [:identity language-key])}))
                                                    added-params (merge params
                                                                        {:additional-filter-opts additional-filter-opts})]
                                                   (cond-> (resolver-fn ctx args parent added-params)
