@@ -14,6 +14,8 @@
    [:db-key keyword?]
    [:post-process-row {:optional true} symbol?]
    [:pre-process-arguments {:optional true} symbol?]
+   [:country-key {:optional true} keyword?]
+   [:language-key {:optional true} keyword?]
    [:resolvers [:map
                 [:resolve-connection {:optional true} [:map
                                                        [:settings {:optional true} resolver-settings-schema]

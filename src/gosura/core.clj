@@ -95,7 +95,8 @@
                                                             (m/explain resolver-config)
                                                             me/humanize))
                     resolver-config)))
-  (let [{:keys [target-ns resolvers node-type db-key post-process-row pre-process-arguments]} resolver-config]
+  (let [{:keys [target-ns resolvers node-type db-key post-process-row pre-process-arguments
+                country-key language-key]} resolver-config]
     (when (nil? (find-ns target-ns)) (create-ns target-ns))
     (doseq [[resolver params] resolvers]
       (let [params (merge {:node-type        node-type
@@ -111,7 +112,9 @@
                                                   auth-filter-opts (auth/auth-filter-opts auth ctx)
                                                   filter-options (merge {:id (or (:db-id this)
                                                                                  (:id this))}
-                                                                        auth-filter-opts)
+                                                                        auth-filter-opts
+                                                                        {country-key  (get-in ctx [:identity country-key])
+                                                                         language-key (get-in ctx [:identity language-key])})
                                                   origin-content (table-fetcher (get ctx db-key) filter-options {})
                                                   _ (when (empty? origin-content)
                                                       (f/fail "NotExistData"))
@@ -136,7 +139,11 @@
                                                                 _ (when (seq required-keys)
                                                                     (f/fail (format "%s keys are needed in parent" required-keys)))
                                                                 resolver-fn (match-resolve-fn resolver)
-                                                                added-params (merge params {:additional-filter-opts auth-filter-opts})]
+                                                                additional-filter-opts (merge auth-filter-opts
+                                                                                              {country-key  (get-in ctx [:identity country-key])
+                                                                                               language-key (get-in ctx [:identity language-key])})
+                                                                added-params (merge params
+                                                                                    {:additional-filter-opts additional-filter-opts})]
                                                                (cond-> (resolver-fn ctx args parent added-params)
                                                                  return-camel-case? (util/update-resolver-result util/transform-keys->camelCaseKeyword))
                                                                (f/when-failed [e]
