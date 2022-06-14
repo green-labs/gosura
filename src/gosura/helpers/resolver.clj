@@ -1,6 +1,6 @@
 (ns gosura.helpers.resolver
   (:require [camel-snake-kebab.core :as csk]
-            [camel-snake-kebab.extras :as cske]
+            [clojure.string :refer [ends-with?]]
             [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [com.walmartlabs.lacinia.schema :refer [tag-with-type]]
             [gosura.auth :as auth]
@@ -8,7 +8,9 @@
             [gosura.helpers.relay :as relay]
             [gosura.helpers.response :as response]
             [gosura.helpers.superlifter :refer [with-superlifter]]
-            [gosura.util :as util]
+            [gosura.util :as util :refer [transform-keys->kebab-case-keyword
+                                          transform-keys->camelCaseKeyword
+                                          update-resolver-result]]
             [medley.core :as medley]
             [promesa.core :as prom]
             [superlifter.api :as superlifter-api]))
@@ -34,8 +36,8 @@
 
         result (gensym 'result_)
         authorized? `(auth/process-auth-fn ~auth ~ctx)
-        arg' (if kebab-case? `(util/transform-keys->kebab-case-keyword ~arg) arg)
-        parent' (if kebab-case? `(util/transform-keys->kebab-case-keyword ~parent) parent)
+        arg' (if kebab-case? `(transform-keys->kebab-case-keyword ~arg) arg)
+        parent' (if kebab-case? `(transform-keys->kebab-case-keyword ~parent) parent)
         keys-not-found `(keys-not-found ~parent' ~required-keys-in-parent)
         params (if (nil? this) [ctx arg' parent'] [this ctx arg' parent'])
         let-mapping (vec (interleave args params))]
@@ -45,7 +47,7 @@
        (if ~authorized?
          (let [~result (do (let ~let-mapping ~@body))]
            (cond-> ~result
-             ~return-camel-case? (util/update-resolver-result util/transform-keys->camelCaseKeyword)))
+                   ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
          (resolve-as nil {:message "Unauthorized"})))))
 
 (defn parse-fdecl
@@ -77,7 +79,7 @@
   TODO: defn과 같이 attr-map을 받는 기능 추가
 
   가능한 설정
-  :auth - 인증함수를 넣습니다 gosura.auth의 설명을 참고해주세요.
+  :auth - 인증함수를 넣습니다. greenlabs.gosura.auth의 설명을 참고해주세요.
   :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
   :node-type - relay resolver 일때 설정하면, edge/node와 :pageInfo의 start/endCursor 처리를 같이 해줍니다.
   :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 false)
@@ -102,62 +104,38 @@
                                           :ctx ctx#
                                           :arg arg#
                                           :parent parent#} ~option ~args ~body)]
-         (tag-with-type (relay/encode-node-id ~node-type result#) ~node-type-pascal)))))
+         (-> result#
+             (relay/build-node ~node-type)
+             transform-keys->camelCaseKeyword
+             (tag-with-type ~node-type-pascal))))))
 
 ;;; Utility functions
-
-(defn- update-vals-having-keys
-  "m: map(데이터)
-   ks: 특정 키값
-   f: val 업데이트 함수"
-  [m ks f]
-  (reduce #(update-in %1 [%2] f)
-          m
-          ks))
 
 (defn decode-global-ids-in-arguments
   "인자 맵의 ID들(열이 ids, 그리고 -ids로 끝나는 것들)의 값을 글로벌 ID에서 ID로 디코드한다."
   [arguments]
   (-> arguments
       (medley/update-existing :ids #(map relay/decode-global-id->db-id %))
-      (update-vals-having-keys (->> (keys arguments)
-                                    (filter #(= [\- \i \d \s]
-                                                (take-last 4 (name %)))))
-                               #(map relay/decode-global-id->db-id %))))
+      (util/update-vals-having-keys (->> (keys arguments)
+                                         (filter #(= [\- \i \d \s]
+                                                     (take-last 4 (name %)))))
+                                    #(map relay/decode-global-id->db-id %))))
 
 (defn decode-global-id-in-arguments
   "인자 맵의 ID들(열이 id, 그리고 -id로 끝나는 것들)의 값을 글로벌 ID에서 ID로 디코드한다."
   [arguments]
   (-> arguments
       (medley/update-existing :id relay/decode-global-id->db-id)
-      (update-vals-having-keys (->> (keys arguments)
-                                    (filter #(= [\- \i \d]
-                                                (take-last 3 (name %)))))
-                               relay/decode-global-id->db-id)))
+      (util/update-vals-having-keys (->> (keys arguments)
+                                         (filter #(ends-with? (name %) "-id")))
+                                    relay/decode-global-id->db-id)))
 
 (defn common-pre-process-arguments
   "인자 맵에 일반적인 전처리를 한다."
   [arguments]
   (->> arguments
-       (cske/transform-keys csk/->kebab-case-keyword)
+       transform-keys->kebab-case-keyword
        decode-global-ids-in-arguments))
-
-(defn- stringify-ids
-  "행의 ID들(열이 id, 그리고 -id로 끝나는 것들)을 텍스트로 변경한다."
-  [row]
-  (-> row
-      (update :id str)
-      (update-vals-having-keys (->> (keys row)
-                                    (filter #(= [\- \i \d]
-                                                (take-last 3 (name %)))))
-                               str)))
-
-(defn- common-post-process-rows
-  "행 목록에 일반적인 후처리를 한다."
-  [rows]
-  (->> rows
-       (map stringify-ids)
-       util/transform-keys->camelCaseKeyword))
 
 (defn- nullify-empty-string-arguments
   [arguments ks]
@@ -172,7 +150,8 @@
 
 (defn resolve-by-parent-pk
   "parent 객체의 primary key (보통 id)와 child의 foreign key 기반으로 child 하나를 resolve한다.
-
+  parent:child가 1:0..1일 것을 가정함. DB 제약으로 child가 n개 붙는 것을 막을 수는 없지만,
+  GraphQL에서 Parent->Optional<Child> 관계를 지원하기 위한 용도임
   ## 인자
   * context   리졸버 실행 문맥
   * arguments 쿼리 입력 (지원 안함)
@@ -195,13 +174,11 @@
                                      :page-options nil})
         superfetch-id (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
-      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-          (prom/then (fn [rows]
-                       (->> rows
-                            (map post-process-row)
-                            (map #(update % :id (partial relay/encode-global-id node-type)))
-                            common-post-process-rows
-                            first)))))))
+                      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+                          (prom/then (fn [rows]
+                                       (-> (first rows)
+                                           (relay/build-node node-type post-process-row)
+                                           transform-keys->camelCaseKeyword)))))))
 
 (defn resolve-by-fk
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
@@ -224,18 +201,17 @@
                                      additional-filter-opts]}]
   {:pre [(some? db-key)]}
   (let [fk (get parent fk-in-parent)
+        ; TODO: 생각해볼 점: 여기서 fk가 nil이면 아래의 로직을 안 타고 바로 nil을 반환해도 될 것 같음
         page-options nil  ; don't limit page size to 1 because superfetcher fetches many rows
         superfetch-arguments (merge additional-filter-opts
                                     {:id           fk
                                      :page-options page-options})
         superfetch-id (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
-      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-          (prom/then (fn [rows] (->> rows
-                                     (map post-process-row)
-                                     (map #(update % :id (partial relay/encode-global-id node-type)))
-                                     common-post-process-rows
-                                     first)))))))
+                      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+                          (prom/then (fn [rows] (-> (first rows)
+                                                    (relay/build-node node-type post-process-row)
+                                                    transform-keys->camelCaseKeyword)))))))
 
 (defn resolve-connection
   "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
@@ -268,15 +244,14 @@
                       pre-process-arguments)
         {:keys [order-by
                 page-direction
-                limit
+                page-size
                 cursor-id] :as page-options} (relay/build-page-options arguments)
         filter-options (relay/build-filter-options arguments additional-filter-opts)
         rows (table-fetcher db filter-options page-options)]
     (->> rows
-         (map post-process-row)
-         common-post-process-rows
-         (relay/build-connection node-type order-by page-direction limit cursor-id)
-         (cske/transform-keys csk/->camelCaseKeyword))))
+         (map #(relay/build-node % node-type post-process-row))
+         (relay/build-connection order-by page-direction page-size cursor-id)
+         transform-keys->camelCaseKeyword)))
 
 ;; FIXME: N+1 쿼리임
 (defn resolve-connection-by-pk-list
@@ -305,7 +280,7 @@
                       (nullify-empty-string-arguments [:after :before]))
         {:keys [order-by
                 page-direction
-                limit
+                page-size
                 cursor-id]
          :as   page-options} (relay/build-page-options arguments)
         pk-list (get parent pk-list-name-in-parent)
@@ -313,10 +288,9 @@
         filter-options (relay/build-filter-options (assoc arguments (or pk-list-name :ids) decoded-pk-list) additional-filter-opts)
         rows (table-fetcher db filter-options page-options)]
     (->> rows
-         (map post-process-row)
-         common-post-process-rows
-         (relay/build-connection node-type order-by page-direction limit cursor-id)
-         (cske/transform-keys csk/->camelCaseKeyword))))
+         (map #(relay/build-node % node-type post-process-row))
+         (relay/build-connection order-by page-direction page-size cursor-id)
+         transform-keys->camelCaseKeyword)))
 
 (defn resolve-connection-by-fk
   "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
@@ -342,7 +316,7 @@
         parent-id (-> parent :id relay/decode-global-id->db-id)
         {:keys [order-by
                 page-direction
-                limit
+                page-size
                 cursor-id]
          :as   page-options} (relay/build-page-options arguments)
         superfetch-arguments (merge additional-filter-opts
@@ -350,22 +324,20 @@
                                      :page-options page-options})
         superfetch-id (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
-      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-          (prom/then (fn [rows]
-                       (->> rows
-                            (map post-process-row)
-                            common-post-process-rows
-                            (relay/build-connection node-type order-by page-direction limit cursor-id)
-                            (cske/transform-keys csk/->camelCaseKeyword))))))))
+                      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+                          (prom/then (fn [rows]
+                                       (->> rows
+                                            (map #(relay/build-node % node-type post-process-row))
+                                            (relay/build-connection order-by page-direction page-size cursor-id)
+                                            transform-keys->camelCaseKeyword)))))))
 
+; TODO 다른 mutation helper 함수와 통합
 (defn pack-mutation-result
   "Lacinia 변환 리졸버 응답용 변환 내역을 꾸며 반환한다."
   [db db-fetcher filter-options {:keys [node-type post-process-row]}]
-  {:result (-> (db-fetcher db filter-options nil)
-               (#(map post-process-row %))
-               common-post-process-rows
-               first
-               (update :id (partial relay/encode-global-id node-type)))})
+  {:result (-> (first (db-fetcher db filter-options nil))
+               (relay/build-node node-type post-process-row)
+               transform-keys->camelCaseKeyword)})
 
 (defn resolve-create-one
   [ctx args _parent {:keys [node-type
@@ -390,8 +362,7 @@
                        :generated-key)] ; 한계) auto-gen key가 있는 경우에만 사용 가능
         (response/->mutation-response (-> (table-fetcher db {:id id} {})
                                           first
-                                          post-process-row)
-                                      node-type
+                                          (relay/build-node node-type post-process-row))
                                       mutation-tag)
         response/not-exist-error)
       (catch Exception e
@@ -420,8 +391,7 @@
         (throw (ex-info "DB update의 대상이 잘못되었습니다" {:target-id decoded-id})))
       (response/->mutation-response (-> (table-fetcher db {:id decoded-id} {})
                                         first
-                                        post-process-row)
-                                    node-type
+                                        (relay/build-node node-type post-process-row))
                                     mutation-tag)
       (catch Exception e
         (response/server-error (get-in ctx [:config :profile]) e)))))
