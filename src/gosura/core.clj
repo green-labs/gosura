@@ -6,7 +6,6 @@
 
    주의) namespace를 임의로 지정하기 보다는 ns를 정의를 하고 해당 네임스페이스를 사용하기시 바랍니다(ns 선언 외 빈 파일)"
   (:require [camel-snake-kebab.core :as csk]
-            [camel-snake-kebab.extras :as cske]
             [clojure.set :as s]
             [clojure.tools.logging :as log]
             [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
@@ -16,7 +15,8 @@
             [gosura.helpers.relay :as relay]
             [gosura.helpers.resolver :as r]
             [gosura.schema :as schema]
-            [gosura.util :as util]
+            [gosura.util :as util :refer [transform-keys->camelCaseKeyword
+                                          transform-keys->kebab-case-keyword]]
             [malli.core :as m]
             [malli.error :as me]
             [medley.core :as medley]))
@@ -24,8 +24,8 @@
 (defn- ->kebab-case
   [kebab-case? args parent]
   (if kebab-case?
-    {:args   (util/transform-keys->kebab-case-keyword args)
-     :parent (util/transform-keys->kebab-case-keyword parent)}
+    {:args   (transform-keys->kebab-case-keyword args)
+     :parent (transform-keys->kebab-case-keyword parent)}
     {:args   args
      :parent parent}))
 
@@ -108,47 +108,47 @@
         (if (= :resolve-node resolver)
           (intern target-ns (symbol resolver) (defmethod relay/node-resolver node-type [this ctx _args _parent]
                                                 (f/attempt-all
-                                                 [{:keys [auth]} settings
-                                                  auth-filter-opts (auth/auth-filter-opts auth ctx)
-                                                  filter-options (merge {:id (or (:db-id this)
-                                                                                 (:id this))}
-                                                                        auth-filter-opts
-                                                                        {country-key  (get-in ctx [:identity country-key])
-                                                                         language-key (get-in ctx [:identity language-key])})
-                                                  origin-content (table-fetcher (get ctx db-key) filter-options {})
-                                                  _ (when (empty? origin-content)
-                                                      (f/fail "NotExistData"))
-                                                  content (->> origin-content
-                                                               (map post-process-row)
-                                                               (map (partial cske/transform-keys csk/->camelCaseKeyword))
-                                                               first)]
-                                                 (tag-with-type (relay/encode-node-id node-type content) (csk/->PascalCaseKeyword node-type))
-                                                 (f/when-failed [e]
-                                                                (resolve-as nil {:resolver (format "%s/%s" (str target-ns) (name resolver))
-                                                                                 :message  (f/message e)})))))
+                                                  [{:keys [auth]} settings
+                                                   auth-filter-opts (auth/auth-filter-opts auth ctx)
+                                                   filter-options (merge {:id (or (:db-id this)
+                                                                                  (:id this))}
+                                                                         auth-filter-opts
+                                                                         {country-key  (get-in ctx [:identity country-key])
+                                                                          language-key (get-in ctx [:identity language-key])})
+                                                   rows (table-fetcher (get ctx db-key) filter-options {})
+                                                   _ (when (empty? rows)
+                                                       (f/fail "NotExistData"))]
+                                                  (-> (first rows)
+                                                      (relay/build-node node-type post-process-row)
+                                                      transform-keys->camelCaseKeyword
+                                                      (tag-with-type (csk/->PascalCaseKeyword node-type)))
+                                                  (f/when-failed [e]
+                                                    (resolve-as nil {:resolver (format "%s/%s" (str target-ns) (name resolver))
+                                                                     :message  (f/message e)})))))
           (intern target-ns (symbol resolver) (fn [ctx args parent]
-                                                (f/attempt-all [{:keys [auth
-                                                                        kebab-case?
-                                                                        return-camel-case?]
-                                                                 :or   {kebab-case?        true
-                                                                        return-camel-case? true}} settings
-                                                                {:keys [args parent]} (->kebab-case kebab-case? args parent)
-                                                                auth-filter-opts (auth/auth-filter-opts auth ctx)
-                                                                required-keys-in-parent (remove nil? [fk-in-parent pk-list-name-in-parent])
-                                                                required-keys (s/difference (set required-keys-in-parent) (set (keys parent)))
-                                                                _ (when (seq required-keys)
-                                                                    (f/fail (format "%s keys are needed in parent" required-keys)))
-                                                                resolver-fn (match-resolve-fn resolver)
-                                                                additional-filter-opts (merge auth-filter-opts
-                                                                                              {country-key  (get-in ctx [:identity country-key])
-                                                                                               language-key (get-in ctx [:identity language-key])})
-                                                                added-params (merge params
-                                                                                    {:additional-filter-opts additional-filter-opts})]
-                                                               (cond-> (resolver-fn ctx args parent added-params)
-                                                                 return-camel-case? (util/update-resolver-result util/transform-keys->camelCaseKeyword))
-                                                               (f/when-failed [e]
-                                                                              (resolve-as nil {:resolver (format "%s/%s" (str target-ns) (name resolver))
-                                                                                               :message  (f/message e)}))))))))
+                                                (f/attempt-all
+                                                  [{:keys [auth
+                                                           kebab-case?
+                                                           return-camel-case?]
+                                                    :or   {kebab-case?        true
+                                                           return-camel-case? true}} settings
+                                                   {:keys [args parent]} (->kebab-case kebab-case? args parent)
+                                                   auth-filter-opts (auth/auth-filter-opts auth ctx)
+                                                   required-keys-in-parent (remove nil? [fk-in-parent pk-list-name-in-parent])
+                                                   required-keys (s/difference (set required-keys-in-parent) (set (keys parent)))
+                                                   _ (when (seq required-keys)
+                                                       (f/fail (format "%s keys are needed in parent" required-keys)))
+                                                   resolver-fn (match-resolve-fn resolver)
+                                                   additional-filter-opts (merge auth-filter-opts
+                                                                                 {country-key  (get-in ctx [:identity country-key])
+                                                                                  language-key (get-in ctx [:identity language-key])})
+                                                   added-params (merge params
+                                                                       {:additional-filter-opts additional-filter-opts})]
+                                                  (cond-> (resolver-fn ctx args parent added-params)
+                                                    return-camel-case? (util/update-resolver-result transform-keys->camelCaseKeyword))
+                                                  (f/when-failed [e]
+                                                    (resolve-as nil {:resolver (format "%s/%s" (str target-ns) (name resolver))
+                                                                     :message  (f/message e)}))))))))
 
     (log/info (format "Gosura has generated resolvers => %s"
                       (mapv str

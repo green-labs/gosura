@@ -55,6 +55,11 @@
                                                        [:mutation-fn symbol?]]]]]])
 
 (def node-schema
-  [:map {:closed true}
-   [:node-type [:or string? keyword?]]
+  [:map
+   [:node-type keyword?]
    [:db-id [:or string? int?]]])
+
+(def decoded-id-schema
+  [:map
+   [:node-type keyword?]
+   [:db-id string?]])

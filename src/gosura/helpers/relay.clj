@@ -2,41 +2,41 @@
   (:require [camel-snake-kebab.core :as csk]
             [clojure.string]
             [gosura.schema :as gosura-schema]
+            [gosura.util :refer [stringify-ids]]
             [malli.core :as m]
             [ring.util.codec :refer [base64-decode base64-encode]]
             [taoensso.nippy :as nippy])
   (:import (clojure.lang ExceptionInfo)
            java.util.Base64))
 
-(defn ->node [node-type db-id]
-  {:node-type (keyword node-type)
-   :db-id (str db-id)})
-
 (defn encode-id
   "Node 레코드를 입력받아 Base64 문자열의 Relay 노드 Id로 인코딩합니다.
-   {:node-type \"notice\", :db-id 2} -> \"bm90aWNlLTI=\"
+   (:notice, 2) -> \"bm90aWNlLTI=\"
    "
-  [{:keys [node-type db-id] :as node}]
-  (when-not (m/validate gosura-schema/node-schema node)
-    (throw (ex-info "Invalid node schema" node)))
+  [node-type db-id]
   (.encodeToString (Base64/getEncoder) (.getBytes (str (name node-type) ":" db-id))))
 
+(defn encode-node-id
+  "DB ID를 노드 ID로 변경한 맵을 반환합니다."
+  [{:keys [node-type db-id] :as node}]
+  (when-not (m/validate gosura-schema/node-schema node)
+    (throw (ex-info "Invalid node schema" {:node node})))
+  (assoc node :id (encode-id node-type db-id)))
+
 (defn decode-id
-  "Relay 노드 ID를 Node 레코드로 디코드합니다.
-   \"bm90aWNlLTI=\" -> {:node-type \"notice\", :db-id 2}
-   "
+  "Relay 노드 ID를 node-type과 db-id의 맵으로 디코드합니다.
+   \"bm90aWNlLTI=\" -> {:node-type \"notice\", :db-id \"2\"}
+   주의: decode된 db id는 string임."
   [id]
   (when-not (string? id)
     (throw (ex-info "node id must be string" {:invalid-id id})))
   (let [[_ node-type db-id] (re-matches #"^(.*):(.*)$"
                                         (String. (.decode (Base64/getDecoder) id)))
-        decoded-result (->node node-type db-id)]
-    (when-not (m/validate gosura-schema/node-schema decoded-result)
+        decoded-result {:node-type (keyword node-type)
+                        :db-id db-id}]
+    (when-not (m/validate gosura-schema/decoded-id-schema decoded-result)
       (throw (ex-info "Invalid node id" {:decoded-id decoded-result})))
     decoded-result))
-
-(defn encode-global-id [node-type id]
-  (encode-id {:node-type node-type, :db-id id}))
 
 (defn decode-global-id->db-id [global-id]
   (-> global-id decode-id :db-id))
@@ -67,13 +67,6 @@
 
 (defn decode-arguments [encoded-arguments]
   (-> encoded-arguments base64-decode nippy/thaw))
-
-(defn encode-node-id
-  "DB ID를 노드 ID로 변경한 맵을 반환합니다."
-  [node-type m]
-  (when-not (map? m)
-    (throw (ex-info "data to convert must be map" {:invalid-data m})))
-  (update m :id #(encode-id (->node node-type %))))
 
 (defmulti node-resolver
   "Relay가 사용하는 node(id: ID!) 쿼리를 다형적으로 처리하기 위한 defmulti 입니다.
@@ -109,41 +102,60 @@
                       {} %)))
 
 (defn node->cursor
+  "order-by: 정렬할 기준 컬럼. 타입: 키워드
+   node: 커서로 변환할 노드"
   [order-by node]
-  (encode-cursor {:id             (:id node)
-                  :ordered-values [(get node (csk/->camelCaseKeyword order-by))]}))  ; TODO: change trans-case time
+  ; 이 시점에서 node의 :id에는 인코드된 릴레이 노드 id가 들어 있기 때문에
+  ; order-by가 :id로 들어오면 :db-id로 우회시켜 줘야 함
+  (let [order-by (if (= order-by :id) :db-id order-by)]
+    (encode-cursor {:id             (:db-id node)
+                    :ordered-values [(get node order-by)]})))
 
 (defn node->edge
   [order-by node]
   {:cursor (node->cursor order-by node)
    :node   node})
 
+(defn build-node
+  "db fetcher가 반환한 행 하나를 graphql node 형식에 맞도록 가공합니다"
+  ([row node-type]
+   (build-node row node-type identity))
+  ([row node-type post-process-row]
+   (when row
+     (-> row
+         (assoc :node-type node-type)
+         (assoc :db-id (:id row)) ; id 인코드 후에도 db id를 사용해야 할 때가 있으므로, :db-id라는 키로 별도로 저장
+         ; Note: 다형적인 node의 경우, node-type이 post-process-row에 의해 동적으로 결정될 수 있기 때문에,
+         ; post-process-row가 (assoc :node-type)보다 뒤에 있어야 함.
+         post-process-row
+         encode-node-id
+         stringify-ids))))
+
 (defn build-connection
   "order-by: 정렬 기준
    page-direction: forward or backward 페이지네이션 방향
-   limit: edges의 데이터 개수
-   cursor-id: 현재 위치한 cursor의 id
-   rows: 데이터"
-  [node-type order-by page-direction limit cursor-id rows]
-  (let [cursor-row? #(= (str (:id %)) (str cursor-id))
+   page-size: edges의 데이터 개수
+   cursor-id: 현재 위치한 cursor의 id (db id)
+   nodes: 노드의 시퀀스. 각 노드들 속에는, :db-id에 db의 row id가 들어 있고, :id에 릴레이 노드 id가 들어 있어야 함
+          (즉, build-node에 의해 만들어진 노드 맵이어야 함)"
+  [order-by page-direction page-size cursor-id nodes]
+  (let [cursor-row? #(= (str (:db-id %)) (str cursor-id))
         prev-rows (when cursor-id
-                    (->> (reverse rows)
+                    (->> (reverse nodes)
                          (drop-while (complement cursor-row?))))
         has-prev? (boolean (seq prev-rows))
         remaining-rows (if cursor-id
-                         (->> rows
+                         (->> nodes
                               (drop-while (complement cursor-row?))  ; 커서 이전 행들을 제거
                               (drop 1))  ; 커서 행을 제거
-                         rows)
-        next-rows (drop limit remaining-rows)
+                         nodes)
+        next-rows (drop page-size remaining-rows)
         has-next? (boolean (seq next-rows))
         paged-rows (cond->> remaining-rows
-                     limit (take limit)
-                     (= page-direction :backward) reverse)
+                            page-size (take page-size)
+                            (= page-direction :backward) reverse)
         edges (->> paged-rows
-                   (map #(node->edge order-by %))
-                   (map #(update-in % [:node :id] (fn [x] ; node > nodeType이 명시되어있으면 해당 nodeType을 사용하도록 한다
-                                                    (encode-global-id (get-in % [:node :nodeType] node-type) x)))))]
+                   (map #(node->edge order-by %)))]
     {:count     (count edges)
      :page-info {:has-previous-page (case page-direction :forward has-prev? :backward has-next?)
                  :has-next-page     (case page-direction :forward has-next? :backward has-prev?)
@@ -212,4 +224,5 @@
      :page-direction       page-direction
      :cursor-id            cursor-id
      :cursor-ordered-value (clojure.core/first cursor-ordered-values)
-     :limit                (+ limit 2)}))
+     :limit                (+ limit 2)
+     :page-size            limit}))
