@@ -162,21 +162,21 @@
   ;; => {:a 1, :b [1 2 3], :f #{1 2}})
 
   (join-for-filter-options
-   [{:join [:table2
-            [:= :table1.table2-id :table2.id]]
-     :for  #{:option1 :option2}}
-    {:join [:table3
-            [:= :table1.table3-id :table3.id]]
-     :for  #{:option3 :option4 :option5}}
-    {:join [:table4
-            [:= :table1.table4-id :table4.id]]
-     :for  #{:option6}}]
-   {:option2 "value"
-    :option3 []
-    :option4 nil
-    :option6 "value"}))
-  ;; => [:table2
-  ;;     [:= :table1.table2-id :table2.id]
-  ;;     :table4
-  ;;     [:= :table1.table4-id :table4.id]]
+    [{:join [:table2
+             [:= :table1.table2-id :table2.id]]
+      :for  #{:option1 :option2}}
+     {:join [:table3
+             [:= :table1.table3-id :table3.id]]
+      :for  #{:option3 :option4 :option5}}
+     {:join [:table4
+             [:= :table1.table4-id :table4.id]]
+      :for  #{:option6}}]
+    {:option2 "value"
+     :option3 []
+     :option4 nil
+     :option6 "value"}))
+;; => [:table2
+;;     [:= :table1.table2-id :table2.id]
+;;     :table4
+;;     [:= :table1.table4-id :table4.id]]
 

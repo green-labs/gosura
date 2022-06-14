@@ -3,13 +3,13 @@
 
 (defn- schema-zipper [m]
   (z/zipper
-   (fn [x] (or (map? x) (map? (nth x 1))))
-   (fn [x] (seq (if (map? x) x (nth x 1))))
-   (fn [x children]
-     (if (map? x)
-       (into {} children)
-       (assoc x 1 (into {} children))))
-   m))
+    (fn [x] (or (map? x) (map? (nth x 1))))
+    (fn [x] (seq (if (map? x) x (nth x 1))))
+    (fn [x children]
+      (if (map? x)
+        (into {} children)
+        (assoc x 1 (into {} children))))
+    m))
 
 (defn- ->schema-and-resolvers
   [loc rs]
@@ -34,7 +34,7 @@
                                  (map #(symbol (namespace %))))]
     (doseq [resolver-namespace resolver-namespaces]
       (require resolver-namespace)))
-  
+
   ;; eval
   (update m :resolvers #(into {} (for [[k v] %]
                                    [k (eval v)]))))
