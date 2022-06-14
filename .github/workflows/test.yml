@@ -30,5 +30,4 @@ jobs:
             ${{ runner.os }}-${{ env.cache-name }}-
 
       - name: Run tests
-        working-directory: server
         run: clojure -X:test
