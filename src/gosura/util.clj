@@ -1,9 +1,10 @@
 (ns gosura.util
   (:require [camel-snake-kebab.core :as csk]
             [camel-snake-kebab.extras :as cske]
-            [sentry-clj.core :as sentry]
+            [clojure.string :refer [ends-with?]]
             [com.walmartlabs.lacinia.resolve :refer [is-resolver-result?]]
-            [com.walmartlabs.lacinia.select-utils :refer [is-wrapped-value?]]))
+            [com.walmartlabs.lacinia.select-utils :refer [is-wrapped-value?]]
+            [sentry-clj.core :as sentry]))
 
 (defn keyword-vals->string-vals
   "hash-map value 값에 keyword가 있으면 String으로 변환해준다
@@ -44,3 +45,19 @@
     (is-resolver-result? resolver-result) (update-in resolver-result [:resolved-value :value] update-fn)
     (is-wrapped-value? resolver-result) (update-in resolver-result [:value] update-fn)
     :else (update-fn resolver-result)))
+
+(defn update-vals-having-keys
+  "m: map(데이터)
+   ks: 특정 키값
+   f: val 업데이트 함수"
+  [m ks f]
+  (reduce #(update %1 %2 f) m ks))
+
+(defn stringify-ids
+  "행의 ID들(열이 id, 그리고 -id로 끝나는 것들)을 문자열로 변경한다."
+  [row]
+  (-> row
+      (update :id str)
+      (update-vals-having-keys (->> (keys row)
+                                    (filter #(ends-with? (name %) "-id")))
+                               #(some-> % str)))) ; *-id 컬럼 값이 nil일 수 있기 때문에, nil이 아닐 때에만 str을 적용
