@@ -1,4 +1,4 @@
-(ns test.gosura.auth-test
+(ns gosura.auth-test
   (:require [clojure.test :refer [deftest is run-tests testing]]
             [failjure.core :as f]
             [gosura.auth :as gosura-auth]))
