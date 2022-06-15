@@ -108,7 +108,7 @@
           (intern target-ns (symbol resolver) (defmethod relay/node-resolver node-type [this ctx _args _parent]
                                                 (f/attempt-all
                                                   [{:keys [auth]} settings
-                                                   auth-filter-opts (auth/auth-filter-opts auth ctx)
+                                                   auth-filter-opts (auth/->auth-result auth ctx)
                                                    filter-options (merge {:id (or (:db-id this)
                                                                                   (:id this))}
                                                                          auth-filter-opts)
@@ -130,7 +130,7 @@
                                                     :or   {kebab-case?        true
                                                            return-camel-case? true}} settings
                                                    {:keys [args parent]} (->kebab-case kebab-case? args parent)
-                                                   auth-filter-opts (auth/auth-filter-opts auth ctx)
+                                                   auth-filter-opts (auth/->auth-result auth ctx)
                                                    required-keys-in-parent (remove nil? [fk-in-parent pk-list-name-in-parent])
                                                    required-keys (s/difference (set required-keys-in-parent) (set (keys parent)))
                                                    _ (when (seq required-keys)
