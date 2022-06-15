@@ -1,12 +1,17 @@
 (ns gosura.helpers.db
   (:require [clojure.set]
             [com.rpl.specter :as specter]
-            [honey.sql.helpers :as sql-helper]))
+            [honey.sql :as honeysql]
+            [honey.sql.helpers :as sql-helper]
+            [next.jdbc :as jdbc]
+            [next.jdbc.result-set :as rs]))
 
 (def ^:private col-with-table-name-pattern #"[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*")
+
 (defn col-with-table-name?
   [col-name]
   (boolean (re-find col-with-table-name-pattern (name col-name))))
+
 (defn col-with-table-name
   "column에 table 이름을 명시한다
    input: table-name :g, col-name :col1
@@ -142,41 +147,85 @@
   ([sql page-options]
    (add-page-options sql page-options nil)))
 
-(comment
 
-  (order-by-page-options {})
-  (order-by-page-options {:order-by        :id
-                          :order-direction :asc})
-  (order-by-page-options {:order-by        :name
-                          :order-direction :asc})
-  (order-by-page-options {:order-by        :name
-                          :order-direction :desc})
+(def query-timeout "waiting to complete query state, unit time: seconds" 10)
 
+(def honey-sql-format-options {:dialect      :mysql
+                               :quoted       true
+                               :quoted-snake true})
 
-  (remove-empty-options {:a 1
-                         :b [1 2 3]
-                         :c []
-                         :d {}
-                         :e nil
-                         :f #{1 2}})
-  ;; => {:a 1, :b [1 2 3], :f #{1 2}})
+(defn fetch!
+  ([ds qs] (fetch! ds qs {}))
+  ([ds qs opts]
+   (let [sql (honeysql/format qs honey-sql-format-options)]
+     (jdbc/execute! ds sql (merge {:timeout query-timeout} opts)))))
 
-  (join-for-filter-options
-    [{:join [:table2
-             [:= :table1.table2-id :table2.id]]
-      :for  #{:option1 :option2}}
-     {:join [:table3
-             [:= :table1.table3-id :table3.id]]
-      :for  #{:option3 :option4 :option5}}
-     {:join [:table4
-             [:= :table1.table4-id :table4.id]]
-      :for  #{:option6}}]
-    {:option2 "value"
-     :option3 []
-     :option4 nil
-     :option6 "value"}))
-;; => [:table2
-;;     [:= :table1.table2-id :table2.id]
-;;     :table4
-;;     [:= :table1.table4-id :table4.id]]
+(defn fetch-one!
+  ([ds qs] (fetch-one! ds qs {}))
+  ([ds qs opts]
+   (let [sql (honeysql/format (sql-helper/limit qs 1) honey-sql-format-options)]
+     (jdbc/execute-one! ds sql (merge {:timeout query-timeout} opts)))))
 
+(defn execute!
+  ([ds qs] (execute! ds qs {}))
+  ([ds qs opts]
+   (let [sql (honeysql/format qs honey-sql-format-options)]
+     (jdbc/execute! ds sql (merge {:timeout query-timeout} opts)))))
+
+(defn execute-one!
+  ([ds qs] (execute-one! ds qs {}))
+  ([ds qs opts]
+   (let [sql (honeysql/format qs honey-sql-format-options)]
+     (jdbc/execute-one! ds sql (merge {:timeout query-timeout} opts)))))
+
+(defn unqualified-kebab-fetch!
+  [ds qs]
+  (fetch! ds qs {:builder-fn rs/as-unqualified-kebab-maps}))
+
+(defn unqualified-kebab-fetch-one!
+  [ds qs]
+  (fetch-one! ds qs {:builder-fn rs/as-unqualified-kebab-maps}))
+
+(defn insert-one
+  "db
+   table-name: a table name; keyword; ex. :table-name
+   data: {:col1 1 :col2 2 :col3 3}
+   cols: a vector of keywords. ex) [:col1 :col2]"
+  ([db table-name cols data]
+   (insert-one db table-name cols data {}))
+  ([db table-name cols data opts]
+   (when (seq cols)
+     (let [row   ((apply juxt cols) data)
+           query {:insert-into [table-name]
+                  :columns     cols
+                  :values      [row]}]
+       (execute-one! db query (merge {:return-keys true} opts))))))
+
+(defn insert
+  "db
+   table-name: a table name; keyword; ex. :table-name
+   data: [{:col1 1 :col2 2 :col3 3}, {:col1 4 :col2 5 :col3 6}, ...]
+   cols: a vector of keywords. ex) [:col1 :col2]"
+  ([db table-name cols data]
+   (insert db table-name cols data {}))
+  ([db table-name cols data opts]
+   (when (seq cols)
+     (let [values (map (apply juxt cols) data)
+           query  {:insert-into [table-name]
+                   :columns     cols
+                   :values      values}]
+       (execute! db query opts)))))
+
+(defn update!
+  [db table-name data where-params]
+  (when (seq data)
+    (let [query {:update table-name
+                 :set    data
+                 :where  where-params}]
+      (execute! db query))))
+
+(defn delete!
+  [db table-name where-params]
+  (let [query {:delete-from table-name
+               :where       where-params}]
+    (execute! db query)))
