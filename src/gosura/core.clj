@@ -64,12 +64,6 @@
     (catch Exception e
       (f/fail (format "Resolver matching failed because of %s" (ex-message e))))))
 
-(defn extract-auth-map
-  [auth]
-  (when (coll? auth)
-    (let [[_auth-fn auth-map] auth]
-      auth-map)))
-
 (defn generate-one
   "GraphQL relay spec에 맞는 기본적인 resolver들을 자동 생성한다.
    제공하고 있는 resolvers의 종류는 아래와 같다.
@@ -114,15 +108,10 @@
           (intern target-ns (symbol resolver) (defmethod relay/node-resolver node-type [this ctx _args _parent]
                                                 (f/attempt-all
                                                   [{:keys [auth]} settings
-                                                   auth-map (extract-auth-map auth)
-                                                   auth-result (if-let [role (auth/process-auth-fn auth ctx)]
-                                                                 (if (boolean? role)
-                                                                   role
-                                                                   {(role auth-map) (get-in ctx [:identity :id])})
-                                                                 (f/fail "Unauthorized"))
-                                                   filter-options (cond-> {:id (or (:db-id this)
-                                                                                   (:id this))}
-                                                                          (map? auth-map) (merge auth-result))
+                                                   auth-filter-opts (auth/->auth-result auth ctx)
+                                                   filter-options (merge {:id (or (:db-id this)
+                                                                                  (:id this))}
+                                                                         auth-filter-opts)
                                                    rows (table-fetcher (get ctx db-key) filter-options {})
                                                    _ (when (empty? rows)
                                                        (f/fail "NotExistData"))]
@@ -141,19 +130,13 @@
                                                     :or   {kebab-case?        true
                                                            return-camel-case? true}} settings
                                                    {:keys [args parent]} (->kebab-case kebab-case? args parent)
-                                                   auth-map (extract-auth-map auth)
-                                                   auth-result (if-let [role (auth/process-auth-fn auth ctx)]
-                                                                 (if (boolean? role)
-                                                                   role
-                                                                   {(role auth-map) (get-in ctx [:identity :id])})
-                                                                 (f/fail "Unauthorized"))
+                                                   auth-filter-opts (auth/->auth-result auth ctx)
                                                    required-keys-in-parent (remove nil? [fk-in-parent pk-list-name-in-parent])
                                                    required-keys (s/difference (set required-keys-in-parent) (set (keys parent)))
                                                    _ (when (seq required-keys)
                                                        (f/fail (format "%s keys are needed in parent" required-keys)))
                                                    resolver-fn (match-resolve-fn resolver)
-                                                   added-params (cond-> params
-                                                                  (map? auth-map) (assoc :additional-filter-opts auth-result))]
+                                                   added-params (merge params {:additional-filter-opts auth-filter-opts})]
                                                   (cond-> (resolver-fn ctx args parent added-params)
                                                     return-camel-case? (util/update-resolver-result transform-keys->camelCaseKeyword))
                                                   (f/when-failed [e]

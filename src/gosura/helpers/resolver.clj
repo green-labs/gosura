@@ -79,7 +79,7 @@
   TODO: defn과 같이 attr-map을 받는 기능 추가
 
   가능한 설정
-  :auth - 인증함수를 넣습니다. greenlabs.gosura.auth의 설명을 참고해주세요.
+  :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
   :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
   :node-type - relay resolver 일때 설정하면, edge/node와 :pageInfo의 start/endCursor 처리를 같이 해줍니다.
   :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 false)

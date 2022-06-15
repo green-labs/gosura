@@ -1,10 +1,10 @@
 (ns gosura.core-test
   (:require [clojure.set :as set]
             [clojure.test :refer [deftest is testing]]
-            [greenlabs.gosura.core :as gosura]
-            [greenlabs.gosura.helpers.resolver :as gosura-resolver]))
+            [gosura.core :as gosura]
+            [gosura.helpers.resolver :as gosura-resolver]))
 
-(def normal-data (-> "test/resources/greenlabs/gosura/sample_resolver_configs.edn"
+(def normal-data (-> "test/resources/gosura/sample_resolver_configs.edn"
                      slurp
                      read-string))
 
