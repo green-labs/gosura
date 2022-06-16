@@ -75,7 +75,7 @@
           []
           coll))
 
-(defmethod qualified-symbol->requiring-var! clojure.lang.PersistentArrayMap
+(defmethod qualified-symbol->requiring-var! clojure.lang.IPersistentMap
   [m]
   (reduce (fn [acc [key value]]
             (if (qualified-symbol? value)

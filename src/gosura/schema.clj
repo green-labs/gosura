@@ -13,10 +13,8 @@
    [:node-type keyword?]
    [:db-key keyword?]
    [:post-process-row {:optional true} symbol?]
-   [:filters map?]
+   [:filters {:optional true} map?]
    [:pre-process-arguments {:optional true} symbol?]
-   [:country {:optional true} [:or symbol? [:cat symbol? [:* any?]]]]
-   [:language {:optional true} [:or symbol? [:cat symbol? [:* any?]]]]
    [:resolvers [:map
                 [:resolve-connection {:optional true} [:map
                                                        [:settings {:optional true} resolver-settings-schema]

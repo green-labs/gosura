@@ -9,7 +9,7 @@
   [v]
   (and (var? v) (fn? (var-get v))))
 
-(defn process-auth-fn
+(defn apply-fn-with-ctx-at-first
   "auth: auth 혹은 [fn & args]
   auth가 fn인 경우, (fn ctx)를 반환합니다
   auth가 [fn & args] 형태의 시퀀스인 경우, (apply fn ctx args)를 반환합니다. (thread-first와 유사)
@@ -24,7 +24,7 @@
 
 (defn ->auth-result
   [auth ctx]
-  (let [result (process-auth-fn auth ctx)]
+  (let [result (apply-fn-with-ctx-at-first auth ctx)]
     (cond
       (true? result) nil
       (false? (boolean result)) (f/fail "Unauthorized")
@@ -33,6 +33,6 @@
 (defn config-filter-opts
   [filters ctx]
   (reduce (fn [acc [key value]]
-            (merge acc {key (process-auth-fn (util/qualified-symbol->requiring-var! value) ctx)}))
+            (merge acc {key (apply-fn-with-ctx-at-first (util/qualified-symbol->requiring-var! value) ctx)}))
           {}
           filters))
