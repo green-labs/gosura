@@ -40,7 +40,7 @@
   (cond-> config
     (symbol? (get-in config [:country 0])) (update-in [:country 0] requiring-resolve)
     (symbol? (get-in config [:country])) (update-in [:country] requiring-resolve)
-    (symbol? (get-in config [:language :auth 0])) (update-in [:language 0] requiring-resolve)
+    (symbol? (get-in config [:language 0])) (update-in [:language 0] requiring-resolve)
     (symbol? (get-in config [:language])) (update-in [:language] requiring-resolve)))
 
 (defn- symbol->requiring-var!  "params: original params
