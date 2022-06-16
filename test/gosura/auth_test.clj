@@ -4,11 +4,6 @@
             [gosura.auth :as gosura-auth]
             [gosura.core :refer [country|language-symbol->requiring-var!]]))
 
-(def normal-data (-> "test/resources/gosura/sample_resolver_configs.edn"
-                     slurp
-                     read-string
-                     country|language-symbol->requiring-var!))
-
 (deftest ->auth-result-test
   (let [auth0        (fn [ctx]
                        (boolean (get-in ctx [:identity :id])))
@@ -55,22 +50,25 @@
   {column (get-in ctx [:identity :country-code])})
 
 (deftest country|language-code-test
-  (testing "country 설정에 따라 ctx 내에 인증 정보를 잘 가지고 온다"
-    (let [ctx             {:identity {:country-code "JP"}}
-          result          (gosura-auth/country|language-auth-fn (:country normal-data) ctx)
-          expected-result {:country-code "JP"}]
-
-      (is (= result expected-result))))
-  (testing "인증 정보에 국가 정보가 없을 때 빈 정보를 가지고 있다"
-    (let [ctx             {}
-          result          (gosura-auth/country|language-auth-fn (:country normal-data) ctx)
-          expected-result {:country-code nil}]
-      (is (= result expected-result))))
-  (testing "인증 정보를 설정하지 않으면 아무일도 일어나지 않는다"
-    (let [ctx             {}
-          result          (gosura-auth/country|language-auth-fn (:language normal-data) ctx)
-          expected-result nil]
-      (is (= result expected-result)))))
+  (let [config (-> "test/resources/gosura/sample_resolver_configs.edn"
+                   slurp
+                   read-string
+                   country|language-symbol->requiring-var!)]
+    (testing "country 설정에 따라 ctx 내에 인증 정보를 잘 가지고 온다"
+      (let [ctx             {:identity {:country-code "JP"}}
+            result          (gosura-auth/country|language-auth-fn (:country config) ctx)
+            expected-result {:country-code "JP"}]
+        (is (= result expected-result))))
+    (testing "인증 정보에 국가 정보가 없을 때 빈 정보를 가지고 있다"
+      (let [ctx             {}
+            result          (gosura-auth/country|language-auth-fn (:country config) ctx)
+            expected-result {:country-code nil}]
+        (is (= result expected-result))))
+    (testing "인증 정보를 설정하지 않으면 아무일도 일어나지 않는다"
+      (let [ctx             {}
+            result          (gosura-auth/country|language-auth-fn (:language config) ctx)
+            expected-result nil]
+        (is (= result expected-result))))))
 
 (comment
   (run-tests))
