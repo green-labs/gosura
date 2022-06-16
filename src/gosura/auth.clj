@@ -1,6 +1,7 @@
 (ns gosura.auth
   (:require [clojure.core.match :refer [match]]
-            [failjure.core :as f]))
+            [failjure.core :as f]
+            [gosura.util :as util]))
 
 (defn- var-fn?
   "v가 var이고, 함수를 가리킨다면 true를 반환합니다.
@@ -29,9 +30,9 @@
       (false? (boolean result)) (f/fail "Unauthorized")
       :else result)))
 
-(defn country|language-auth-fn
-  [country|language ctx]
-  (match [country|language]
-    [(_ :guard nil?)] nil
-    [([(country|language-auth-fn :guard var-fn?) & args] :seq)] (apply country|language-auth-fn ctx args)
-    [([(country|language-auth-fn :guard fn?) & args] :seq)] (apply country|language-auth-fn ctx args)))
+(defn config-filter-opts
+  [filters ctx]
+  (reduce (fn [acc [key value]]
+            (merge acc {key (process-auth-fn (util/qualified-symbol->requiring-var! value) ctx)}))
+          {}
+          filters))
