@@ -28,3 +28,10 @@
       (true? result) nil
       (false? (boolean result)) (f/fail "Unauthorized")
       :else result)))
+
+(defn country|language-auth-fn
+  [country|language ctx]
+  (match [country|language]
+    [(_ :guard nil?)] nil
+    [([(country|language-auth-fn :guard var-fn?) & args] :seq)] (apply country|language-auth-fn ctx args)
+    [([(country|language-auth-fn :guard fn?) & args] :seq)] (apply country|language-auth-fn ctx args)))

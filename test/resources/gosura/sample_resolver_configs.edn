@@ -1,8 +1,9 @@
-{:target-ns        test-namespace
- :node-type        :test-type
- :db-key           :db
- :resolvers        {:resolve-connection {:settings      {:auth clojure.core/identity}
-                                         :table-fetcher clojure.core/identity}
-                    :resolve-by-fk      {:settings     {:auth clojure.core/identity}
-                                         :superfetcher clojure.core/identity
-                                         :fk-in-parent :test-id}}}
+{:target-ns test-namespace
+ :node-type :test-type
+ :db-key    :db
+ :country   [gosura.auth-test/get-country-code :country-code]
+ :resolvers {:resolve-connection {:settings      {:auth clojure.core/identity}
+                                  :table-fetcher clojure.core/identity}
+             :resolve-by-fk      {:settings     {:auth clojure.core/identity}
+                                  :superfetcher clojure.core/identity
+                                  :fk-in-parent :test-id}}}
