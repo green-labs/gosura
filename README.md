@@ -2,6 +2,10 @@
 Data-driven GraphQL Resolvers on [lacinia](https://github.com/walmartlabs/lacinia) for Clojure.
 
 # Motivation
+다목적의 어플리케이션 개발을 하다보면 GraphQL을 이용하여 많고 다양한 quary와 mutation을 만들어야합니다. 특히, 기본 query와 mutation을 작성하는 것은 중요하지만 반복적인 일이기도 합니다. 이 따분한 작업들을 조금 더 빠르고 쉽게 개발할 수 있도록 하는 여러가지 서비스들이 있는데 그 중 하나인 [hasura](https://hasura.io/)의 영향을 받아 [gosura](https://github.com/green-labs/gosura)가 만들어졌습니다.
+
+기본적으로 GraphQL [relay](https://relay.dev/) 스펙을 이용한 어플리케이션 설계에 유용하도록 만들어져있습니다. 그리고 [EDN](https://github.com/edn-format/edn)을 이용하여 선언적으로 GraphQL query 및 mutation이 만들어지도록 하였습니다.
+
 We are writing diverse and repetitive GraphQL queries and mutations where we are building general-purposed applications. When you follow [GraphQL](https://graphql.org/) and even [relay](https://relay.dev/), we should handle the relay specification with Clojure code. It's pretty annoying with us. So, we decided to make some helpers and [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) for data-driven resolvers.
 
 # Features
@@ -22,6 +26,28 @@ Use git dependency:
 green-labs/gosura {:git/url "https://github.com/green-labs/gosura"
                    :git/sha "f1d586669f37a3ca99e14739f9abfb1a02128274"}
 ```
+
+# Core
+This is almost full configs you're able to set.
+```clojure
+{:target-ns             animal.resolve ; a generated resolver's namespace
+ :node-type             :animal ; node-type for relay
+ :db-key                :db ; db-key to find datasource in a lacinia's context
+ :pre-process-arguments animal.core/pre-process-arguments ; fn to process in args
+ :post-process-row      animal.core/post-process-row ; fn to process in a result
+ :filters               {:country-code animal.core/get-country-code} ; filters for additional filter opts for query
+ :resolvers             {:resolve-node       {:table-fetcher animal.db/fetch} ; table fetcher for queries
+                         :resolve-connection {:table-fetcher animal.db/fetch
+                                              :settings      {:auth               animal.core/auth ; set for authentification and authorization.
+                                                              :kebab-case?        true ; opts ; transform args into kebeb-case. A default is true.
+                                                              :return-camel-case? true}} ; opts ; transform results into camelCase. A default value is true.
+                         :resolve-by-fk      {:superfetcher animal.superfetcher/->Fetch ; superfetcher for superlifter
+                                              :fk-in-parent :user-type-id}
+                         :resolve-create-one {:table-fetcher animal.db/fetch
+                                              :mutation-fn   animal.core/create-one 
+                                              :mutation-tag  AnimalPayload}}}
+```
+
 # Getting Started
 Let's start with creating a simple resolver containing queries for connection, connection by a foreign key (1:N), a single record by a foreign key (1:1).
 ```edn
