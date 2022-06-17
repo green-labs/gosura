@@ -125,7 +125,8 @@ When your server is executed, lacinia is run successfully with generated resolve
 - documenations for lacinia compiler to use symbolic resolve in schema.
 - documenations for lacinia schema examples
 
-# Clojars 배포
+# Deploy
+## Clojars
 
 출시하고자 하는 버전에 해당하는 git tag를 생성하고, `build.edn` 파일을 수정한 뒤 아래 명령어를 실행합니다.
 
