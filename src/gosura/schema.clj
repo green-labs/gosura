@@ -13,6 +13,7 @@
    [:node-type keyword?]
    [:db-key keyword?]
    [:post-process-row {:optional true} symbol?]
+   [:filters {:optional true} map?]
    [:pre-process-arguments {:optional true} symbol?]
    [:resolvers [:map
                 [:resolve-connection {:optional true} [:map

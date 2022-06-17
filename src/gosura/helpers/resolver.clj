@@ -35,7 +35,7 @@
                 required-keys-in-parent []}} option
 
         result (gensym 'result_)
-        authorized? `(auth/process-auth-fn ~auth ~ctx)
+        authorized? `(auth/apply-fn-with-ctx-at-first ~auth ~ctx)
         arg' (if kebab-case? `(transform-keys->kebab-case-keyword ~arg) arg)
         parent' (if kebab-case? `(transform-keys->kebab-case-keyword ~parent) parent)
         keys-not-found `(keys-not-found ~parent' ~required-keys-in-parent)
