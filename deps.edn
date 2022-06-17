@@ -21,4 +21,9 @@
                    :extra-deps  {io.github.cognitect-labs/test-runner {:git/tag "v0.5.0"
                                                                        :git/sha "b3fd0d2"}}
                    :exec-fn     cognitect.test-runner.api/test
-                   :exec-args   {:excludes [:integration]}}}}
+                   :exec-args   {:excludes [:integration]}}
+
+           :build {:deps              {com.github.liquidz/build.edn {:git/tag "0.3.90" :git/sha "e3a3e31"}}
+                   :ns-default        build-edn.main
+                   :deploy-repository {:username #env YOUR_USERNAME
+                                       :password #env YOUR_PASSWORD}}}}
