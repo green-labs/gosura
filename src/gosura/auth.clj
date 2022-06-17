@@ -1,5 +1,6 @@
 (ns gosura.auth
-  (:require [clojure.core.match :refer [match]]))
+  (:require [clojure.core.match :refer [match]]
+            [failjure.core :as f]))
 
 (defn- var-fn?
   "v가 var이고, 함수를 가리킨다면 true를 반환합니다.
@@ -19,3 +20,11 @@
     [(auth-fn :guard fn?)] (auth-fn ctx)
     [([(auth-fn :guard var-fn?) & args] :seq)] (apply auth-fn ctx args)
     [([(auth-fn :guard fn?) & args] :seq)] (apply auth-fn ctx args)))
+
+(defn ->auth-result
+  [auth ctx]
+  (let [result (process-auth-fn auth ctx)]
+    (cond
+      (true? result) nil
+      (false? (boolean result)) (f/fail "Unauthorized")
+      :else result)))

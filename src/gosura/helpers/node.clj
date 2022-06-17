@@ -4,6 +4,7 @@
 
 (defn tag-with-subtype
   [{:keys [subtype] :as row} subtype->node-type]
-  (let [node-type (get subtype->node-type subtype)
-        added-node-type-row (assoc row :node-type node-type)]
-    (schema/tag-with-type added-node-type-row (csk/->PascalCaseKeyword node-type))))
+  (let [node-type (get subtype->node-type subtype)]
+    (-> row
+        (assoc :node-type node-type)
+        (schema/tag-with-type (csk/->PascalCaseKeyword node-type)))))

@@ -1,0 +1,33 @@
+name: Tests
+
+on:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3.0.2
+
+      - uses: actions/setup-java@v3.3.0
+        with:
+          distribution: "zulu"
+          java-version: "17"
+
+      - uses: DeLaGuardo/setup-clojure@6.0
+        with:
+          cli: "1.11.1.1129"
+
+      - name: Cache maven
+        uses: actions/cache@v3.0.4
+        env:
+          cache-name: cache-maven
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-name }}-
+
+      - name: Run tests
+        run: clojure -X:test

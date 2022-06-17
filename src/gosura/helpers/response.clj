@@ -1,7 +1,6 @@
 (ns gosura.helpers.response
   (:require [clojure.string :as string]
             [com.walmartlabs.lacinia.schema :refer [tag-with-type]]
-            [gosura.helpers.relay :as relay]
             [gosura.util :as util]))
 
 (defn error-response
@@ -31,7 +30,7 @@
   ([profile error]
    (server-error profile error nil))
   ([profile error message]
-   (let [message (if (= "prod" (string/lower-case profile))
+   (let [message (if (and profile (= "prod" (string/lower-case profile)))
                    "서버의 알 수 없는 에러"
                    (or message (ex-message error)))]
      (util/send-sentry-server-event {:message   message
@@ -47,7 +46,7 @@
 
 (defn ->mutation-response
   "mutation: create/update (생성/수정) 시의 response
-   lacinia schema의 :MutationPayload interface 를 따른다
+   lacinia schema의 :MutationPayload interface를 따른다
    mutation response인 {:result {:type :Node}}로 변환한다"
-  [data node-type tag]
-  (tag-with-type {:result (relay/encode-node-id node-type data)} tag))
+  [node tag]
+  (tag-with-type {:result node} tag))

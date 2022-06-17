@@ -1,37 +1,29 @@
-{:paths     ["src" "resources" "classes"]
- :deps      {camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.3"}
-             com.github.seancorfield/honeysql    {:mvn/version "2.2.868"}
-             com.rpl/specter                     {:mvn/version "1.1.3"}
-             com.taoensso/nippy                  {:mvn/version "3.1.1"}
-             com.taoensso/timbre                 {:mvn/version "5.1.2"}
-             com.walmartlabs/lacinia             {:mvn/version "1.1"}
-             com.walmartlabs/lacinia-pedestal    {:mvn/version "1.1"}
-             failjure/failjure                   {:mvn/version "2.2.0"}
-             io.sentry/sentry-clj                {:mvn/version "5.6.170"}
-             medley/medley                       {:mvn/version "1.3.0"}
-             org.clojure/clojure                 {:mvn/version "1.11.1"}
-             org.clojure/data.json               {:mvn/version "2.4.0"}
-             org.clojure/tools.logging           {:mvn/version "1.2.4"}
-             org.clojure/core.match              {:mvn/version "1.0.0"}
-             org.flatland/ordered                {:mvn/version "1.15.10"}
-             org.slf4j/slf4j-simple              {:mvn/version "1.7.30"}
-             ring-cors/ring-cors                 {:mvn/version "0.1.13"}
-             ring/ring                           {:mvn/version "1.9.4"}
-             ring/ring-codec                     {:mvn/version "1.2.0"}
-             ring/ring-json                      {:mvn/version "0.5.1"}
-             ring/ring-headers                   {:mvn/version "0.3.0"}
-             superlifter/superlifter             {:git/url "https://github.com/green-labs/superlifter.git"
-                                                  :sha     "e0df5b36b496c485c75f38052a71b18f02772cc0"}
-             metosin/malli                       {:mvn/version "0.8.4"}}
+{:paths   ["src" "resources" "classes"]
+ :deps    {camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.3"}
+           com.github.seancorfield/honeysql    {:mvn/version "2.2.891"}
+           com.rpl/specter                     {:mvn/version "1.1.4"}
+           com.taoensso/nippy                  {:mvn/version "3.1.1"}
+           com.taoensso/timbre                 {:mvn/version "5.2.1"}
+           com.walmartlabs/lacinia             {:mvn/version "1.1"}
+           failjure/failjure                   {:mvn/version "2.2.0"}
+           io.sentry/sentry-clj                {:mvn/version "5.7.180"}
+           medley/medley                       {:mvn/version "1.4.0"}
+           org.clojure/clojure                 {:mvn/version "1.11.1"}
+           org.clojure/data.json               {:mvn/version "2.4.0"}
+           org.clojure/tools.logging           {:mvn/version "1.2.4"}
+           org.clojure/core.match              {:mvn/version "1.0.0"}
+           superlifter/superlifter             {:git/url "https://github.com/green-labs/superlifter.git"
+                                                :sha     "e0df5b36b496c485c75f38052a71b18f02772cc0"}
+           metosin/malli                       {:mvn/version "0.8.4"}
+           com.github.seancorfield/next.jdbc   {:mvn/version "1.2.780"}}
 
- :aliases   {:test      {:extra-paths ["test"]
-                         :extra-deps  {io.github.cognitect-labs/test-runner {:git/tag "v0.5.0"
-                                                                             :git/sha "b3fd0d2"}
-                                       integrant/repl                       {:mvn/version "0.3.2"}
-                                       district0x/graphql-query             {:mvn/version "1.0.6"}
-                                       migratus/migratus                    {:mvn/version "1.3.5"}}
-                         :exec-fn     cognitect.test-runner.api/test
-                         :exec-args   {:excludes [:integration]}}
-             :build     {:deps       {io.github.green-labs/build-clj {:git/tag "v0.0.6"
-                                                                      :git/sha "7548c3c"}}
-                         :ns-default greenlabs.build}}}
+ :aliases {:test  {:extra-paths ["test"]
+                   :extra-deps  {io.github.cognitect-labs/test-runner {:git/tag "v0.5.0"
+                                                                       :git/sha "b3fd0d2"}}
+                   :exec-fn     cognitect.test-runner.api/test
+                   :exec-args   {:excludes [:integration]}}
+
+           :build {:deps              {com.github.liquidz/build.edn {:git/tag "0.3.90" :git/sha "e3a3e31"}}
+                   :ns-default        build-edn.main
+                   :deploy-repository {:username #env YOUR_USERNAME
+                                       :password #env YOUR_PASSWORD}}}}

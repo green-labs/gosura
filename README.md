@@ -2,7 +2,7 @@
 Data-driven GraphQL Resolvers on [lacinia](https://github.com/walmartlabs/lacinia) for Clojure.
 
 # Motivation
-We are writing diverse and repetative GraphQL queries and mutations where we are building general-purposed applications. When you follow [GraphQL](https://graphql.org/) and even [relay](https://relay.dev/), we should handle the relay specification with Clojure code. It's pretty annoying with us. So, we decided to make some helpers and [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) for data-driven resolvers.
+We are writing diverse and repetitive GraphQL queries and mutations where we are building general-purposed applications. When you follow [GraphQL](https://graphql.org/) and even [relay](https://relay.dev/), we should handle the relay specification with Clojure code. It's pretty annoying with us. So, we decided to make some helpers and [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) for data-driven resolvers.
 
 # Features
 - An [EDN](https://github.com/edn-format/edn)-based GraphQL resolver language.
@@ -98,5 +98,13 @@ When your server is executed, lacinia is run successfully with generated resolve
 # Todo
 - documenations for lacinia compiler to use symbolic resolve in schema.
 - documenations for lacinia schema examples
+
+# Clojars 배포
+
+출시하고자 하는 버전에 해당하는 git tag를 생성하고, `build.edn` 파일을 수정한 뒤 아래 명령어를 실행합니다.
+
+```bash
+clj -T:build deploy
+```
 
 # License
