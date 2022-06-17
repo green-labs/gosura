@@ -30,7 +30,7 @@
   ([profile error]
    (server-error profile error nil))
   ([profile error message]
-   (let [message (if (= "prod" (string/lower-case profile))
+   (let [message (if (and profile (= "prod" (string/lower-case profile)))
                    "서버의 알 수 없는 에러"
                    (or message (ex-message error)))]
      (util/send-sentry-server-event {:message   message
