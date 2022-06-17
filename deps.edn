@@ -15,11 +15,6 @@
            org.clojure/core.match              {:mvn/version "1.0.0"}
            org.flatland/ordered                {:mvn/version "1.15.10"}
            org.slf4j/slf4j-simple              {:mvn/version "1.7.36"}
-           ring-cors/ring-cors                 {:mvn/version "0.1.13"}
-           ring/ring                           {:mvn/version "1.9.5"}
-           ring/ring-codec                     {:mvn/version "1.2.0"}
-           ring/ring-json                      {:mvn/version "0.5.1"}
-           ring/ring-headers                   {:mvn/version "0.3.0"}
            superlifter/superlifter             {:git/url "https://github.com/green-labs/superlifter.git"
                                                 :sha     "e0df5b36b496c485c75f38052a71b18f02772cc0"}
            metosin/malli                       {:mvn/version "0.8.4"}
