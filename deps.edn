@@ -10,6 +10,7 @@
            medley/medley                       {:mvn/version "1.4.0"}
            org.clojure/clojure                 {:mvn/version "1.11.1"}
            org.clojure/data.json               {:mvn/version "2.4.0"}
+           cli-matic/cli-matic                 {:mvn/version "0.5.4"}
            org.clojure/tools.logging           {:mvn/version "1.2.4"}
            org.clojure/core.match              {:mvn/version "1.0.0"}
            superlifter/superlifter             {:git/url "https://github.com/green-labs/superlifter.git"

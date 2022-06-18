@@ -134,4 +134,18 @@ When your server is executed, lacinia is run successfully with generated resolve
 clj -T:build deploy
 ```
 
+# CLI
+```sh
+$ clj -M -m gosura.cli generate query
+NAME:
+ gosura-cli generate query - Query
+
+USAGE:
+ gosura-cli generate query [command options] [arguments...]
+
+OPTIONS:
+       --path S*  Path to generate
+   -?, --help
+```
+
 # License
