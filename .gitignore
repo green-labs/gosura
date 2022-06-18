@@ -13,8 +13,10 @@ pom.xml.asc
 .nrepl-port
 .cpcache/
 .clj-kondo/.cache
+.clj-kondo/com.github.seancorfield/
 .lsp
 .calva
 
+.DS_Store
 .idea/
 gosura.iml

@@ -1,10 +1,17 @@
 (ns gosura.cli
   (:require [cli-matic.core :refer [run-cmd]]))
 
-(defn generate-query [{:keys [path]}]
-  (prn "generate query" path))
+(defn generate-query [{:keys [path name]}]
+  (let [path (str path "/" name "/")]
+    (.mkdir (java.io.File. path))
 
-(def config 
+    (spit (str path "superfetcher.clj") "")
+    (spit (str path "db.clj") "")
+    (spit (str path "resolve.clj") "")
+
+    (println (str "Query " name " generated."))))
+
+(def config
   {:command     "gosura-cli"
    :description "A simple gosura cli"
    :version     "0.0.1"
@@ -15,6 +22,10 @@
                                  :description "Query"
                                  :opts        [{:as      "Path to generate"
                                                 :option  "path"
+                                                :default :present
+                                                :type    :string}
+                                               {:as      "Query name"
+                                                :option  "name"
                                                 :default :present
                                                 :type    :string}]
                                  :runs generate-query}]}]})
