@@ -145,6 +145,7 @@ USAGE:
 
 OPTIONS:
        --path S*  Path to generate
+       --name S*  Query name
    -?, --help
 ```
 
