@@ -34,20 +34,20 @@
                 return-camel-case?      true
                 required-keys-in-parent []}} option
 
-        result (gensym 'result_)
-        authorized? `(auth/apply-fn-with-ctx-at-first ~auth ~ctx)
-        arg' (if kebab-case? `(transform-keys->kebab-case-keyword ~arg) arg)
-        parent' (if kebab-case? `(transform-keys->kebab-case-keyword ~parent) parent)
-        keys-not-found `(keys-not-found ~parent' ~required-keys-in-parent)
-        params (if (nil? this) [ctx arg' parent'] [this ctx arg' parent'])
-        let-mapping (vec (interleave args params))]
+        result                                                                                                                                             (gensym 'result_)
+        authorized?                                                                                                                                        `(auth/apply-fn-with-ctx-at-first ~auth ~ctx)
+        arg'                                                                                                                                               (if kebab-case? `(transform-keys->kebab-case-keyword ~arg) arg)
+        parent'                                                                                                                                            (if kebab-case? `(transform-keys->kebab-case-keyword ~parent) parent)
+        keys-not-found                                                                                                                                     `(keys-not-found ~parent' ~required-keys-in-parent)
+        params                                                                                                                                             (if (nil? this) [ctx arg' parent'] [this ctx arg' parent'])
+        let-mapping                                                                                                                                        (vec (interleave args params))]
 
     `(if (seq ~keys-not-found)
        (error/error {:message (format "%s keys are needed in parent" ~keys-not-found)})
        (if ~authorized?
          (let [~result (do (let ~let-mapping ~@body))]
            (cond-> ~result
-                   ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
+             ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
          (resolve-as nil {:message "Unauthorized"})))))
 
 (defn parse-fdecl
@@ -55,16 +55,16 @@
   (fdecl이라는 이름은 core의 defn 구현에서 쓰이는 이름을 따왔습니다)
   "
   [fdecl]
-  (let [[doc-string args] (if (string? (first fdecl))
-                            [(first fdecl) (rest fdecl)]
-                            [nil fdecl])
+  (let [[doc-string args]      (if (string? (first fdecl))
+                                 [(first fdecl) (rest fdecl)]
+                                 [nil fdecl])
         [option [args & body]] (if (map? (first args))
                                  [(first args) (rest args)]
                                  [{} args])]
     {:doc-string doc-string
-     :option option
-     :args args
-     :body body}))
+     :option     option
+     :args       args
+     :body       body}))
 
 (defmacro defresolver
   "GraphQL resolver 함수를 만듭니다.
@@ -87,22 +87,22 @@
   {:arglists '([name doc-string? option? args & body])}
   [name & fdecl]
   (let [{:keys [doc-string option args body]} (parse-fdecl fdecl)
-        header (if doc-string [name doc-string] [name])]
+        header                                (if doc-string [name doc-string] [name])]
     `(defn ~@header [ctx# arg# parent#]
-       (wrap-resolver-body {:ctx ctx#
-                            :arg arg#
+       (wrap-resolver-body {:ctx    ctx#
+                            :arg    arg#
                             :parent parent#} ~option ~args ~body))))
 
 (defmacro defnode
   {:arglists '([node-type doc-string? option? args & body])}
   [node-type & fdecl]
   (let [{:keys [option args body]} (parse-fdecl fdecl)
-        node-type (keyword node-type)
-        node-type-pascal (csk/->PascalCaseKeyword node-type)]
+        node-type                  (keyword node-type)
+        node-type-pascal           (csk/->PascalCaseKeyword node-type)]
     `(defmethod relay/node-resolver ~node-type [this# ctx# arg# parent#]
-       (let [result# (wrap-resolver-body {:this this#
-                                          :ctx ctx#
-                                          :arg arg#
+       (let [result# (wrap-resolver-body {:this   this#
+                                          :ctx    ctx#
+                                          :arg    arg#
                                           :parent parent#} ~option ~args ~body)]
          (-> result#
              (relay/build-node ~node-type)
@@ -168,17 +168,17 @@
                                      post-process-row
                                      additional-filter-opts]}]
   {:pre [(some? db-key)]}
-  (let [parent-id (-> parent :id relay/decode-global-id->db-id)
+  (let [parent-id            (-> parent :id relay/decode-global-id->db-id)
         superfetch-arguments (merge additional-filter-opts
                                     {:id           parent-id
                                      :page-options nil})
-        superfetch-id (hash superfetch-arguments)]
+        superfetch-id        (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
-                      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-                          (prom/then (fn [rows]
-                                       (-> (first rows)
-                                           (relay/build-node node-type post-process-row)
-                                           transform-keys->camelCaseKeyword)))))))
+      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+          (prom/then (fn [rows]
+                       (-> (first rows)
+                           (relay/build-node node-type post-process-row)
+                           transform-keys->camelCaseKeyword)))))))
 
 (defn resolve-by-fk
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
@@ -200,18 +200,18 @@
                                      post-process-row fk-in-parent
                                      additional-filter-opts]}]
   {:pre [(some? db-key)]}
-  (let [fk (get parent fk-in-parent)
+  (let [fk                   (get parent fk-in-parent)
         ; TODO: 생각해볼 점: 여기서 fk가 nil이면 아래의 로직을 안 타고 바로 nil을 반환해도 될 것 같음
-        page-options nil  ; don't limit page size to 1 because superfetcher fetches many rows
+        page-options         nil  ; don't limit page size to 1 because superfetcher fetches many rows
         superfetch-arguments (merge additional-filter-opts
                                     {:id           fk
                                      :page-options page-options})
-        superfetch-id (hash superfetch-arguments)]
+        superfetch-id        (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
-                      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-                          (prom/then (fn [rows] (-> (first rows)
-                                                    (relay/build-node node-type post-process-row)
-                                                    transform-keys->camelCaseKeyword)))))))
+      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+          (prom/then (fn [rows] (-> (first rows)
+                                    (relay/build-node node-type post-process-row)
+                                    transform-keys->camelCaseKeyword)))))))
 
 (defn resolve-connection
   "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
@@ -237,17 +237,18 @@
                                      pre-process-arguments
                                      post-process-row
                                      additional-filter-opts]}]
-  (let [db (get context db-key)
-        arguments (-> arguments
-                      common-pre-process-arguments
-                      (nullify-empty-string-arguments [:after :before])
-                      pre-process-arguments)
+  (let [db                                                                      (get context db-key)
+        arguments                                                               (-> arguments
+                                                                                    common-pre-process-arguments
+                                                                                    (nullify-empty-string-arguments [:after :before])
+                                                                                    pre-process-arguments)
         {:keys [order-by
                 page-direction
                 page-size
-                cursor-id] :as page-options} (relay/build-page-options arguments)
-        filter-options (relay/build-filter-options arguments additional-filter-opts)
-        rows (table-fetcher db filter-options page-options)]
+                cursor-id]
+         :as   page-options} (relay/build-page-options arguments)
+        filter-options                                                          (relay/build-filter-options arguments additional-filter-opts)
+        rows                                                                    (table-fetcher db filter-options page-options)]
     (->> rows
          (map #(relay/build-node % node-type post-process-row))
          (relay/build-connection order-by page-direction page-size cursor-id)
@@ -274,19 +275,19 @@
                                     post-process-row pk-list-name-in-parent
                                     additional-filter-opts]}]
   {:pre [(some? db-key)]}
-  (let [db (get context db-key)
-        arguments (-> arguments
-                      common-pre-process-arguments
-                      (nullify-empty-string-arguments [:after :before]))
+  (let [db                                                                      (get context db-key)
+        arguments                                                               (-> arguments
+                                                                                    common-pre-process-arguments
+                                                                                    (nullify-empty-string-arguments [:after :before]))
         {:keys [order-by
                 page-direction
                 page-size
                 cursor-id]
          :as   page-options} (relay/build-page-options arguments)
-        pk-list (get parent pk-list-name-in-parent)
-        decoded-pk-list (map relay/decode-global-id->db-id pk-list)
-        filter-options (relay/build-filter-options (assoc arguments (or pk-list-name :ids) decoded-pk-list) additional-filter-opts)
-        rows (table-fetcher db filter-options page-options)]
+        pk-list                                                                 (get parent pk-list-name-in-parent)
+        decoded-pk-list                                                         (map relay/decode-global-id->db-id pk-list)
+        filter-options                                                          (relay/build-filter-options (assoc arguments (or pk-list-name :ids) decoded-pk-list) additional-filter-opts)
+        rows                                                                    (table-fetcher db filter-options page-options)]
     (->> rows
          (map #(relay/build-node % node-type post-process-row))
          (relay/build-connection order-by page-direction page-size cursor-id)
@@ -310,26 +311,26 @@
                                     post-process-row
                                     additional-filter-opts]}]
   {:pre [(some? db-key)]}
-  (let [arguments (-> arguments
-                      common-pre-process-arguments
-                      (nullify-empty-string-arguments [:after :before]))
-        parent-id (-> parent :id relay/decode-global-id->db-id)
+  (let [arguments                                                               (-> arguments
+                                                                                    common-pre-process-arguments
+                                                                                    (nullify-empty-string-arguments [:after :before]))
+        parent-id                                                               (-> parent :id relay/decode-global-id->db-id)
         {:keys [order-by
                 page-direction
                 page-size
                 cursor-id]
          :as   page-options} (relay/build-page-options arguments)
-        superfetch-arguments (merge additional-filter-opts
-                                    {:id           parent-id
-                                     :page-options page-options})
-        superfetch-id (hash superfetch-arguments)]
+        superfetch-arguments                                                    (merge additional-filter-opts
+                                                                                       {:id           parent-id
+                                                                                        :page-options page-options})
+        superfetch-id                                                           (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
-                      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-                          (prom/then (fn [rows]
-                                       (->> rows
-                                            (map #(relay/build-node % node-type post-process-row))
-                                            (relay/build-connection order-by page-direction page-size cursor-id)
-                                            transform-keys->camelCaseKeyword)))))))
+      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+          (prom/then (fn [rows]
+                       (->> rows
+                            (map #(relay/build-node % node-type post-process-row))
+                            (relay/build-connection order-by page-direction page-size cursor-id)
+                            transform-keys->camelCaseKeyword)))))))
 
 ; TODO 다른 mutation helper 함수와 통합
 (defn pack-mutation-result
@@ -348,14 +349,14 @@
                             additional-filter-opts
                             pre-process-arguments
                             post-process-row]}]
-  (let [db (db-key ctx)
+  (let [db              (db-key ctx)
         {:keys [input]} args
-        input (merge (-> input
-                         util/keyword-vals->string-vals
-                         decode-global-id-in-arguments
-                         decode-global-ids-in-arguments
-                         pre-process-arguments)
-                     additional-filter-opts)]
+        input           (merge (-> input
+                                   util/keyword-vals->string-vals
+                                   decode-global-id-in-arguments
+                                   decode-global-ids-in-arguments
+                                   pre-process-arguments)
+                               additional-filter-opts)]
     (try
       (if-let [id (->> input
                        (mutation-fn db)
@@ -377,15 +378,15 @@
                             additional-filter-opts
                             pre-process-arguments
                             post-process-row]}]
-  (let [db (db-key ctx)
+  (let [db                 (db-key ctx)
         {:keys [input id]} args
-        decoded-id (relay/decode-global-id->db-id id)
-        input (merge (-> input
-                         util/keyword-vals->string-vals
-                         decode-global-id-in-arguments
-                         decode-global-ids-in-arguments
-                         pre-process-arguments)
-                     additional-filter-opts)]
+        decoded-id         (relay/decode-global-id->db-id id)
+        input              (merge (-> input
+                                      util/keyword-vals->string-vals
+                                      decode-global-id-in-arguments
+                                      decode-global-ids-in-arguments
+                                      pre-process-arguments)
+                                  additional-filter-opts)]
     (try
       (when-not (mutation-fn db input decoded-id)
         (throw (ex-info "DB update의 대상이 잘못되었습니다" {:target-id decoded-id})))
@@ -407,5 +408,30 @@
       (when-not (mutation-fn db additional-filter-opts decoded-id)
         (throw (ex-info "DB delete의 대상이 잘못되었습니다" {:target-id decoded-id})))
       (response/->delete-response id)
+      (catch Exception e
+        (response/server-error (get-in ctx [:config :profile]) e)))))
+
+(defn resolve-update-multi
+  [ctx args _parent {:keys [node-type
+                            db-key
+                            table-fetcher
+                            mutation-fn
+                            mutation-tag
+                            additional-filter-opts
+                            pre-process-arguments
+                            post-process-row]}]
+  (let [db              (db-key ctx)
+        {:keys [input]} args
+        input           (merge (-> input
+                                   util/keyword-vals->string-vals
+                                   decode-global-id-in-arguments
+                                   decode-global-ids-in-arguments
+                                   pre-process-arguments)
+                               additional-filter-opts)]
+    (try
+      (let [affected-ids (mutation-fn db input)]
+        (response/->mutation-response (->> (table-fetcher db {:ids affected-ids} {})
+                                           (map #(relay/build-node % node-type post-process-row)))
+                                      mutation-tag))
       (catch Exception e
         (response/server-error (get-in ctx [:config :profile]) e)))))

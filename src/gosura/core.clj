@@ -60,7 +60,8 @@
       #"resolve-connection-by-(.*)" r/resolve-connection-by-fk
       #"resolve-create-one" r/resolve-create-one
       #"resolve-update-one" r/resolve-update-one
-      #"resolve-delete-one" r/resolve-delete-one)
+      #"resolve-delete-one" r/resolve-delete-one
+      #"resolve-update-multi" r/resolve-update-multi)
     (catch Exception e
       (f/fail (format "Resolver matching failed because of %s" (ex-message e))))))
 
