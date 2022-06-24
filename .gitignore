@@ -18,3 +18,5 @@ pom.xml.asc
 
 .idea/
 gosura.iml
+
+.clj-kondo/com.github.seancorfield

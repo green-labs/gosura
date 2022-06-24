@@ -6,6 +6,15 @@
    [:kebab-case? {:optional true} boolean?]
    [:return-camel-case? {:optional true} boolean?]])
 
+(def base-root-query-config-schema
+  [:map
+   [:settings {:optional true} resolver-settings-schema]
+   [:node-type {:optional true} keyword?]
+   [:db-key {:optional true} keyword?]
+   [:post-process-row {:optional true} symbol?]
+   [:pre-process-arguments {:optional true} symbol?]
+   [:table-fetcher symbol?]])
+
 (def resolvers-map-schema
   "resolvers 설정에 필요한 스키마 정의"
   [:map {:closed true}
@@ -16,13 +25,8 @@
    [:filters {:optional true} map?]
    [:pre-process-arguments {:optional true} symbol?]
    [:resolvers [:map
-                [:resolve-connection {:optional true} [:map
-                                                       [:settings {:optional true} resolver-settings-schema]
-                                                       [:node-type {:optional true} keyword?]
-                                                       [:db-key {:optional true} keyword?]
-                                                       [:post-process-row {:optional true} symbol?]
-                                                       [:pre-process-arguments {:optional true} symbol?]
-                                                       [:table-fetcher symbol?]]]
+                [:resolve-connection {:optional true} base-root-query-config-schema]
+                [:resolve-one {:optional true} base-root-query-config-schema]
                 [:resolve-by-fk {:optional true} [:map
                                                   [:settings {:optional true} resolver-settings-schema]
                                                   [:node-type {:optional true} keyword?]
