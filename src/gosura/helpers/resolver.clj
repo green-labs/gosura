@@ -420,9 +420,9 @@
   (let [db             (get context db-key)
         arguments      (-> arguments
                            common-pre-process-arguments
-                           (nullify-empty-string-arguments [:after :before])
                            pre-process-arguments)
         filter-options (relay/build-filter-options arguments additional-filter-opts)
         row            (table-fetcher db filter-options {})]
-    (->> (relay/build-node row node-type post-process-row)
-         transform-keys->camelCaseKeyword)))
+    (-> (relay/build-node row node-type post-process-row)
+        transform-keys->camelCaseKeyword
+        (tag-with-type (csk/->PascalCaseKeyword node-type)))))
