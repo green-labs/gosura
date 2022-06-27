@@ -430,7 +430,7 @@
     (try
       (let [affected-ids (mutation-fn db input)]
         (response/->mutation-response (->> (table-fetcher db {:ids affected-ids} {})
-                                           (map #((relay/build-node % node-type post-process-row))))
+                                           (map #(relay/build-node % node-type post-process-row)))
                                       mutation-tag))
       (catch Exception e
         (response/server-error (get-in ctx [:config :profile]) e)))))
