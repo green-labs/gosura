@@ -434,3 +434,20 @@
                                       mutation-tag))
       (catch Exception e
         (response/server-error (get-in ctx [:config :profile]) e)))))
+
+(defn resolve-one
+  [context arguments _parent {:keys [node-type
+                                     db-key
+                                     fetch-one
+                                     pre-process-arguments
+                                     post-process-row
+                                     additional-filter-opts]}]
+  (let [db             (get context db-key)
+        arguments      (-> arguments
+                           common-pre-process-arguments
+                           pre-process-arguments)
+        filter-options (relay/build-filter-options arguments additional-filter-opts)
+        row            (fetch-one db filter-options {})]
+    (-> (relay/build-node row node-type post-process-row)
+        transform-keys->camelCaseKeyword
+        (tag-with-type (csk/->PascalCaseKeyword node-type)))))
