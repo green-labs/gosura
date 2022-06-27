@@ -413,7 +413,7 @@
 (defn resolve-one
   [context arguments _parent {:keys [node-type
                                      db-key
-                                     table-fetcher
+                                     fetch-one
                                      pre-process-arguments
                                      post-process-row
                                      additional-filter-opts]}]
@@ -422,7 +422,7 @@
                            common-pre-process-arguments
                            pre-process-arguments)
         filter-options (relay/build-filter-options arguments additional-filter-opts)
-        row            (table-fetcher db filter-options {})]
+        row            (fetch-one db filter-options {})]
     (-> (relay/build-node row node-type post-process-row)
         transform-keys->camelCaseKeyword
         (tag-with-type (csk/->PascalCaseKeyword node-type)))))
