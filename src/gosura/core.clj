@@ -44,7 +44,8 @@
       (medley/update-existing :pre-process-arguments requiring-resolve)
       (medley/update-existing :post-process-row requiring-resolve)
       (medley/update-existing :superfetcher requiring-resolve)
-      (medley/update-existing :mutation-fn requiring-resolve)))
+      (medley/update-existing :mutation-fn requiring-resolve)
+      (medley/update-existing :fetch-one requiring-resolve)))
 
 (defn match-resolve-fn
   "resolver-config로부터 전달 받은 resolver 값에 따라
