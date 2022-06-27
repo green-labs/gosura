@@ -61,6 +61,7 @@
       #"resolve-create-one" r/resolve-create-one
       #"resolve-update-one" r/resolve-update-one
       #"resolve-delete-one" r/resolve-delete-one
+      #"resolve-update-multi" r/resolve-update-multi
       #"resolve-one" r/resolve-one)
     (catch Exception e
       (f/fail (format "Resolver matching failed because of %s" (ex-message e))))))

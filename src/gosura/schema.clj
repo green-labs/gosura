@@ -6,6 +6,18 @@
    [:kebab-case? {:optional true} boolean?]
    [:return-camel-case? {:optional true} boolean?]])
 
+
+(def base-mutation-config-schema
+  [:map
+   [:settings {:optional true} resolver-settings-schema]
+   [:node-type {:optional true} keyword?]
+   [:db-key {:optional true} keyword?]
+   [:post-process-row {:optional true} symbol?]
+   [:pre-process-arguments {:optional true} symbol?]
+   [:table-fetcher symbol?]
+   [:mutation-fn symbol?]
+   [:mutation-tag keyword?]])
+
 (def base-root-query-multi-config-schema
   [:map
    [:settings {:optional true} resolver-settings-schema]
@@ -43,24 +55,9 @@
                                                   [:post-process-row {:optional true} symbol?]
                                                   [:superfetcher symbol?]
                                                   [:fk-in-parent keyword?]]]
-                [:resolve-create-one {:optional true} [:map
-                                                       [:settings {:optional true} resolver-settings-schema]
-                                                       [:node-type {:optional true} keyword?]
-                                                       [:db-key {:optional true} keyword?]
-                                                       [:post-process-row {:optional true} symbol?]
-                                                       [:pre-process-arguments {:optional true} symbol?]
-                                                       [:table-fetcher symbol?]
-                                                       [:mutation-fn symbol?]
-                                                       [:mutation-tag keyword?]]]
-                [:resolve-update-one {:optional true} [:map
-                                                       [:settings {:optional true} resolver-settings-schema]
-                                                       [:node-type {:optional true} keyword?]
-                                                       [:db-key {:optional true} keyword?]
-                                                       [:post-process-row {:optional true} symbol?]
-                                                       [:pre-process-arguments {:optional true} symbol?]
-                                                       [:table-fetcher symbol?]
-                                                       [:mutation-fn symbol?]
-                                                       [:mutation-tag keyword?]]]
+                [:resolve-create-one {:optional true} base-mutation-config-schema]
+                [:resolve-update-one {:optional true} base-mutation-config-schema]
+                [:resolve-update-multi {:optional true} base-mutation-config-schema]
                 [:resolve-delete-one {:optional true} [:map
                                                        [:settings {:optional true} resolver-settings-schema]
                                                        [:db-key {:optional true} keyword?]

@@ -410,6 +410,31 @@
       (catch Exception e
         (response/server-error (get-in ctx [:config :profile]) e)))))
 
+(defn resolve-update-multi
+  [ctx args _parent {:keys [node-type
+                            db-key
+                            table-fetcher
+                            mutation-fn
+                            mutation-tag
+                            additional-filter-opts
+                            pre-process-arguments
+                            post-process-row]}]
+  (let [db              (db-key ctx)
+        {:keys [input]} args
+        input           (merge (-> input
+                                   util/keyword-vals->string-vals
+                                   decode-global-id-in-arguments
+                                   decode-global-ids-in-arguments
+                                   pre-process-arguments)
+                               additional-filter-opts)]
+    (try
+      (let [affected-ids (mutation-fn db input)]
+        (response/->mutation-response (->> (table-fetcher db {:ids affected-ids} {})
+                                           (map #(relay/build-node % node-type post-process-row)))
+                                      mutation-tag))
+      (catch Exception e
+        (response/server-error (get-in ctx [:config :profile]) e)))))
+
 (defn resolve-one
   [context arguments _parent {:keys [node-type
                                      db-key
