@@ -357,9 +357,7 @@
                          pre-process-arguments)
                      additional-filter-opts)]
     (try
-      (if-let [id (->> input
-                       (mutation-fn db)
-                       :generated-key)] ; 한계) auto-gen key가 있는 경우에만 사용 가능
+      (if-let [id (mutation-fn db input)]
         (response/->mutation-response (-> (table-fetcher db {:id id} {})
                                           first
                                           (relay/build-node node-type post-process-row))
