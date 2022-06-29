@@ -111,24 +111,28 @@
 
 ;;; Utility functions
 
+(defn decode-value-in-args
+  "suffix를 가진 key값들을 찾아서 value가 nil이 아닌 경우 value를 디코딩한다"
+  [args suffix f]
+  (util/update-vals-having-keys args
+                                (->> (keys args)
+                                     (filter #(and (ends-with? (name %) suffix)
+                                                   (some? (% args)))))
+                                f))
+
 (defn decode-global-ids-in-arguments
   "인자 맵의 ID들(열이 ids, 그리고 -ids로 끝나는 것들)의 값을 글로벌 ID에서 ID로 디코드한다."
   [arguments]
   (-> arguments
       (medley/update-existing :ids #(map relay/decode-global-id->db-id %))
-      (util/update-vals-having-keys (->> (keys arguments)
-                                         (filter #(= [\- \i \d \s]
-                                                     (take-last 4 (name %)))))
-                                    #(map relay/decode-global-id->db-id %))))
+      (decode-value-in-args "-ids" #(map relay/decode-global-id->db-id %))))
 
 (defn decode-global-id-in-arguments
   "인자 맵의 ID들(열이 id, 그리고 -id로 끝나는 것들)의 값을 글로벌 ID에서 ID로 디코드한다."
   [arguments]
   (-> arguments
       (medley/update-existing :id relay/decode-global-id->db-id)
-      (util/update-vals-having-keys (->> (keys arguments)
-                                         (filter #(ends-with? (name %) "-id")))
-                                    relay/decode-global-id->db-id)))
+      (decode-value-in-args "-id" relay/decode-global-id->db-id)))
 
 (defn common-pre-process-arguments
   "인자 맵에 일반적인 전처리를 한다."
