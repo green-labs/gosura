@@ -134,8 +134,10 @@
   "인자 맵에 일반적인 전처리를 한다."
   [arguments]
   (->> arguments
-       transform-keys->kebab-case-keyword
-       decode-global-ids-in-arguments))
+       transform-keys->kebab-case-keyword ; it will be deleted
+       util/keyword-vals->string-vals
+       decode-global-ids-in-arguments
+       decode-global-id-in-arguments))
 
 (defn- nullify-empty-string-arguments
   [arguments ks]
