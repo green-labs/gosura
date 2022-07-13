@@ -40,6 +40,7 @@
                                    etc-keys) ; 인증 관련되어서 추가 필터를 적용하기 위함
         filter-options (merge (->> arguments-list first :filter-options) ; base filter options
                               {filter-key ids}
+                              {:batch-args arguments-list} ; 추가 필터값이 포함된 전체 argument list
                               etc-filter-options)
         page-options (-> (->> arguments-list first :page-options) ; base page options
                          (dissoc :limit))  ; (연오) foolproof: 페치할 때 LIMIT 하면 안 된다. 페치 -> ID별 그룹 -> 그룹별 LIMIT
