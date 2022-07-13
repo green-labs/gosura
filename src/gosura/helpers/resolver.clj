@@ -1,4 +1,15 @@
 (ns gosura.helpers.resolver
+  "resolver-fn 의 모음.
+
+  resolve-connection
+  resolve-connection-by-fk
+  resolve-connection-by-pk-list
+  resolve-by-fk
+  resolve-by-parent-pk
+  ...
+
+  를 resolver-fn 이라 부르자, 약속해봅니다.
+  "
   (:require [camel-snake-kebab.core :as csk]
             [clojure.string :refer [ends-with?]]
             [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
@@ -67,7 +78,7 @@
      :body body}))
 
 (defmacro defresolver
-  "GraphQL resolver 함수를 만듭니다.
+  "lacinia 용 resolver 함수를 만듭니다.
 
   입력
   name - 함수 이름

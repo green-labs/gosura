@@ -47,12 +47,14 @@
       (medley/update-existing :mutation-fn requiring-resolve)
       (medley/update-existing :fetch-one requiring-resolve)))
 
-(defn match-resolve-fn
-  "resolver-config로부터 전달 받은 resolver 값에 따라
-   resolver-helper에서 정의한 적절한 resolver함수를 지정한다"
-  [resolver]
+(defn find-resolver-fn
+  "resolver-key 에 따라 적절한 resolver-fn 함수를 리턴한다.
+
+   보통 ns `gosura.helpers.resolver` 의 resolver-fn 를 리턴한다. "
+  [resolver-key]
+  {:pre [(keyword? resolver-key)]}
   (try
-    (condp re-matches (name resolver)
+    (condp re-matches (name resolver-key)
       #"resolve-connection" r/resolve-connection
       #"resolve-by-parent-pk-(.*)" r/resolve-by-parent-pk
       #"resolve-by-fk" r/resolve-by-fk
@@ -65,7 +67,7 @@
       #"resolve-update-multi" r/resolve-update-multi
       #"resolve-one" r/resolve-one)
     (catch Exception e
-      (f/fail (format "Resolver matching failed because of %s" (ex-message e))))))
+      (f/fail (format "Can't find resolver-fn because of %s" (ex-message e))))))
 
 (defn generate-one
   "GraphQL relay spec에 맞는 기본적인 resolver들을 자동 생성한다.
@@ -142,7 +144,7 @@
                                                    required-keys (s/difference (set required-keys-in-parent) (set (keys parent)))
                                                    _ (when (seq required-keys)
                                                        (f/fail (format "%s keys are needed in parent" required-keys)))
-                                                   resolver-fn (match-resolve-fn resolver)
+                                                   resolver-fn (find-resolver-fn resolver)
                                                    added-params (merge params {:additional-filter-opts (merge auth-filter-opts
                                                                                                               config-filter-opts)})]
                                                   (cond-> (resolver-fn ctx args parent added-params)
