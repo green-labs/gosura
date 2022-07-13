@@ -1,10 +1,11 @@
 (ns gosura.core
-  "GraphQL relay spec에 맞는 기본적인 resolver들을 자동 생성하려합니다.
-   이에 필요한 schema, generator 등을 정의합니다
-   edn 파일로 정의하지 않으면 자동생성되지 않으니 강제 사항은 아닙니다
-   필요한 resolver만 자동 생성하고 custom하게 작성해야하는 경우는 따로 작성하면 됩니다
+  "relay.dev spec 의 Connection, Node 를 구현하는
+   lacinia schema, resolver-fn 을 생성합니다.
 
-   주의) namespace를 임의로 지정하기 보다는 ns를 정의를 하고 해당 네임스페이스를 사용하기시 바랍니다(ns 선언 외 빈 파일)"
+   gosura resolver-config edn 파일을 정의하면 생성합니다.
+   gosura 에서 생성하는 resolver-fn 이 부적합 할 때는 따로 작성하는 것이 더 적절할 수 있습니다.
+
+   주의) resolver-config edn 에 사용하는 ns 는 (ns 선언만 있는 빈 파일을 만들고) 그 네임스페이스를 사용하세요."
   (:require [camel-snake-kebab.core :as csk]
             [clojure.set :as s]
             [clojure.tools.logging :as log]
@@ -70,14 +71,11 @@
       (f/fail (format "Can't find resolver-fn because of %s" (ex-message e))))))
 
 (defn generate-one
-  "GraphQL relay spec에 맞는 기본적인 resolver들을 자동 생성한다.
-   제공하고 있는 resolvers의 종류는 아래와 같다.
-   - resolve-connection: GraphQL relay spec에서 connection object를 조회할 때
-   - resolve-by-fk: fk로 조회한 값
-   - resolve-connection-by-xxx: xxx는 보통 fk로, xxx에 따른 connection object를 조회할 때 사용한다
+  "gosura resolver-config edn 을 받아
+   :target-ns 에 resolver-fn 을 생성(intern)합니다.
 
-   m: 설정값의 hash-map
-   예시)
+   gosura `resolver-config` edn 예)
+   ```
    {:target-ns         ns
     :resolvers         {:resolve-connection               {:node-type             node-type
                                                            :db-key                db-key
@@ -93,6 +91,7 @@
                                                            :node-type         node-type
                                                            :superfetcher      superfetcher/->FetchByExampleId
                                                            :post-process-row  post-process-row}}}
+   ```
    "
   [resolver-config]
   (when-not (m/validate schema/resolvers-map-schema resolver-config)
