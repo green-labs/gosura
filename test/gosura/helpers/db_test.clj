@@ -3,7 +3,7 @@
             [gosura.helpers.db :as db]))
 
 (deftest batch-args-filter-pred-test
-  (testing "batch-args를 HoneySQL에서 사용할 수 있는 데이터로 반환한다."
+  (testing "batch-args를 HoneySQL에서 사용할 수 있는 데이터로 반환합니다."
     (let [result (db/batch-args-filter-pred
                   [{:country-code "JP", :id "1204"}
                    {:country-code "JP", :id "1205"}
