@@ -1,0 +1,18 @@
+(ns gosura.helpers.db-test
+  (:require [clojure.test :refer [deftest is testing run-tests]]
+            [gosura.helpers.db :as db]))
+
+(deftest batch-args-filter-pred-test
+  (testing "batch-args를 HoneySQL에서 사용할 수 있는 데이터로 반환한다."
+    (let [result (db/batch-args-filter-pred
+                  [{:country-code "JP", :id "1204"}
+                   {:country-code "JP", :id "1205"}
+                   {:country-code "KR", :id "1206"}])]
+      (is (= [:in [:composite :country-code :id]
+              [[:composite "JP" "1204"]
+               [:composite "JP" "1205"]
+               [:composite "KR" "1206"]]]
+             result)))))
+
+(comment
+  (run-tests))
