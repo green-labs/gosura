@@ -76,15 +76,14 @@
      * env - {:db #object[com.zaxxer.hikari.HikariDataSource] ...}"
   [many
    env
-   {:keys [db-key table-fetcher id-column filter-key]}]
+   {:keys [db-key table-fetcher id-column]}]
   (let [db (get env db-key)
         arguments-list (map :arguments many)
         ids (->> arguments-list
                  (map :id)
                  (map str))
-        filter-options (merge (->> arguments-list first :filter-options) ; base filter options
-                              {:batch-args arguments-list} ; 추가 필터값이 포함된 전체 argument list
-                              {filter-key ids})
+        filter-options (-> (merge (->> arguments-list first :filter-options) ; base filter options
+                                  {:batch-args (map #(dissoc % :page-options) arguments-list)}))
         page-options (-> (->> arguments-list first :page-options) ; base page options
                          (dissoc :limit))  ; (연오) foolproof: 페치할 때 LIMIT 하면 안 된다. 페치 -> ID별 그룹 -> 그룹별 LIMIT
         id->rows (->> (table-fetcher db filter-options page-options)
