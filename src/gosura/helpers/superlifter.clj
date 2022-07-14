@@ -63,10 +63,17 @@
          (superfetch many# env# ~params)))))
 
 (defn superfetch-v2
-  "
-  ## 인자
-  * id-column   superfetch 결과의 매핑 단위가 되는 (parent 하나에 대응되는) 컬럼 이름
-  * filter-key  table-fetcher에서 in 조건을 걸어줄 컬럼 이름"
+  "superfetcher로부터 N개의 쿼리 전달받아 벌크로 fetch 합니다.
+   fetch 할 때는 인자로 받은 table-fetcher 함수를 이용합니다.
+
+   table-fetcher에는 `filter-options` 가 전달되는데, 
+   해당 맵 안에 `batch-args` 에는 가공되지 않은 전체 argument가 들어있습니다.
+   
+   ## 인자
+     * many - id와 argument를 가진 superfetcher.Fetch 목록
+              예: (#farmmorning.api_global.country_region.superfetcher.Fetch
+                   {:id 1501533529, :arguments {:country-code \"JP\", :id \"1204\", :page-options nil}} ...)
+     * env - {:db #object[com.zaxxer.hikari.HikariDataSource] ...}"
   [many
    env
    {:keys [db-key table-fetcher id-column filter-key]}]
@@ -90,8 +97,7 @@
    defrecord를 생성하므로 name은 PascalCase로 작성하는 걸 원칙으로 한다
    호출할 때에는 ->name 으로 사용한다
    생성예시) (superfetcher FetchByExampleId {...})
-   사용예시) ->FetchByExampleId
-   "
+   사용예시) ->FetchByExampleId"
   [name params]
   (let [id (symbol "id")
         arguments (symbol "arguments")]
