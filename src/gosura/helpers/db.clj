@@ -162,12 +162,15 @@
    
    ## HoneySQL을 통해 SQL 문으로 변환한 결과
      => [\"WHERE (country_code, id) IN ((?, ?), (?, ?), (?, ?))\" \"JP\" \"1204\" \"JP\" \"1205\" \"KR\" \"1206\"]"
-  [batch-args]
-  (let [column-names (->> batch-args first keys)
-        column-values (map #((apply juxt column-names) %) batch-args)]
-    [:in
-     (cons :composite column-names)
-     (map #(cons :composite %) column-values)]))
+  ([batch-args]
+   (batch-args-filter-pred batch-args nil))
+   ([batch-args table-name-alias]
+    (let [column-names (->> batch-args first keys)
+          column-values (map #((apply juxt column-names) %) batch-args)] 
+      [:in
+       (cons :composite (->> column-names
+                             (map #(col-with-table-name table-name-alias %))))
+       (map #(cons :composite %) column-values)])))
 
 (def query-timeout "waiting to complete query state, unit time: seconds" 10)
 
