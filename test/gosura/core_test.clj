@@ -2,7 +2,8 @@
   (:require [clojure.set :as set]
             [clojure.test :refer [deftest is testing]]
             [gosura.core :as gosura]
-            [gosura.helpers.resolver :as gosura-resolver]))
+            [gosura.helpers.resolver :as gosura-resolver]
+            [failjure.core :as f]))
 
 (def normal-data (-> "test/resources/gosura/sample_resolver_configs.edn"
                      slurp
@@ -21,20 +22,18 @@
   #_(testing "settings in return-camel-case? 가 잘 동작한다")
   #_(testing "settings in required-keys-in-parent 가 잘 동작한다"))
 
-(deftest match-resolve-fn-test
-  (testing "gosura resolver에 필요한 match-resolve-fn은"
-    (testing "resolve-connection을 잘 매칭한다"
-      (is (= (gosura/match-resolve-fn :resolve-connection) gosura-resolver/resolve-connection)))
-    (testing "resolve-by-fk를 잘 매칭한다"
-      (is (= (gosura/match-resolve-fn :resolve-by-fk) gosura-resolver/resolve-by-fk)))
-    (testing "resolve-connection-by-pk-list를 잘 매칭한다"
-      (is (= (gosura/match-resolve-fn :resolve-connection-by-pk-list) gosura-resolver/resolve-connection-by-pk-list)))
-    (testing "resolve-connection-by-some-id를 잘 매칭한다"
-      (is (= (gosura/match-resolve-fn :resolve-connection-by-sample-id) gosura-resolver/resolve-connection-by-fk)))
-    (testing "매칭할게 없다면 에러 메시지를 잘 뱉어낸다"
-      (let [bad-resolver :bad-resolver]
-        (is (= (format "Resolver matching failed because of No matching clause: %s" (name bad-resolver))
-               (:message (gosura/match-resolve-fn bad-resolver))))))))
+(deftest find-resolver-fn-test
+  (testing "find-resolver-fn 가"
+    (testing "resolve-connection 을 잘 찾는다"
+      (is (= (gosura/find-resolver-fn :resolve-connection) gosura-resolver/resolve-connection)))
+    (testing "resolve-by-fk 를 잘 찾는다"
+      (is (= (gosura/find-resolver-fn :resolve-by-fk) gosura-resolver/resolve-by-fk)))
+    (testing "resolve-connection-by-pk-list 를 잘 찾는다"
+      (is (= (gosura/find-resolver-fn :resolve-connection-by-pk-list) gosura-resolver/resolve-connection-by-pk-list)))
+    (testing "resolve-connection-by-some-id 를 잘 찾는다"
+      (is (= (gosura/find-resolver-fn :resolve-connection-by-sample-id) gosura-resolver/resolve-connection-by-fk)))
+    (testing "찾을 수 없다면 failed? 가 true 이다"
+      (is (f/failed? (gosura/find-resolver-fn :resolve-un-exist))))))
 
 (deftest gosura-resolver-generate-all-test
   "gosura resolver의 generate-all은"
