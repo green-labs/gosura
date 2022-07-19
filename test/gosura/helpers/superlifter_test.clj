@@ -31,7 +31,7 @@
           result (superfetch-v2 superlifter-requests {} args)]
       (are [expected target] (= expected target)
         @filter-option-args {:test-filter "filter"
-                             :batch-args [{:country-code "JP" :id "1204" :filter-options {:test-filter "filter"}}
+                             :batch-args [{:country-code "JP" :id "1204"}
                                           {:country-code "JP" :id "1123"}
                                           {:country-code "JP" :id "370"}]}
         @page-option-args {:order-by :id

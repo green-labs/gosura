@@ -83,7 +83,7 @@
                  (map :id)
                  (map str))
         base-filter-options (->> arguments-list first :filter-options)
-        batch-args (map #(dissoc % :page-options) arguments-list)
+        batch-args (map #(dissoc % :page-options :filter-options) arguments-list)
         filter-options (merge base-filter-options
                               {:batch-args batch-args})
         base-page-options (->> arguments-list first :page-options)
