@@ -16,8 +16,12 @@
                            {:id 3 :arguments {:country-code "JP" :id "370" :page-options nil}}])
 
 (deftest superlifter-v2-test
-  (testing "superlifter 요청을 받아서 db에서 값을 fetch해 올바른 순서로 반환합니다.
-            table-fetcher로 올바른 batch-args를 전달해줍니다."
+  (testing "superlifter 요청을 받아서 db에서 값을 fetch해 올바른 순서로 반환하는 과정을 테스트합니다.
+            
+            ## 테스트 목록
+            * `filter-option`, `page-option` 를 올바르게 만드는지
+            * `fetch` 함수에 `batch-args` 내려줄 때 `filter-option`, `page-option`는 제거되는지
+            * `superfetcher-v2` 함수에서 db `fetch` 후 결과 잘 반환하는지"
     (let [filter-option-args (atom {})
           page-option-args (atom {})
           args {:db-key :db
