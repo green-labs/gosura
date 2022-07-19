@@ -9,7 +9,8 @@
                                                              :page-direction :forward
                                                              :cursor-id nil
                                                              :cursor-ordered-value nil
-                                                             :page-size 10}
+                                                             :page-size 10
+                                                             :limit 10}
                                               :filter-options {:test-filter "filter"}}}
                            {:id 2 :arguments {:country-code "JP" :id "1123" :page-options nil}}
                            {:id 3 :arguments {:country-code "JP" :id "370" :page-options nil}}])
