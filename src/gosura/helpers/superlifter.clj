@@ -76,7 +76,7 @@
      * env - {:db #object[com.zaxxer.hikari.HikariDataSource] ...}"
   [many
    env
-   {:keys [db-key table-fetcher id-column]}]
+   {:keys [db-key table-fetcher id-in-parent]}]
   (let [db (get env db-key)
         arguments-list (map :arguments many)
         ids (->> arguments-list
@@ -89,8 +89,8 @@
         base-page-options (->> arguments-list first :page-options)
         page-options (dissoc base-page-options :limit)  ; (연오) foolproof: 페치할 때 LIMIT 하면 안 된다. 페치 -> ID별 그룹 -> 그룹별 LIMIT
         id->rows (->> (table-fetcher db filter-options page-options)
-                      (map #(update % id-column str))  ; ids가 str로 입력되므로 맞춤
-                      (group-by id-column))]
+                      (map #(update % id-in-parent str))  ; ids가 str로 입력되므로 맞춤
+                      (group-by id-in-parent))]
     (map id->rows ids))) ; rows를 ids 순서대로 배치
 
 (defmacro superfetcher-v2
