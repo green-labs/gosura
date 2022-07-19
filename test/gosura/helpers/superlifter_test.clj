@@ -15,7 +15,7 @@
                                  [{:id "1204" :title "title1"}
                                   {:id "370" :title "title2"}
                                   {:id "1123" :title "title3"}])
-                :id-column :id}
+                :id-in-parent :id}
           result (superfetch-v2 superlifter-requests {} args)]
       (are [expected target] (= expected target)
         @filter-option-args {:batch-args [{:country-code "JP" :id "1204"}
