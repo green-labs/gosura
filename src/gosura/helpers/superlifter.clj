@@ -82,10 +82,12 @@
         ids (->> arguments-list
                  (map :id)
                  (map str))
-        filter-options (-> (merge (->> arguments-list first :filter-options) ; base filter options
-                                  {:batch-args (map #(dissoc % :page-options) arguments-list)}))
-        page-options (-> (->> arguments-list first :page-options) ; base page options
-                         (dissoc :limit))  ; (연오) foolproof: 페치할 때 LIMIT 하면 안 된다. 페치 -> ID별 그룹 -> 그룹별 LIMIT
+        base-filter-options (->> arguments-list first :filter-options)
+        batch-args (map #(dissoc % :page-options) arguments-list)
+        filter-options (merge base-filter-options
+                              {:batch-args batch-args})
+        base-page-options (->> arguments-list first :page-options)
+        page-options (dissoc base-page-options :limit)  ; (연오) foolproof: 페치할 때 LIMIT 하면 안 된다. 페치 -> ID별 그룹 -> 그룹별 LIMIT
         id->rows (->> (table-fetcher db filter-options page-options)
                       (map #(update % id-column str))  ; ids가 str로 입력되므로 맞춤
                       (group-by id-column))]
