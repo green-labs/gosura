@@ -44,7 +44,32 @@
                            :cursor-id nil
                            :cursor-ordered-value nil
                            :page-size 10}
-        result '([{:id "1204" :title "title1"}] [{:id "1123" :title "title3"}] [{:id "370" :title "title2"}])))))
+        result '([{:id "1204" :title "title1"}] [{:id "1123" :title "title3"}] [{:id "370" :title "title2"}]))))
+        
+        (testing "superlifter에 id-in-parent 값이 :id 가 아닐 때 잘 변환합니다."
+          (let [filter-option-args (atom {})
+                page-option-args (atom {})
+                args {:db-key :db
+                      :table-fetcher (fn [_db filter-options page-options]
+                                       (reset! filter-option-args filter-options)
+                                       (reset! page-option-args page-options)
+                                       [{:id-2 "1204" :title "title1"}
+                                        {:id-2 "370" :title "title2"}
+                                        {:id-2 "1123" :title "title3"}])
+                      :id-in-parent :id-2}
+                result (superfetch-v2 superlifter-requests {} args)]
+            (are [expected target] (= expected target)
+              @filter-option-args {:test-filter "filter"
+                                   :batch-args [{:country-code "JP" :id-2 "1204"}
+                                                {:country-code "JP" :id-2 "1123"}
+                                                {:country-code "JP" :id-2 "370"}]}
+              @page-option-args {:order-by :id
+                                 :order-direction :asc
+                                 :page-direction :forward
+                                 :cursor-id nil
+                                 :cursor-ordered-value nil
+                                 :page-size 10}
+              result '([{:id-2 "1204" :title "title1"}] [{:id-2 "1123" :title "title3"}] [{:id-2 "370" :title "title2"}])))))
 
 (comment
   (run-tests))
