@@ -61,3 +61,47 @@
     `(api/def-superfetcher ~name [~id ~arguments]
        (fn [many# env#]
          (superfetch many# env# ~params)))))
+
+(defn superfetch-v2
+  "superfetcher로부터 N개의 쿼리 전달받아 벌크로 fetch 합니다.
+   fetch 할 때는 인자로 받은 table-fetcher 함수를 이용합니다.
+
+   table-fetcher에는 `filter-options` 가 전달되는데, 
+   해당 맵 안에 `batch-args` 에는 가공되지 않은 전체 argument가 들어있습니다.
+   
+   ## 인자
+     * many - id와 argument를 가진 superfetcher.Fetch 목록
+              예: (#farmmorning.api_global.country_region.superfetcher.Fetch
+                   {:id 1501533529, :arguments {:country-code \"JP\", :id \"1204\", :page-options nil}} ...)
+     * env - {:db #object[com.zaxxer.hikari.HikariDataSource] ...}"
+  [many
+   env
+   {:keys [db-key table-fetcher id-in-parent]}]
+  (let [db (get env db-key)
+        arguments-list (map :arguments many)
+        ids (->> arguments-list
+                 (map :id)
+                 (map str))
+        base-filter-options (->> arguments-list first :filter-options)
+        batch-args (map #(dissoc % :page-options :filter-options) arguments-list)
+        filter-options (merge base-filter-options
+                              {:batch-args batch-args})
+        base-page-options (->> arguments-list first :page-options)
+        page-options (dissoc base-page-options :limit)  ; (연오) foolproof: 페치할 때 LIMIT 하면 안 된다. 페치 -> ID별 그룹 -> 그룹별 LIMIT
+        id->rows (->> (table-fetcher db filter-options page-options)
+                      (map #(update % id-in-parent str))  ; ids가 str로 입력되므로 맞춤
+                      (group-by id-in-parent))]
+    (map id->rows ids))) ; rows를 ids 순서대로 배치
+
+(defmacro superfetcher-v2
+  "superfetcher 기본 form을 쉽게 제공한다
+   defrecord를 생성하므로 name은 PascalCase로 작성하는 걸 원칙으로 한다
+   호출할 때에는 ->name 으로 사용한다
+   생성예시) (superfetcher FetchByExampleId {...})
+   사용예시) ->FetchByExampleId"
+  [name params]
+  (let [id (symbol "id")
+        arguments (symbol "arguments")]
+    `(api/def-superfetcher ~name [~id ~arguments]
+       (fn [many# env#]
+         (superfetch-v2 many# env# ~params)))))

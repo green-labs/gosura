@@ -147,6 +147,30 @@
   ([sql page-options]
    (add-page-options sql page-options nil)))
 
+(defn batch-args-filter-pred
+  "WHERE (key1, key2) IN ((value1-1, value1-2), (value2-1, value2-2) ...)
+   꼴의 HoneySQL 식을 반환합니다.
+
+   ## 입력과 출력
+     * 입력: key가 모두 같고 value만 다른 map의 모음을 받습니다.
+            예) [{:country-code \"JP\", :id \"1204\"}
+                {:country-code \"JP\", :id \"1205\"}
+                {:country-code \"KR\", :id \"1206\"}]
+   
+     * 출력: [:in (:composite :country-code :id)
+                 ((:composite \"JP\" \"1204\") (:composite \"JP\" \"1205\") (:composite \"KR\" \"1206\"))]
+   
+   ## HoneySQL을 통해 SQL 문으로 변환한 결과
+     => [\"WHERE (country_code, id) IN ((?, ?), (?, ?), (?, ?))\" \"JP\" \"1204\" \"JP\" \"1205\" \"KR\" \"1206\"]"
+  ([batch-args]
+   (batch-args-filter-pred batch-args nil))
+  ([batch-args table-name-alias]
+   (let [column-names (->> batch-args first keys)
+         column-values (map #((apply juxt column-names) %) batch-args)]
+     [:in
+      (cons :composite (->> column-names
+                            (map #(col-with-table-name table-name-alias %))))
+      (map #(cons :composite %) column-values)])))
 
 (def query-timeout "waiting to complete query state, unit time: seconds" 10)
 
