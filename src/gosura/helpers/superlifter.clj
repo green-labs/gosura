@@ -1,6 +1,7 @@
 (ns gosura.helpers.superlifter
   (:require [com.walmartlabs.lacinia.resolve :as resolve]
-            [superlifter.api :as api]))
+            [superlifter.api :as api]
+            [clojure.set :as s]))
 
 ;; Superlifter.lacinia가 Pedestal 의존성이 있기 때문에, ns를 불러올 수 없음.
 ;; https://github.com/oliyh/superlifter/blob/master/src/superlifter/lacinia.clj
@@ -83,7 +84,9 @@
                  (map :id)
                  (map str))
         base-filter-options (->> arguments-list first :filter-options)
-        batch-args (map #(dissoc % :page-options :filter-options) arguments-list)
+        batch-args (->> arguments-list
+                        (map #(dissoc % :page-options :filter-options))
+                        (map #(s/rename-keys % {:id id-in-parent})))
         filter-options (merge base-filter-options
                               {:batch-args batch-args})
         base-page-options (->> arguments-list first :page-options)
