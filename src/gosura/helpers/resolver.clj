@@ -1,6 +1,7 @@
 (ns gosura.helpers.resolver
   (:require [camel-snake-kebab.core :as csk]
             [clojure.string :refer [ends-with?]]
+            [clojure.tools.logging :as log]
             [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [com.walmartlabs.lacinia.schema :refer [tag-with-type]]
             [gosura.auth :as auth]
@@ -8,8 +9,8 @@
             [gosura.helpers.relay :as relay]
             [gosura.helpers.response :as response]
             [gosura.helpers.superlifter :refer [with-superlifter]]
-            [gosura.util :as util :refer [transform-keys->kebab-case-keyword
-                                          transform-keys->camelCaseKeyword
+            [gosura.util :as util :refer [transform-keys->camelCaseKeyword
+                                          transform-keys->kebab-case-keyword
                                           update-resolver-result]]
             [medley.core :as medley]
             [promesa.core :as prom]
@@ -370,6 +371,7 @@
                                       mutation-tag)
         response/not-exist-error)
       (catch Exception e
+        (log/error e)
         (response/server-error (get-in ctx [:config :profile]) e)))))
 
 (defn resolve-update-one
@@ -398,6 +400,7 @@
                                         (relay/build-node node-type post-process-row))
                                     mutation-tag)
       (catch Exception e
+        (log/error e)
         (response/server-error (get-in ctx [:config :profile]) e)))))
 
 (defn resolve-delete-one
@@ -412,6 +415,7 @@
         (throw (ex-info "DB delete의 대상이 잘못되었습니다" {:target-id decoded-id})))
       (response/->delete-response id)
       (catch Exception e
+        (log/error e)
         (response/server-error (get-in ctx [:config :profile]) e)))))
 
 (defn resolve-update-multi
@@ -437,6 +441,7 @@
                                            (map #(relay/build-node % node-type post-process-row)))
                                       mutation-tag))
       (catch Exception e
+        (log/error e)
         (response/server-error (get-in ctx [:config :profile]) e)))))
 
 (defn resolve-one
