@@ -229,15 +229,16 @@
   (let [page-direction (cond first :forward
                              last :backward
                              :else :forward)
-        limit (or (case page-direction
-                    :forward first
-                    :backward last) 10)
+        page-size (or (case page-direction
+                        :forward first
+                        :backward last) 10)
         cursor (when-let [encoded-cursor (case page-direction
                                            :forward after
                                            :backward before)]
                  (decode-cursor encoded-cursor))
-        cursor-ordered-values (:ordered-values cursor)
-        cursor-id (:id cursor)
+        {cursor-id :id
+         cursor-ordered-values :ordered-values
+         cursor-values :values} cursor
         order-by (if (keyword? order-by)
                    [{(csk/->kebab-case-keyword order-by) (or order-direction :ASC)}] ;; for backward compatibility
                    order-by)
@@ -245,7 +246,8 @@
         order-by (map #(apply-page-direction-to-order-by % page-direction) order-by)]
     {:order-by             order-by
      :page-direction       page-direction
-     :cursor-id            cursor-id
-     :cursor-ordered-value (clojure.core/first cursor-ordered-values)
-     :limit                (+ limit 2)
-     :page-size            limit}))
+     :cursor-id            cursor-id                                  ;; will be deprecated
+     :cursor-ordered-value (clojure.core/first cursor-ordered-values) ;; will be deprecated
+     :cursor-values        cursor-values
+     :limit                (+ page-size 2)
+     :page-size            page-size}))

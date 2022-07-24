@@ -26,19 +26,49 @@
           (keyword (str table-name "." col-name)))
         (keyword col-name)))))
 
+(defn order-by->comparison
+  [{:keys [column direction value]}]
+  (let [operator (case direction
+                       :ASC :>
+                       :DESC :<)]
+    [operator column value]))
+
 (defn cursor-filter-pred
+  "
+  Example:
+  order-by: [[:updated-at :DESC] [:id :ASC]]
+  cursor-values: {:updated-at 1234
+                  :id 100}
+
+  output: [:or [:< :updated-at 1234]
+               [:and [:= :updated-at 1234] [:> :id 100]]]"
   ([{:as   _page-options
-     :keys [order-by order-direction cursor-id cursor-ordered-value]}
+     :keys [order-by cursor-values]}
     table-name-alias]
-   (when (and order-by cursor-id)
-     (let [operator ({:asc  :>=
-                      :desc :<=} order-direction :>=)
-           id       (col-with-table-name table-name-alias :id)]
-       (if (= order-by id)
-         [operator id cursor-id]
-         [operator (sql-helper/columns order-by id) [cursor-ordered-value cursor-id]]))))
+   (when (and order-by cursor-values)
+     (let [orders (for [[column direction] order-by]
+                    {:column    (col-with-table-name table-name-alias column)
+                     :direction direction
+                     :value     (get cursor-values column)})
+           orders (reverse orders)]
+       (reduce (fn [acc {:keys [column value] :as order-by}]
+                 (if (empty? acc)
+                   (order-by->comparison order-by)
+                   [:or (order-by->comparison order-by)
+                    [:and [:= column value] acc]]))
+               []
+               orders))))
   ([page-options]
    (cursor-filter-pred page-options nil)))
+
+(comment
+  (cursor-filter-pred {:order-by [[:price :ASC] [:updated-at :DESC] [:id :ASC]]
+                       :cursor-values {:updated-at 1234
+                                       :price 10000
+                                       :id 100}})
+  [:or [:> :price 10000]
+       [:and [:= :price 10000] [:or [:< :updated-at 1234]
+                                    [:and [:= :updated-at 1234] [:> :id 100]]]]])
 
 (defn order-by-page-options
   "정렬 기준 값(order-by)과 ID를 정렬 방향(order-direction)에 맞춰 정렬하도록 하는 DSL을 만든다.
@@ -135,13 +165,15 @@
             join-rules)))
 
 (defn add-page-options
-  ([sql {:keys [order-direction order-by limit offset]} table-name-alias]
-   (let [order-by        (col-with-table-name table-name-alias order-by)
-         id              (col-with-table-name table-name-alias :id)
-         order-direction (or order-direction :asc)]
+  "
+  Example
+  order-by: [[:updated-at :DESC] [:id :ASC]]"
+  ([sql {:keys [order-by limit offset]} table-name-alias]
+   (let [order-by (map (fn [[col dir]]
+                         [(col-with-table-name table-name-alias col) dir])
+                       order-by)]
      (cond-> sql
-       order-by (assoc :order-by [[order-by order-direction]
-                                  [id       order-direction]])
+       order-by (assoc :order-by order-by)
        offset (assoc :offset offset)
        limit (assoc :limit limit))))
   ([sql page-options]
