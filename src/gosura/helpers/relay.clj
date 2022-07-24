@@ -222,9 +222,8 @@
    * order-by는 enum일 수도(기존 버전), 맵의 리스트일 수도 있음 (새 버전, [{:id :ASC} {:updatedAt :DESC}])"
   [{:keys [first last
            after before
-           order-by order-direction
-           order-field->column]
-    :or   {order-by {:id :ASC}}
+           order-by order-direction]
+    :or   {order-by [{:id :ASC}]}
     :as   args}]
   (validate-connection-arguments args)
   (let [page-direction (cond first :forward
