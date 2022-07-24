@@ -190,15 +190,6 @@
                     {:side      :client
                      :caused-by {:arguments (select-keys arguments [:after :before])}}))))
 
-(defn gql-order-by->sql-order-by
-  "GraphQL 쿼리가 받은 order-by 리스트를 SQL 문법으로 변환합니다.
-  예: [{:order :ASC} {:buyable-products-count :DESC} {:updated-at :DESC}]
-  -> [[:dcss/order :ASC] [:dcpc/buyable-products-count :DESC] [:dc/updated-at :DESC]]"
-  [order-by order-field->column]
-  (let [[order-field order-direction] (first order-by)
-        order-column (order-field->column order-field)]
-    [order-column order-direction]))
-
 (defn reverse-direction [dir]
   (case dir
     :ASC :DESC
@@ -214,6 +205,15 @@
     (case page-direction
       :forward order-by
       :backward [column (reverse-direction direction)])))
+
+(defn parse-order-by
+  "GraphQL 쿼리의 orderBy argument를 파싱하여, pair들의 리스트로 변환한다
+  order-bys: [{:col1 :ASC} {:col2 :DESC}]
+  output: [[:col1 :ASC] [:col2 :DESC]]"
+  [order-by]
+  (if (not-every? #(= (count %) 1) order-by)
+    (throw (ex-info "Each element of orderBy argument must be of length 1" {}))
+    (map first order-by)))
 
 (defn build-page-options
   "relay connection 조회에 필요한 page options를 빌드합니다.
@@ -242,7 +242,7 @@
         order-by (if (keyword? order-by)
                    [{(csk/->kebab-case-keyword order-by) (or order-direction :ASC)}] ;; for backward compatibility
                    order-by)
-        order-by (gql-order-by->sql-order-by order-by order-field->column)
+        order-by (parse-order-by order-by)
         order-by (map #(apply-page-direction-to-order-by % page-direction) order-by)]
     {:order-by             order-by
      :page-direction       page-direction

@@ -47,12 +47,6 @@
       (medley/update-existing :mutation-fn requiring-resolve)
       (medley/update-existing :fetch-one requiring-resolve)))
 
-(defn validate-order-by-arg
-  "GraphQL 쿼리의 orderBy argument가 길이 1인 맵들의 리스트인지 검사한다."
-  [order-by]
-  (when (not-every? #(= (count %) 1) order-by)
-    (f/fail "Each element of orderBy argument must be of length 1")))
-
 (defn match-resolve-fn
   "resolver-config로부터 전달 받은 resolver 값에 따라
    resolver-helper에서 정의한 적절한 resolver함수를 지정한다"
@@ -146,7 +140,6 @@
                                                    config-filter-opts (auth/config-filter-opts filters ctx)
                                                    required-keys-in-parent (remove nil? [fk-in-parent pk-list-name-in-parent])
                                                    required-keys (s/difference (set required-keys-in-parent) (set (keys parent)))
-                                                   _ (validate-order-by-arg (:order-by args))
                                                    _ (when (seq required-keys)
                                                        (f/fail (format "%s keys are needed in parent" required-keys)))
                                                    resolver-fn (match-resolve-fn resolver)
