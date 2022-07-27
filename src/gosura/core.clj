@@ -126,6 +126,7 @@
                                                       transform-keys->camelCaseKeyword
                                                       (tag-with-type (csk/->PascalCaseKeyword node-type)))
                                                   (f/when-failed [e]
+                                                    (log/error e)
                                                     (resolve-as nil {:resolver (format "%s/%s" (str target-ns) (name resolver))
                                                                      :message  (f/message e)})))))
           (intern target-ns (symbol resolver) (fn [ctx args parent]
@@ -148,6 +149,7 @@
                                                   (cond-> (resolver-fn ctx args parent added-params)
                                                     return-camel-case? (util/update-resolver-result transform-keys->camelCaseKeyword))
                                                   (f/when-failed [e]
+                                                    (log/error e)
                                                     (resolve-as nil {:resolver (format "%s/%s" (str target-ns) (name resolver))
                                                                      :message  (f/message e)}))))))))
 

@@ -1,7 +1,7 @@
 (ns gosura.helpers.superlifter
-  (:require [com.walmartlabs.lacinia.resolve :as resolve]
-            [superlifter.api :as api]
-            [clojure.set :as s]))
+  (:require [clojure.set :as s]
+            [com.walmartlabs.lacinia.resolve :as resolve]
+            [superlifter.api :as api]))
 
 ;; Superlifter.lacinia가 Pedestal 의존성이 있기 때문에, ns를 불러올 수 없음.
 ;; https://github.com/oliyh/superlifter/blob/master/src/superlifter/lacinia.clj
