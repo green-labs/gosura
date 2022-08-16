@@ -190,39 +190,64 @@
                     {:side      :client
                      :caused-by {:arguments (select-keys arguments [:after :before])}}))))
 
+(defn reverse-direction [dir]
+  (case dir
+    :ASC :DESC
+    :DESC :ASC))
+
+(defn apply-page-direction-to-order-by
+  "
+  order-by: [:column :direction]
+  page-direction: :forward | :backward
+  "
+  [order-by page-direction]
+  (let [[column direction] order-by]
+    (case page-direction
+      :forward order-by
+      :backward [column (reverse-direction direction)])))
+
+(defn parse-order-by
+  "GraphQL 쿼리의 orderBy argument를 파싱하여, pair들의 리스트로 변환한다
+  order-bys: [{:col1 :ASC} {:col2 :DESC}]
+  output: [[:col1 :ASC] [:col2 :DESC]]"
+  [order-by]
+  (if (not-every? #(= (count %) 1) order-by)
+    (throw (ex-info "Each element of orderBy argument must be of length 1" {}))
+    (map first order-by)))
+
 (defn build-page-options
   "relay connection 조회에 필요한 page options를 빌드합니다.
-   (default) 10개의 데이터를 id기준으로 정방향으로 오름차순으로 가지고 옵니다"
+   (default) 10개의 데이터를 id기준으로 정방향으로 오름차순으로 가지고 옵니다
+
+   * order-by는 enum일 수도(기존 버전), 맵의 리스트일 수도 있음 (새 버전, [{:id :ASC} {:updatedAt :DESC}])"
   [{:keys [first last
            after before
            order-by order-direction]
-    :or {order-by        :id
-         order-direction :ASC} :as args}]
+    :or   {order-by [{:id :ASC}]}
+    :as   args}]
   (validate-connection-arguments args)
   (let [page-direction (cond first :forward
                              last :backward
                              :else :forward)
-        limit (or (case page-direction
-                    :forward first
-                    :backward last) 10)
+        page-size (or (case page-direction
+                        :forward first
+                        :backward last) 10)
         cursor (when-let [encoded-cursor (case page-direction
                                            :forward after
                                            :backward before)]
                  (decode-cursor encoded-cursor))
-        cursor-ordered-values (:ordered-values cursor)
-        cursor-id (:id cursor)
-        order-by (csk/->kebab-case-keyword order-by)
-        order-direction (csk/->kebab-case-keyword order-direction)  ; ASC/DESC -> asc/desc
-        order-direction (get #{:asc :desc} order-direction :asc)
-        order-direction (case page-direction
-                          :forward order-direction
-                          :backward (get {:asc :desc
-                                          :desc :asc}
-                                         order-direction))]
+        {cursor-id :id
+         cursor-ordered-values :ordered-values
+         cursor-values :values} cursor
+        order-by (if (keyword? order-by)
+                   [{(csk/->kebab-case-keyword order-by) (or order-direction :ASC)}] ;; for backward compatibility
+                   order-by)
+        order-by (parse-order-by order-by)
+        order-by (map #(apply-page-direction-to-order-by % page-direction) order-by)]
     {:order-by             order-by
-     :order-direction      order-direction
      :page-direction       page-direction
-     :cursor-id            cursor-id
-     :cursor-ordered-value (clojure.core/first cursor-ordered-values)
-     :limit                (+ limit 2)
-     :page-size            limit}))
+     :cursor-id            cursor-id                                  ;; will be deprecated
+     :cursor-ordered-value (clojure.core/first cursor-ordered-values) ;; will be deprecated
+     :cursor-values        cursor-values
+     :limit                (+ page-size 2)
+     :page-size            page-size}))

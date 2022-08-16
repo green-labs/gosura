@@ -107,8 +107,7 @@
   (testing "아무 조건도 없을 때 기본값으로 다 가지고 온다"
     (let [args            {}
           result          (gosura-relay/build-page-options args)
-          expected-result {:order-by             :id
-                           :order-direction      :asc
+          expected-result {:order-by             [[:id :ASC]]
                            :page-direction       :forward
                            :cursor-id            nil
                            :cursor-ordered-value nil
@@ -118,65 +117,61 @@
   (testing "first만 있을 때 first 개수 + 2만큼 limit이 잘 설정된다"
     (let [args            {:first 3}
           result          (gosura-relay/build-page-options args)
-          expected-result {:order-by             :id
-                           :order-direction      :asc
+          expected-result {:order-by             [[:id :ASC]]
                            :page-direction       :forward
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                5
                            :page-size            3}]
       (is (= result expected-result))))
-  (testing "order-by만 있을 때 설정이 잘 된다"
+  (testing "order-by가 키워드일 때 설정이 잘 된다"
     (let [args            {:order-by :value}
           result          (gosura-relay/build-page-options args)
-          expected-result {:order-by             :value
-                           :order-direction      :asc
+          expected-result {:order-by             [[:value :ASC]]
                            :page-direction       :forward
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                12
                            :page-size            10}]
       (is (= result expected-result))))
-  (testing "order-direction만 있을 때 설정이 잘 된다"
-    (let [args            {:order-direction :desc}
-          result          (gosura-relay/build-page-options args)
-          expected-result {:order-by             :id
-                           :order-direction      :desc
-                           :page-direction       :forward
-                           :cursor-id            nil
-                           :cursor-ordered-value nil
-                           :limit                12
-                           :page-size            10}]
-      (is (= result expected-result))))
+
   (testing "order-direction, order-by가 같이 있을 때,설정이 잘 된다"
-    (let [args            {:order-direction :desc
-                           :order-by        :value}
+    (let [args            {:order-by        :value
+                           :order-direction :DESC}
           result          (gosura-relay/build-page-options args)
-          expected-result {:order-by             :value
-                           :order-direction      :desc
+          expected-result {:order-by             [[:value :DESC]]
                            :page-direction       :forward
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                12
                            :page-size            10}]
       (is (= result expected-result))))
-  (testing "order-direction에 이상한 값이 들어와도 asc 기본값으로 잘 설정된다"
-    (let [args            {:order-direction :up}
+  (testing "order-by가 맵의 리스트일 때 설정이 잘 된다"
+    (let [args            {:order-by [{:value :DESC}]}
           result          (gosura-relay/build-page-options args)
-          expected-result {:order-by             :id
-                           :order-direction      :asc
+          expected-result {:order-by             [[:value :DESC]]
                            :page-direction       :forward
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                12
                            :page-size            10}]
       (is (= result expected-result))))
-  (testing "first가 있고 order-direction이 asc일 때, order-direction은 asc이다"
-    (let [args            {:first           3
-                           :order-direction :asc}
+  ;(testing "order-direction에 이상한 값이 들어오면 실패한다"
+  ;  (let [args            {:order-direction :up}
+  ;        result          (gosura-relay/build-page-options args)
+  ;        expected-result {:order-by             :id
+  ;                         :order-direction      :asc
+  ;                         :page-direction       :forward
+  ;                         :cursor-id            nil
+  ;                         :cursor-ordered-value nil
+  ;                         :limit                12
+  ;                         :page-size            10}]
+  ;    (is (= result expected-result))))
+  (testing "first가 있고 order-direction이 asc일 때, 최종 order-direction은 asc이다"
+    (let [args            {:first    3
+                           :order-by [{:id :ASC}]}
           result          (gosura-relay/build-page-options args)
-          expected-result {:order-by             :id
-                           :order-direction      :asc
+          expected-result {:order-by             [[:id :ASC]]
                            :page-direction       :forward
                            :cursor-id            nil
                            :cursor-ordered-value nil
@@ -184,11 +179,10 @@
                            :page-size            3}]
       (is (= result expected-result))))
   (testing "first가 있고 order-direction이 desc일 때, order-direction은 desc이다"
-    (let [args            {:first           3
-                           :order-direction :desc}
+    (let [args            {:first    3
+                           :order-by [{:id :ASC}]}
           result          (gosura-relay/build-page-options args)
-          expected-result {:order-by             :id
-                           :order-direction      :desc
+          expected-result {:order-by             [[:id :ASC]]
                            :page-direction       :forward
                            :cursor-id            nil
                            :cursor-ordered-value nil
@@ -196,24 +190,22 @@
                            :page-size            3}]
       (is (= result expected-result))))
   (testing "last가 있고 order-direction이 asc일 때, order-direction은 desc이다"
-    (let [args            {:first           3
-                           :order-direction :desc}
+    (let [args            {:last     3
+                           :order-by [{:id :ASC}]}
           result          (gosura-relay/build-page-options args)
-          expected-result {:order-by             :id
-                           :order-direction      :desc
-                           :page-direction       :forward
+          expected-result {:order-by             [[:id :DESC]]
+                           :page-direction       :backward
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                5
                            :page-size            3}]
       (is (= result expected-result))))
   (testing "last가 있고 order-direction이 desc일 때, order-direction은 asc이다"
-    (let [args            {:first           3
-                           :order-direction :asc}
+    (let [args            {:last           3
+                           :order-by [{:id :DESC}]}
           result          (gosura-relay/build-page-options args)
-          expected-result {:order-by             :id
-                           :order-direction      :asc
-                           :page-direction       :forward
+          expected-result {:order-by             [[:id :ASC]]
+                           :page-direction       :backward
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                5
@@ -223,8 +215,7 @@
     (let [args            {:first 3
                            :after "TlBZAHFkAW4BZAE="}
           result          (gosura-relay/build-page-options args)
-          expected-result {:order-by             :id
-                           :order-direction      :asc
+          expected-result {:order-by             [[:id :ASC]]
                            :page-direction       :forward
                            :cursor-id            1
                            :cursor-ordered-value 1
@@ -235,8 +226,7 @@
     (let [args            {:last   3
                            :before "TlBZAHFkAW4BZAE="}
           result          (gosura-relay/build-page-options args)
-          expected-result {:order-by             :id
-                           :order-direction      :desc
+          expected-result {:order-by             [[:id :DESC]]
                            :page-direction       :backward
                            :cursor-id            1
                            :cursor-ordered-value 1
