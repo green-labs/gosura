@@ -33,7 +33,8 @@
    (when (and order-by cursor-id)
      (let [operator ({:asc  :>=
                       :desc :<=} order-direction :>=)
-           id       (col-with-table-name table-name-alias :id)]
+           id       (col-with-table-name table-name-alias :id)
+           order-by (col-with-table-name table-name-alias order-by)]
        (if (= order-by id)
          [operator id cursor-id]
          [operator (sql-helper/columns order-by id) [cursor-ordered-value cursor-id]]))))
