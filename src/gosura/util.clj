@@ -73,7 +73,7 @@
   "qualified-symbol을 var로 변환합니다"
   [sym|var]
   (cond
-    (symbol? sym|var) (requiring-var! sym|var)
+    (symbol? sym|var) (requiring-resolve sym|var)
     (var? sym|var) sym|var
     :else (prn "something wrong")))
 
