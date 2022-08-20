@@ -62,15 +62,26 @@
                                     (filter #(ends-with? (name %) "-id")))
                                #(some-> % str)))) ; *-id 컬럼 값이 nil일 수 있기 때문에, nil이 아닐 때에만 str을 적용
 
-(defmulti qualified-symbol->requiring-var!
+(defmulti
+  ^{:deprecated "0.2.8"}
+  qualified-symbol->requiring-var!
   (fn [x]
     (type x)))
+
+
+(defn requiring-var!
+  "qualified-symbol을 var로 변환합니다"
+  [sym|var]
+  (cond
+    (symbol? sym|var) (requiring-var! sym|var)
+    (var? sym|var) sym|var
+    :else (prn "something wrong")))
 
 (defmethod qualified-symbol->requiring-var! clojure.lang.PersistentVector
   [coll]
   (reduce (fn [acc value]
             (if (qualified-symbol? value)
-              (conj acc (requiring-resolve value))
+              (conj acc (requiring-var! value))
               (merge acc value)))
           []
           coll))
@@ -79,11 +90,11 @@
   [m]
   (reduce (fn [acc [key value]]
             (if (qualified-symbol? value)
-              (merge acc {key (requiring-resolve value)})
+              (merge acc {key (requiring-var! value)})
               (merge acc {key value})))
           {}
           m))
 
 (defmethod qualified-symbol->requiring-var! clojure.lang.Symbol
   [sym]
-  (requiring-resolve sym))
+  (requiring-var! sym))

@@ -17,7 +17,8 @@
             [gosura.helpers.resolver :as r]
             [gosura.schema :as schema]
             [gosura.util :as util :refer [transform-keys->camelCaseKeyword
-                                          transform-keys->kebab-case-keyword]]
+                                          transform-keys->kebab-case-keyword
+                                          requiring-var!]]
             [malli.core :as m]
             [malli.error :as me]
             [medley.core :as medley]))
@@ -30,23 +31,28 @@
     {:args   args
      :parent parent}))
 
-(defn- auth-symbol->requiring-var!
+(defn-
+  ^{:deprecated "0.2.8"}
+  auth-symbol->requiring-var!
   [params]
   (cond-> params
-    (symbol? (get-in params [:settings :auth 0])) (update-in [:settings :auth 0] requiring-resolve)
-    (symbol? (get-in params [:settings :auth])) (update-in [:settings :auth] requiring-resolve)))
+    (symbol? (get-in params [:settings :auth 0])) (update-in [:settings :auth 0] requiring-var!)
+    (symbol? (get-in params [:settings :auth])) (update-in [:settings :auth] requiring-var!)))
 
-(defn- symbol->requiring-var!  "params: original params
+(defn-
+  ^{:deprecated "0.2.8"}
+  symbol->requiring-var!
+  "params: original params
    symbol로 들어온 값들 중에 var로 취급되어야하는 것들을 변환한다"
   [params]
   (-> params
       auth-symbol->requiring-var!
-      (medley/update-existing :table-fetcher requiring-resolve)
-      (medley/update-existing :pre-process-arguments requiring-resolve)
-      (medley/update-existing :post-process-row requiring-resolve)
-      (medley/update-existing :superfetcher requiring-resolve)
-      (medley/update-existing :mutation-fn requiring-resolve)
-      (medley/update-existing :fetch-one requiring-resolve)))
+      (medley/update-existing :table-fetcher requiring-var!)
+      (medley/update-existing :pre-process-arguments requiring-var!)
+      (medley/update-existing :post-process-row requiring-var!)
+      (medley/update-existing :superfetcher requiring-var!)
+      (medley/update-existing :mutation-fn requiring-var!)
+      (medley/update-existing :fetch-one requiring-var!)))
 
 (defn find-resolver-fn
   "resolver-key 에 따라 적절한 resolver-fn 함수를 리턴한다.
@@ -105,8 +111,8 @@
     (doseq [[resolver params] resolvers]
       (let [params (merge {:node-type        node-type
                            :db-key           db-key
-                           :post-process-row (if (nil? post-process-row) identity (requiring-resolve post-process-row))
-                           :pre-process-arguments (if (nil? pre-process-arguments) identity (requiring-resolve pre-process-arguments))}
+                           :post-process-row (if (nil? post-process-row) identity (requiring-var! post-process-row))
+                           :pre-process-arguments (if (nil? pre-process-arguments) identity (requiring-var! pre-process-arguments))}
                           (symbol->requiring-var! params))
             {:keys [table-fetcher node-type post-process-row db-key settings fk-in-parent pk-list-name-in-parent]} params]
         (if (= :resolve-node resolver)

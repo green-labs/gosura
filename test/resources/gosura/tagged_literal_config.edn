@@ -1,0 +1,4 @@
+{:fn1 #var clojure.core/identity
+ :fn2 clojure.core/identity
+ :fn3 #var clojure.core/inc}
+

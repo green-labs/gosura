@@ -33,18 +33,18 @@ This is almost full configs you're able to set.
 {:target-ns             animal.resolve ; a generated resolver's namespace
  :node-type             :animal ; node-type for relay
  :db-key                :db ; db-key to find datasource in a lacinia's context
- :pre-process-arguments animal.core/pre-process-arguments ; fn to process in args
- :post-process-row      animal.core/post-process-row ; fn to process in a result
- :filters               {:country-code animal.core/get-country-code} ; filters for additional filter opts for query
- :resolvers             {:resolve-node       {:table-fetcher animal.db/fetch} ; table fetcher for queries
-                         :resolve-connection {:table-fetcher animal.db/fetch
-                                              :settings      {:auth               animal.core/auth ; set for authentification and authorization.
+ :pre-process-arguments #var animal.core/pre-process-arguments ; fn to process in args
+ :post-process-row      #var animal.core/post-process-row ; fn to process in a result
+ :filters               {:country-code #var animal.core/get-country-code} ; filters for additional filter opts for query
+ :resolvers             {:resolve-node       {:table-fetcher #var animal.db/fetch} ; table fetcher for queries
+                         :resolve-connection {:table-fetcher #var animal.db/fetch
+                                              :settings      {:auth               #var animal.core/auth ; set for authentification and authorization.
                                                               :kebab-case?        true ; opts ; transform args into kebeb-case. A default is true.
                                                               :return-camel-case? true}} ; opts ; transform results into camelCase. A default value is true.
-                         :resolve-by-fk      {:superfetcher animal.superfetcher/->Fetch ; superfetcher for superlifter
+                         :resolve-by-fk      {:superfetcher #var animal.superfetcher/->Fetch ; superfetcher for superlifter
                                               :fk-in-parent :user-type-id}
-                         :resolve-create-one {:table-fetcher animal.db/fetch
-                                              :mutation-fn   animal.core/create-one 
+                         :resolve-create-one {:table-fetcher #var animal.db/fetch
+                                              :mutation-fn   #var animal.core/create-one 
                                               :mutation-tag  AnimalPayload}}}
 ```
 
@@ -99,15 +99,15 @@ Here's things.
                      :filter-key    :ids})
 ```
 
-`generate-all` must be executed before lacinia compiles schema because `generate-all` has to make all the resolvers in edn where we define.
+`generate-all` must be executed before lacinia compiles schema because `generate-all` has to make all the resolvers in edn where we define. In order to use a tagged literal `#var`, make sure you need to use `gosura.edn/read-config`.
 ```clojure
-(require '[gosura.core :as gosura])
+(require '[gosura.core :as gosura]
+          [gosura.edn])
 
 (defn- read-in-resource [path]
   (-> path
       clojure.java.io/resource
-      slurp
-      cloure.edn/read-string))
+      gosura.edn/read-config))
 
 (def gosura-resolvers
   (->> ["resolver/animal.edn"]
