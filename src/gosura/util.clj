@@ -68,7 +68,6 @@
   (fn [x]
     (type x)))
 
-
 (defn requiring-var!
   "qualified-symbol을 var로 변환합니다"
   [sym|var]
@@ -76,6 +75,10 @@
     (symbol? sym|var) (requiring-resolve sym|var)
     (var? sym|var) sym|var
     :else (prn "something wrong")))
+
+(defmethod qualified-symbol->requiring-var! :default
+  [x]
+  x)
 
 (defmethod qualified-symbol->requiring-var! clojure.lang.PersistentVector
   [coll]

@@ -27,7 +27,7 @@
   (let [result (apply-fn-with-ctx-at-first auth ctx)]
     (cond
       (true? result) nil
-      (false? (boolean result)) (f/fail "Unauthorized")
+      (false? (boolean result)) (f/fail "Unauthorized2")
       :else result)))
 
 (defn config-filter-opts

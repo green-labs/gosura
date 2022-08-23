@@ -1,8 +1,10 @@
 {:linters {:unsorted-required-namespaces {:level :warning}
            :unresolved-symbol            {:exclude [rate-limit]}}
- :lint-as {failjure.core/ok->               clojure.core/->
-           failjure.core/ok->>              clojure.core/->>
-           failjure.core/when-failed        clojure.core/fn
-           failjure.core/attempt-all        clojure.core/let
-           superlifter.api/def-fetcher      clojure.core/defrecord
-           superlifter.api/def-superfetcher clojure.core/defrecord}}
+ :lint-as {failjure.core/ok->                   clojure.core/->
+           failjure.core/ok->>                  clojure.core/->>
+           failjure.core/when-failed            clojure.core/fn
+           failjure.core/attempt-all            clojure.core/let
+           superlifter.api/def-fetcher          clojure.core/defrecord
+           superlifter.api/def-superfetcher     clojure.core/defrecord
+           gosura.helpers.resolver/defresolver  clojure.core/defn
+           gosura.helpers.resolver/defresolver2 clojure.core/defn}}
