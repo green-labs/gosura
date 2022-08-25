@@ -94,7 +94,7 @@
   :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
   :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
   :node-type - relay resolver 일때 설정하면, edge/node와 :pageInfo의 start/endCursor 처리를 같이 해줍니다.
-  :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 false)
+  :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)
   :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다."
   {:arglists '([name doc-string? option? args & body])}
   [name & fdecl]
