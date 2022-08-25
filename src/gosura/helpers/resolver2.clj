@@ -22,15 +22,15 @@
          :or   {kebab-case?             true
                 return-camel-case?      true
                 required-keys-in-parent []}} option
-        result                                                                                                                                                     (gensym 'result_)
-        auth-filter-opts                                                                                                                                           `(auth/->auth-result ~auth ~ctx)
-        config-filter-opts                                                                                                                                         `(auth/config-filter-opts ~filters ~ctx)
-        arg                                                                                                                                                        `(merge ~arg ~auth-filter-opts ~config-filter-opts)
-        arg'                                                                                                                                                       (if kebab-case? `(transform-keys->kebab-case-keyword ~arg) arg)
-        parent'                                                                                                                                                    (if kebab-case? `(transform-keys->kebab-case-keyword ~parent) parent)
-        keys-not-found                                                                                                                                             `(keys-not-found ~parent' ~required-keys-in-parent)
-        params                                                                                                                                                     (if (nil? this) [ctx arg' parent'] [this ctx arg' parent'])
-        let-mapping                                                                                                                                                (vec (interleave args params))]
+        result (gensym 'result_)
+        auth-filter-opts `(auth/->auth-result ~auth ~ctx)
+        config-filter-opts `(auth/config-filter-opts ~filters ~ctx)
+        arg `(merge ~arg ~auth-filter-opts ~config-filter-opts)
+        arg' (if kebab-case? `(transform-keys->kebab-case-keyword ~arg) arg)
+        parent' (if kebab-case? `(transform-keys->kebab-case-keyword ~parent) parent)
+        keys-not-found `(keys-not-found ~parent' ~required-keys-in-parent)
+        params (if (nil? this) [ctx arg' parent'] [this ctx arg' parent'])
+        let-mapping (vec (interleave args params))]
     `(if (seq ~keys-not-found)
        (error/error {:message (format "%s keys are needed in parent" ~keys-not-found)})
        (if (and ~auth-filter-opts
