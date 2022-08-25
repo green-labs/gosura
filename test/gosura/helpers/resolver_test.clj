@@ -1,6 +1,7 @@
 (ns gosura.helpers.resolver-test
   (:require [clojure.test :refer [deftest is run-tests testing]]
-            [gosura.helpers.resolver :as gosura-resolver]))
+            [gosura.helpers.resolver :as gosura-resolver]
+            [gosura.helpers.resolver2 :as gosura-resolver2]))
 
 (deftest decode-global-id-in-arguments-test
   (testing "argments에 -id로 끝나는 것들이 nil이면 디코딩하지 않고 그대로 둔다"
@@ -79,7 +80,7 @@
 (def auth-column-name :userId)
 (def arg-in-resolver (atom {}))
 
-(gosura-resolver/defresolver2 test-resolver
+(gosura-resolver2/defresolver test-resolver
   {:auth [user-auth auth-column-name]}
   [ctx arg parent]
   (reset! arg-in-resolver arg)
@@ -118,7 +119,7 @@
                               :userId "1"}
                      :parent {}}))))
   (testing "required-keys-in-parent 설정이 잘 동작한다"
-    (let [_            (gosura-resolver/defresolver2 test-resolver-2
+    (let [_            (gosura-resolver2/defresolver test-resolver-2
                          {:auth                    [user-auth auth-column-name]
                           :required-keys-in-parent [:my-col]}
                          [ctx arg parent]
@@ -142,7 +143,7 @@
                  :data
                  :message) "[:my-col] keys are needed in parent"))))
   (testing "filter 로직이 잘 동작한다"
-    (let [_      (gosura-resolver/defresolver2 test-resolver-3
+    (let [_      (gosura-resolver2/defresolver test-resolver-3
                    {:auth    [user-auth auth-column-name]
                     :filters {:country-code get-country-code}}
                    [ctx arg parent]
@@ -164,7 +165,7 @@
                               :countryCode "KR"}
                      :parent {}}))))
   (testing "auth 설정이 false를 반환해도 잘 동작한다"
-    (let [_      (gosura-resolver/defresolver2 test-resolver-4
+    (let [_      (gosura-resolver2/defresolver test-resolver-4
                    {:auth user-auth}
                    [ctx arg parent]
                    {:ctx    ctx
