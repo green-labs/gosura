@@ -1,13 +1,13 @@
 (ns gosura.core-test
   (:require [clojure.set :as set]
             [clojure.test :refer [deftest is testing]]
+            [failjure.core :as f]
             [gosura.core :as gosura]
-            [gosura.helpers.resolver :as gosura-resolver]
-            [failjure.core :as f]))
+            [gosura.edn :refer [read-config]]
+            [gosura.helpers.resolver :as gosura-resolver]))
 
 (def normal-data (-> "test/resources/gosura/sample_resolver_configs.edn"
-                     slurp
-                     read-string))
+                     read-config))
 
 (deftest gosura-resolver-generate-one-test
   (testing "gosura resolver의 generate-one은"

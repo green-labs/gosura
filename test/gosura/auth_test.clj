@@ -1,7 +1,8 @@
 (ns gosura.auth-test
   (:require [clojure.test :refer [deftest is run-tests testing]]
             [failjure.core :as f]
-            [gosura.auth :as gosura-auth]))
+            [gosura.auth :as gosura-auth]
+            [gosura.edn :refer [read-config]]))
 
 (deftest ->auth-result-test
   (let [auth0        (fn [ctx]
@@ -50,8 +51,7 @@
 
 (deftest filter-opts-test
   (let [filters (-> "test/resources/gosura/sample_resolver_configs.edn"
-                    slurp
-                    read-string
+                    read-config
                     :filters)]
     (testing "fiilters.country 설정에 signiture가 싱글 파라미터(qualified symbol)일 때, ctx 내에 인증 정보를 잘 가지고 온다"
       (let [ctx             {:identity {:country-code "JP"}}
