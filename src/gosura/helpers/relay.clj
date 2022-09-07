@@ -39,7 +39,7 @@
     decoded-result))
 
 (defn decode-global-id->db-id [global-id]
-  (-> global-id decode-id :db-id))
+  (some-> global-id decode-id :db-id))
 
 (defn encode-cursor [{:keys [id ordered-values]}]
   (-> [id (vec ordered-values)]
@@ -226,3 +226,16 @@
      :cursor-ordered-value (clojure.core/first cursor-ordered-values)
      :limit                (+ limit 2)
      :page-size            limit}))
+
+(defn decode-global-ids-by-keys
+  "arguments 맵에서 ks의 키값 값을 재귀적으로 찾아 DB ID로 디코드합니다."
+  [arguments ks]
+  (reduce-kv (fn [m k v]
+               (cond
+                 ((set ks) k) (assoc m k (if (coll? v)
+                                           (map decode-global-id->db-id v)
+                                           (decode-global-id->db-id v)))
+                 (associative? v) (assoc m k (decode-global-ids-by-keys v ks))
+                 :else m))
+             arguments
+             arguments))

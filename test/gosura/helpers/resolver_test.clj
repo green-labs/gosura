@@ -178,7 +178,32 @@
       (is (= (-> result
                  :resolved-value
                  :data
-                 :message) "Unauthorized")))))
+                 :message) "Unauthorized"))))
+  (testing "auth가 없으면 인증 없이 사용할 수 있다"
+    (let [_      (gosura-resolver2/defresolver test-resolver-5
+                   [ctx arg parent]
+                   {:ctx    ctx
+                    :arg    arg
+                    :parent parent})
+          ctx    {}
+          arg    {}
+          parent {}
+          result (test-resolver-5 ctx arg parent)]
+      (is (= (-> result
+                 :arg) {}))))
+  (testing "decode-ids-by-keys가 잘 동작한다"
+    (let [_      (gosura-resolver2/defresolver test-resolver-6
+                   {:decode-ids-by-keys [:test-col]}
+                   [ctx arg parent]
+                   {:ctx    ctx
+                    :arg    arg
+                    :parent parent})
+          ctx    {}
+          arg    {:test-col "dGVzdDox"} ;; "test:1"
+          parent {}
+          result (test-resolver-6 ctx arg parent)]
+      (is (= (-> result
+                 :arg) {:testCol "1"})))))
 
 (comment
   (run-tests))

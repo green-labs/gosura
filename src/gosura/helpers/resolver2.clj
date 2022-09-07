@@ -6,6 +6,7 @@
             [gosura.helpers.error :as error]
             [gosura.helpers.resolver :refer [parse-fdecl
                                              keys-not-found]]
+            [gosura.helpers.relay :as relay]
             [gosura.util :as util :refer [transform-keys->camelCaseKeyword
                                           transform-keys->kebab-case-keyword
                                           update-resolver-result]]))
@@ -15,10 +16,15 @@
 
   this, ctx, arg, parent: 상위 리졸버 생성 매크로에서 만든 심벌
   option: 리졸버 선언에 지정된 옵션 맵
-  args: 리졸버 선언의 argument vector 부분
-  body: 리졸버의 body expression 부분"
+   - :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
+   - :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
+   - :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)
+   - :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다.
+   - :decode-ids-by-keys - 키 목록을 받아서 resolver args의 global id들을 db id로 변환 해줍니다.
+   - :filters - args에 추가할 key-value 값을 필터로 넣습니다.
+  "
   [{:keys [this ctx arg parent]} option args body]
-  (let [{:keys [auth kebab-case? return-camel-case? required-keys-in-parent filters]
+  (let [{:keys [auth kebab-case? return-camel-case? required-keys-in-parent filters decode-ids-by-keys]
          :or   {kebab-case?             true
                 return-camel-case?      true
                 required-keys-in-parent []}} option
@@ -27,14 +33,16 @@
         config-filter-opts `(auth/config-filter-opts ~filters ~ctx)
         arg `(merge ~arg ~auth-filter-opts ~config-filter-opts)
         arg' (if kebab-case? `(transform-keys->kebab-case-keyword ~arg) arg)
+        arg' (if decode-ids-by-keys `(relay/decode-global-ids-by-keys ~arg' ~decode-ids-by-keys) arg')
         parent' (if kebab-case? `(transform-keys->kebab-case-keyword ~parent) parent)
         keys-not-found `(keys-not-found ~parent' ~required-keys-in-parent)
         params (if (nil? this) [ctx arg' parent'] [this ctx arg' parent'])
         let-mapping (vec (interleave args params))]
     `(if (seq ~keys-not-found)
        (error/error {:message (format "%s keys are needed in parent" ~keys-not-found)})
-       (if (and ~auth-filter-opts
-                (not (f/failed? ~auth-filter-opts)))
+       (if (or (nil? ~auth-filter-opts)
+               (and ~auth-filter-opts
+                    (not (f/failed? ~auth-filter-opts))))
          (let [~result (do (let ~let-mapping ~@body))]
            (cond-> ~result
              ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
