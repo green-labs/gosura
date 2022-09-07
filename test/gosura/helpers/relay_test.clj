@@ -462,5 +462,19 @@
             (-> result :edges third :node :id gosura-relay/decode-id) {:node-type :test
                                                                        :db-id     "3"}))))))
 
+(deftest decode-global-ids-by-keys
+  (testing "decode key"
+    (is (= (gosura-relay/decode-global-ids-by-keys {:a "bm90aWNlOjEwMA=="} [:a])
+           {:a "100"})))
+  (testing "decode vector"
+    (is (= (gosura-relay/decode-global-ids-by-keys {:a ["bm90aWNlOjEwMA==" "bm90aWNlOjEwMA=="]} [:a])
+           {:a ["100" "100"]})))
+  (testing "nested"
+    (is (= (gosura-relay/decode-global-ids-by-keys {:a "bm90aWNlOjEwMA=="
+                                                    :b "bm90aWNlOjEwMA=="
+                                                    :c {:d ["bm90aWNlOjEwMA==" "bm90aWNlOjEwMA=="]}}
+                                                   [:a :d])
+           {:a "100", :b "bm90aWNlOjEwMA==", :c {:d ["100" "100"]}}))))
+
 (comment
   (run-tests))
