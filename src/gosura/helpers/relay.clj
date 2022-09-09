@@ -230,12 +230,13 @@
 (defn decode-global-ids-by-keys
   "arguments 맵에서 ks의 키값 값을 재귀적으로 찾아 DB ID로 디코드합니다."
   [arguments ks]
-  (reduce-kv (fn [m k v]
-               (cond
-                 ((set ks) k) (assoc m k (if (coll? v)
-                                           (map decode-global-id->db-id v)
-                                           (decode-global-id->db-id v)))
-                 (associative? v) (assoc m k (decode-global-ids-by-keys v ks))
-                 :else m))
-             arguments
-             arguments))
+(let [ks (set ks)]
+    (reduce-kv (fn [m k v]
+                 (cond
+                   (ks k) (assoc m k (if (coll? v)
+                                       (map decode-global-id->db-id v)
+                                       (decode-global-id->db-id v)))
+                   (associative? v) (assoc m k (decode-global-ids-by-keys v ks))
+                   :else (assoc m k v)))
+               {}
+               arguments))
