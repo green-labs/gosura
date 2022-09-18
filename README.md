@@ -118,6 +118,11 @@ Here's things.
 
 When your server is executed, lacinia is run successfully with generated resolvers.
 
+# API docs
+See [docs](API.md). You can call and make a quickdoc using
+```clojure
+clj -M:quickdoc
+```
 # Status
 - not stable
 
