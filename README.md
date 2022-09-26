@@ -2,7 +2,7 @@
 Data-driven GraphQL Resolvers on [lacinia](https://github.com/walmartlabs/lacinia) for Clojure.
 
 # Motivation
-다목적의 어플리케이션 개발을 하다보면 GraphQL을 이용하여 많고 다양한 quary와 mutation을 만들어야합니다. 특히, 기본 query와 mutation을 작성하는 것은 중요하지만 반복적인 일이기도 합니다. 이 따분한 작업들을 조금 더 빠르고 쉽게 개발할 수 있도록 하는 여러가지 서비스들이 있는데 그 중 하나인 [hasura](https://hasura.io/)의 영향을 받아 [gosura](https://github.com/green-labs/gosura)가 만들어졌습니다.
+다목적의 어플리케이션 개발을 하다보면 GraphQL을 이용하여 많고 다양한 query와 mutation을 만들어야합니다. 특히, 기본 query와 mutation을 작성하는 것은 중요하지만 반복적인 일이기도 합니다. 이 따분한 작업들을 조금 더 빠르고 쉽게 개발할 수 있도록 하는 여러가지 서비스들이 있는데 그 중 하나인 [hasura](https://hasura.io/)의 영향을 받아 [gosura](https://github.com/green-labs/gosura)가 만들어졌습니다.
 
 기본적으로 GraphQL [relay](https://relay.dev/) 스펙을 이용한 어플리케이션 설계에 유용하도록 만들어져있습니다. 그리고 [EDN](https://github.com/edn-format/edn)을 이용하여 선언적으로 GraphQL query 및 mutation이 만들어지도록 하였습니다.
 
