@@ -155,7 +155,7 @@
        decode-global-ids-in-arguments
        decode-global-id-in-arguments))
 
-(defn- nullify-empty-string-arguments
+(defn nullify-empty-string-arguments
   [arguments ks]
   (reduce (fn [arguments k]
             (if (= (get arguments k) "")
