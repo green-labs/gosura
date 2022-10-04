@@ -114,7 +114,8 @@
          :as   page-options} (relay/build-page-options arguments)
         superfetch-arguments (merge additional-filter-opts
                                     {:id           load-id
-                                     :page-options page-options})
+                                     :page-options page-options
+                                     :load-id      load-id})
         superfetch-id (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
@@ -150,7 +151,8 @@
                                             [parent-id])) parent)
         superfetch-arguments (merge additional-filter-opts
                                     {:id           load-id
-                                     :page-options nil})
+                                     :page-options nil
+                                     :load-id      load-id})
         superfetch-id        (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
