@@ -87,7 +87,7 @@
         base-id-in-parent (or (->> arguments-list first :prop)
                               id-in-parent) ; 하위호환
         batch-args (->> arguments-list
-                        (map #(dissoc % :page-options :filter-options))
+                        (map #(dissoc % :page-options :filter-options :prop))
                         (map #(s/rename-keys % {:id base-id-in-parent})))
         filter-options (merge base-filter-options
                               {:batch-args batch-args})
