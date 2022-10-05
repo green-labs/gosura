@@ -97,13 +97,14 @@
   [context arguments parent {:keys [db-key
                                      node-type
                                      superfetcher
-                                     {:keys [pre-fn prop] :as _parent-id}
+                                     parent-id
                                      post-process-row
                                      additional-filter-opts]}]
   {:pre [(some? db-key)]}
   (let [arguments (-> arguments
                       common-pre-process-arguments
                       (nullify-empty-string-arguments [:after :before]))
+        {:keys [pre-fn prop]} parent-id
         load-id (-> parent
                     (or pre-fn identity)
                     prop)
@@ -143,11 +144,11 @@
                                      node-type
                                      superfetcher
                                      post-process-row
-                                     {:keys [pre-fn prop]
-                                      :as   _parent-id}
+                                     parent-id
                                      additional-filter-opts]}]
   {:pre [(some? db-key)]}
-  (let [load-id (-> parent
+  (let [{:keys [pre-fn prop]} parent-id
+        load-id (-> parent
                     (or pre-fn identity)
                     prop)
         superfetch-arguments (merge additional-filter-opts
