@@ -160,6 +160,3 @@
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows] (-> (first rows)
                                     (relay/build-node node-type post-process-row))))))))
-
-(comment
-  ((or nil identity) 1))
