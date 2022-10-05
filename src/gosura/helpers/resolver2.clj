@@ -90,23 +90,23 @@
   * config    리졸버 동작 설정
     * :superfetcher: 슈퍼페처
     * :post-process-row: 결과 객체 목록 후처리 함수 (예: identity)
-    * :parent-id: 부모로부터 전달되는 id 값. 예) [:relay/decode-global-id->db-id :id] or :user-id
+    * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id} {:prop :user-id}
   ## 반환
   * 객체 목록
   "
   [context arguments parent {:keys [db-key
                                      node-type
                                      superfetcher
-                                     parent-id
+                                     {:keys [pre-fn prop] :as _parent-id}
                                      post-process-row
                                      additional-filter-opts]}]
   {:pre [(some? db-key)]}
   (let [arguments (-> arguments
                       common-pre-process-arguments
                       (nullify-empty-string-arguments [:after :before]))
-        load-id ((apply comp (if (coll? parent-id)
-                               parent-id
-                               [parent-id])) parent)
+        load-id (-> parent
+                    (or pre-fn identity)
+                    prop)
         {:keys [order-by
                 page-direction
                 page-size
@@ -115,7 +115,7 @@
         superfetch-arguments (merge additional-filter-opts
                                     {:id           load-id
                                      :page-options page-options
-                                     :load-id      load-id})
+                                     :prop         prop})
         superfetch-id (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
@@ -135,7 +135,7 @@
     * :db-key            사용할 DB 이름
     * :superfetcher      슈퍼페처
     * :post-process-row  결과 객체 목록 후처리 함수 (예: identity)
-    * :parent-id: 부모로부터 전달되는 id 값. 예) [:relay/decode-global-id->db-id :id] or :user-id
+    * :parent-id: 부모로부터 전달되는 id 정보 예) {:fn relay/decode-global-id->db-id :prop :id} {:prop :user-id}
   ## 반환
   * 객체 하나
   "
@@ -143,18 +143,22 @@
                                      node-type
                                      superfetcher
                                      post-process-row
-                                     parent-id
+                                     {:keys [pre-fn prop]
+                                      :as   _parent-id}
                                      additional-filter-opts]}]
   {:pre [(some? db-key)]}
-  (let [load-id              ((apply comp (if (coll? parent-id)
-                                            parent-id
-                                            [parent-id])) parent)
+  (let [load-id (-> parent
+                    (or pre-fn identity)
+                    prop)
         superfetch-arguments (merge additional-filter-opts
                                     {:id           load-id
                                      :page-options nil
-                                     :load-id      load-id})
+                                     :prop         prop})
         superfetch-id        (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows] (-> (first rows)
                                     (relay/build-node node-type post-process-row))))))))
+
+(comment
+  ((or nil identity) 1))

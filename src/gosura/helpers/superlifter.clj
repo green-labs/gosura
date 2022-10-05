@@ -84,7 +84,7 @@
                  (map :id)
                  (map str))
         base-filter-options (->> arguments-list first :filter-options)
-        base-id-in-parent (or (->> arguments-list first :load-id)
+        base-id-in-parent (or (->> arguments-list first :prop)
                               id-in-parent) ; 하위호환
         batch-args (->> arguments-list
                         (map #(dissoc % :page-options :filter-options))
