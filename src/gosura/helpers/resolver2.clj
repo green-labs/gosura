@@ -90,7 +90,10 @@
   * config    리졸버 동작 설정
     * :superfetcher: 슈퍼페처
     * :post-process-row: 결과 객체 목록 후처리 함수 (예: identity)
-    * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id} {:prop :user-id}
+    * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id :agg :id} {:prop :user-id :agg :id}
+     * :pre-fn: 전처리
+     * :prop: 부모로부터 전달 받는 키값
+     * :agg: 데이터를 모으는 키값 
   ## 반환
   * 객체 목록
   "
@@ -104,7 +107,7 @@
   (let [arguments (-> arguments
                       common-pre-process-arguments
                       (nullify-empty-string-arguments [:after :before]))
-        {:keys [pre-fn prop]} parent-id
+        {:keys [pre-fn prop agg]} parent-id
         load-id (-> parent
                     (or pre-fn identity)
                     prop)
@@ -116,7 +119,7 @@
         superfetch-arguments (merge additional-filter-opts
                                     {:id           load-id
                                      :page-options page-options
-                                     :prop         prop})
+                                     :agg          agg})
         superfetch-id (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
@@ -136,7 +139,10 @@
     * :db-key            사용할 DB 이름
     * :superfetcher      슈퍼페처
     * :post-process-row  결과 객체 목록 후처리 함수 (예: identity)
-    * :parent-id: 부모로부터 전달되는 id 정보 예) {:fn relay/decode-global-id->db-id :prop :id} {:prop :user-id}
+    * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id :agg :id} {:prop :user-id :agg :id}
+     * :pre-fn: 전처리
+     * :prop: 부모로부터 전달 받는 키값
+     * :agg: 데이터를 모으는 키값 
   ## 반환
   * 객체 하나
   "
@@ -147,14 +153,14 @@
                                      parent-id
                                      additional-filter-opts]}]
   {:pre [(some? db-key)]}
-  (let [{:keys [pre-fn prop]} parent-id
+  (let [{:keys [pre-fn prop agg]} parent-id
         load-id (-> parent
                     (or pre-fn identity)
                     prop)
         superfetch-arguments (merge additional-filter-opts
                                     {:id           load-id
                                      :page-options nil
-                                     :prop         prop})
+                                     :agg          agg})
         superfetch-id        (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))

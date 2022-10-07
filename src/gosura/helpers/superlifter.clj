@@ -84,18 +84,18 @@
                  (map :id)
                  (map str))
         base-filter-options (->> arguments-list first :filter-options)
-        base-relation-id (or (->> arguments-list first :prop)
+        base-aggregation-id (or (->> arguments-list first :agg)
                               id-in-parent) ; 하위호환
         batch-args (->> arguments-list
-                        (map #(dissoc % :page-options :filter-options :prop))
-                        (map #(s/rename-keys % {:id base-relation-id})))
+                        (map #(dissoc % :page-options :filter-options :agg))
+                        (map #(s/rename-keys % {:id base-aggregation-id})))
         filter-options (merge base-filter-options
                               {:batch-args batch-args})
         base-page-options (->> arguments-list first :page-options)
         page-options (dissoc base-page-options :limit)  ; (연오) foolproof: 페치할 때 LIMIT 하면 안 된다. 페치 -> ID별 그룹 -> 그룹별 LIMIT
         id->rows (->> (table-fetcher db filter-options page-options)
-                      (map #(update % base-relation-id str))  ; ids가 str로 입력되므로 맞춤
-                      (group-by base-relation-id))]
+                      (map #(update % base-aggregation-id str))  ; ids가 str로 입력되므로 맞춤
+                      (group-by base-aggregation-id))]
     (map id->rows ids))) ; rows를 ids 순서대로 배치
 
 (defmacro superfetcher-v2
