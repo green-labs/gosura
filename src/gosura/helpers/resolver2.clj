@@ -2,6 +2,8 @@
   "gosura.helpers.resolver의 v2입니다."
   (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [failjure.core :as f]
+            [camel-snake-kebab.core :as csk]
+            [com.walmartlabs.lacinia.schema :refer [tag-with-type]]
             [gosura.auth :as auth]
             [gosura.helpers.error :as error]
             [gosura.helpers.relay :as relay]
@@ -136,10 +138,10 @@
   * arguments 쿼리 입력
   * parent    부모 노드
   * config    리졸버 동작 설정
-    * :db-key            사용할 DB 이름
-    * :superfetcher      슈퍼페처
-    * :post-process-row  결과 객체 목록 후처리 함수 (예: identity)
-    * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id :agg :id} {:prop :user-id :agg :id}
+    * :db-key 사용할 DB 이름
+    * :fetch-one 단일 맵을 반환하는 함수
+    * :post-process-row 결과 객체 목록 후처리 함수 (예: identity)
+    * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id} {:prop :user-id :agg :id}
      * :pre-fn: 전처리
      * :prop: 부모로부터 전달 받는 키값
      * :agg: 데이터를 모으는 키값 
@@ -148,7 +150,7 @@
   "
   [context _arguments parent {:keys [db-key
                                      node-type
-                                     superfetcher
+                                     fetch-one
                                      post-process-row
                                      parent-id
                                      additional-filter-opts]}]
@@ -157,12 +159,8 @@
         load-id (-> parent
                     (or pre-fn identity)
                     prop)
-        superfetch-arguments (merge additional-filter-opts
-                                    {:id           load-id
-                                     :page-options nil
-                                     :agg          agg})
-        superfetch-id        (hash superfetch-arguments)]
-    (with-superlifter (:superlifter context)
-      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-          (prom/then (fn [rows] (-> (first rows)
-                                    (relay/build-node node-type post-process-row))))))))
+        db (get context db-key)
+        filter-options (relay/build-filter-options {agg load-id} additional-filter-opts)
+        result (fetch-one db filter-options {})]
+    (-> (relay/build-node result node-type post-process-row)
+        (tag-with-type (csk/->PascalCaseKeyword node-type)))))
