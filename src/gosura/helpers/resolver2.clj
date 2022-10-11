@@ -2,14 +2,20 @@
   "gosura.helpers.resolver의 v2입니다."
   (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [failjure.core :as f]
+            [camel-snake-kebab.core :as csk]
+            [com.walmartlabs.lacinia.schema :refer [tag-with-type]]
             [gosura.auth :as auth]
             [gosura.helpers.error :as error]
-            [gosura.helpers.resolver :refer [parse-fdecl
-                                             keys-not-found]]
             [gosura.helpers.relay :as relay]
+            [gosura.helpers.resolver :refer [common-pre-process-arguments
+                                             keys-not-found
+                                             nullify-empty-string-arguments parse-fdecl]]
+            [gosura.helpers.superlifter :refer [with-superlifter]]
             [gosura.util :as util :refer [transform-keys->camelCaseKeyword
                                           transform-keys->kebab-case-keyword
-                                          update-resolver-result]]))
+                                          update-resolver-result]]
+            [promesa.core :as prom]
+            [superlifter.api :as superlifter-api]))
 
 (defmacro wrap-resolver-body
   "GraphQL 리졸버가 공통으로 해야 할 auth 처리, case 변환 처리를 resolver body의 앞뒤에서 해 주도록 wrapping합니다.
@@ -75,3 +81,89 @@
        (wrap-resolver-body {:ctx    ctx#
                             :arg    arg#
                             :parent parent#} ~option ~args ~body))))
+
+(defn connection-by
+  "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
+
+  ## 인자
+  * context   리졸버 실행 문맥
+  * arguments 쿼리 입력
+  * parent    부모 노드
+  * config    리졸버 동작 설정
+    * :superfetcher: 슈퍼페처
+    * :post-process-row: 결과 객체 목록 후처리 함수 (예: identity)
+    * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id :agg :id} {:prop :user-id :agg :id}
+     * :pre-fn: 전처리
+     * :prop: 부모로부터 전달 받는 키값
+     * :agg: 데이터를 모으는 키값 
+  ## 반환
+  * 객체 목록
+  "
+  [context arguments parent {:keys [db-key
+                                     node-type
+                                     superfetcher
+                                     parent-id
+                                     post-process-row
+                                     additional-filter-opts]}]
+  {:pre [(some? db-key)]}
+  (let [arguments (-> arguments
+                      common-pre-process-arguments
+                      (nullify-empty-string-arguments [:after :before]))
+        {:keys [pre-fn prop agg]} parent-id
+        load-id (-> parent
+                    (or pre-fn identity)
+                    prop)
+        {:keys [order-by
+                page-direction
+                page-size
+                cursor-id]
+         :as   page-options} (relay/build-page-options arguments)
+        superfetch-arguments (merge additional-filter-opts
+                                    {:id           load-id
+                                     :page-options page-options
+                                     :agg          agg})
+        superfetch-id (hash superfetch-arguments)]
+    (with-superlifter (:superlifter context)
+      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+          (prom/then (fn [rows]
+                       (->> rows
+                            (map #(relay/build-node % node-type post-process-row))
+                            (relay/build-connection order-by page-direction page-size cursor-id))))))))
+
+(defn one-by
+  "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
+  ## 인자
+  * context   리졸버 실행 문맥
+  * arguments 쿼리 입력
+  * parent    부모 노드
+  * config    리졸버 동작 설정
+    * :db-key            사용할 DB 이름
+    * :superfetcher      슈퍼페처
+    * :post-process-row  결과 객체 목록 후처리 함수 (예: identity)
+    * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id :agg :id} {:prop :user-id :agg :id}
+     * :pre-fn: 전처리
+     * :prop: 부모로부터 전달 받는 키값
+     * :agg: 데이터를 모으는 키값 
+  ## 반환
+  * 객체 하나
+  "
+  [context _arguments parent {:keys [db-key
+                                     node-type
+                                     superfetcher
+                                     post-process-row
+                                     parent-id
+                                     additional-filter-opts]}]
+  {:pre [(some? db-key)]}
+  (let [{:keys [pre-fn prop agg]} parent-id
+        load-id                   (-> parent
+                                      (or pre-fn identity)
+                                      prop)
+        superfetch-arguments      (merge additional-filter-opts
+                                         {:id           load-id
+                                          :page-options nil
+                                          :agg          agg})
+        superfetch-id             (hash superfetch-arguments)]
+    (with-superlifter (:superlifter context)
+      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+          (prom/then (fn [rows] (-> (first rows)
+                                    (relay/build-node node-type post-process-row))))))))

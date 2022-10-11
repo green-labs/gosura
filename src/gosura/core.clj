@@ -15,6 +15,7 @@
             [gosura.auth :as auth]
             [gosura.helpers.relay :as relay]
             [gosura.helpers.resolver :as r]
+            [gosura.helpers.resolver2 :as r2]
             [gosura.schema :as schema]
             [gosura.util :as util :refer [transform-keys->camelCaseKeyword
                                           transform-keys->kebab-case-keyword
@@ -72,7 +73,11 @@
       #"resolve-update-one" r/resolve-update-one
       #"resolve-delete-one" r/resolve-delete-one
       #"resolve-update-multi" r/resolve-update-multi
-      #"resolve-one" r/resolve-one)
+      #"resolve-one" r/resolve-one
+      
+      ;; resolver2
+      #"connection-by-(.*)" r2/connection-by
+      #"one-by-(.*)" r2/one-by)
     (catch Exception e
       (f/fail (format "Can't find resolver-fn because of %s" (ex-message e))))))
 
