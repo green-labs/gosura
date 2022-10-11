@@ -132,16 +132,15 @@
 
 (defn one-by
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
-
   ## 인자
   * context   리졸버 실행 문맥
   * arguments 쿼리 입력
   * parent    부모 노드
   * config    리졸버 동작 설정
-    * :db-key 사용할 DB 이름
-    * :fetch-one 단일 맵을 반환하는 함수
-    * :post-process-row 결과 객체 목록 후처리 함수 (예: identity)
-    * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id} {:prop :user-id :agg :id}
+    * :db-key            사용할 DB 이름
+    * :superfetcher      슈퍼페처
+    * :post-process-row  결과 객체 목록 후처리 함수 (예: identity)
+    * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id :agg :id} {:prop :user-id :agg :id}
      * :pre-fn: 전처리
      * :prop: 부모로부터 전달 받는 키값
      * :agg: 데이터를 모으는 키값 
@@ -150,17 +149,21 @@
   "
   [context _arguments parent {:keys [db-key
                                      node-type
-                                     fetch-one
+                                     superfetcher
                                      post-process-row
                                      parent-id
                                      additional-filter-opts]}]
   {:pre [(some? db-key)]}
   (let [{:keys [pre-fn prop agg]} parent-id
-        load-id (-> parent
-                    (or pre-fn identity)
-                    prop)
-        db (get context db-key)
-        filter-options (relay/build-filter-options {agg load-id} additional-filter-opts)
-        result (fetch-one db filter-options {})]
-    (-> (relay/build-node result node-type post-process-row)
-        (tag-with-type (csk/->PascalCaseKeyword node-type)))))
+        load-id                   (-> parent
+                                      (or pre-fn identity)
+                                      prop)
+        superfetch-arguments      (merge additional-filter-opts
+                                         {:id           load-id
+                                          :page-options nil
+                                          :agg          agg})
+        superfetch-id             (hash superfetch-arguments)]
+    (with-superlifter (:superlifter context)
+      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+          (prom/then (fn [rows] (-> (first rows)
+                                    (relay/build-node node-type post-process-row))))))))
