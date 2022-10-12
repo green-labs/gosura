@@ -2,8 +2,6 @@
   "gosura.helpers.resolver의 v2입니다."
   (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [failjure.core :as f]
-            [camel-snake-kebab.core :as csk]
-            [com.walmartlabs.lacinia.schema :refer [tag-with-type]]
             [gosura.auth :as auth]
             [gosura.helpers.error :as error]
             [gosura.helpers.relay :as relay]
@@ -128,7 +126,8 @@
           (prom/then (fn [rows]
                        (->> rows
                             (map #(relay/build-node % node-type post-process-row))
-                            (relay/build-connection order-by page-direction page-size cursor-id))))))))
+                            (relay/build-connection order-by page-direction page-size cursor-id)
+                            transform-keys->camelCaseKeyword)))))))
 
 (defn one-by
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
@@ -166,4 +165,5 @@
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows] (-> (first rows)
-                                    (relay/build-node node-type post-process-row))))))))
+                                    (relay/build-node node-type post-process-row)
+                                    transform-keys->camelCaseKeyword)))))))
