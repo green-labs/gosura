@@ -1,8 +1,10 @@
 (ns gosura.helpers.db
   (:require [clojure.set]
+            [clojure.string]
             [com.rpl.specter :as specter]
             [honey.sql :as honeysql]
             [honey.sql.helpers :as sql-helper]
+            [net.lewisship.trace :refer [trace]]
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as rs]))
 
@@ -166,7 +168,7 @@
   ([batch-args]
    (batch-args-filter-pred batch-args nil))
   ([batch-args table-name-alias]
-   (let [column-names (->> batch-args first keys)
+   (let [column-names  (->> batch-args first keys)
          column-values (map #((apply juxt column-names) %) batch-args)]
      [:in
       (cons :composite (->> column-names
@@ -183,24 +185,28 @@
   ([ds qs] (fetch! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format qs honey-sql-format-options)]
+     (trace :sql sql)
      (jdbc/execute! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn fetch-one!
   ([ds qs] (fetch-one! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format (sql-helper/limit qs 1) honey-sql-format-options)]
+     (trace :sql sql)
      (jdbc/execute-one! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn execute!
   ([ds qs] (execute! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format qs honey-sql-format-options)]
+     (trace :sql sql)
      (jdbc/execute! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn execute-one!
   ([ds qs] (execute-one! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format qs honey-sql-format-options)]
+     (trace :sql sql)
      (jdbc/execute-one! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn unqualified-kebab-fetch!
@@ -254,3 +260,10 @@
   (let [query {:delete-from table-name
                :where       where-params}]
     (execute! db query)))
+
+(defn format-query
+  [honeysql-formmated-query]
+  (let [query        (-> (first honeysql-formmated-query)
+                         (clojure.string/replace "?" "%s"))
+        placeholders (rest honeysql-formmated-query)]
+    (apply format query placeholders)))

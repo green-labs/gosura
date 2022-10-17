@@ -16,7 +16,8 @@
                                                 :sha     "e0df5b36b496c485c75f38052a71b18f02772cc0"}
            metosin/malli                       {:mvn/version "0.8.4"}
            com.github.seancorfield/next.jdbc   {:mvn/version "1.2.780"}
-           aero/aero                           {:mvn/version "1.1.6"}}
+           aero/aero                           {:mvn/version "1.1.6"}
+           io.github.hlship/trace              {:mvn/version "v1.0"}}
 
  :aliases {:test     {:extra-paths ["test"]
                       :extra-deps  {io.github.cognitect-labs/test-runner {:git/tag "v0.5.0"
