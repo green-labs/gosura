@@ -185,28 +185,28 @@
   ([ds qs] (fetch! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format qs honey-sql-format-options)]
-     (trace :sql sql)
+     (trace :sql (symbol sql))
      (jdbc/execute! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn fetch-one!
   ([ds qs] (fetch-one! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format (sql-helper/limit qs 1) honey-sql-format-options)]
-     (trace :sql sql)
+     (trace :sql (symbol sql))
      (jdbc/execute-one! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn execute!
   ([ds qs] (execute! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format qs honey-sql-format-options)]
-     (trace :sql sql)
+     (trace :sql (symbol sql))
      (jdbc/execute! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn execute-one!
   ([ds qs] (execute-one! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format qs honey-sql-format-options)]
-     (trace :sql sql)
+     (trace :sql (symbol sql))
      (jdbc/execute-one! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn unqualified-kebab-fetch!
