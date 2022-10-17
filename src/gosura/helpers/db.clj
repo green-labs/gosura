@@ -181,32 +181,39 @@
                                :quoted       true
                                :quoted-snake true})
 
+(defn format-query
+  [honeysql-formmated-query]
+  (let [query        (-> (first honeysql-formmated-query)
+                         (clojure.string/replace "?" "%s"))
+        placeholders (rest honeysql-formmated-query)]
+    (symbol (apply format query placeholders))))
+
 (defn fetch!
   ([ds qs] (fetch! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format qs honey-sql-format-options)]
-     (trace :sql (symbol sql))
+     (trace :sql (format-query sql))
      (jdbc/execute! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn fetch-one!
   ([ds qs] (fetch-one! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format (sql-helper/limit qs 1) honey-sql-format-options)]
-     (trace :sql (symbol sql))
+     (trace :sql (format-query sql))
      (jdbc/execute-one! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn execute!
   ([ds qs] (execute! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format qs honey-sql-format-options)]
-     (trace :sql (symbol sql))
+     (trace :sql (format-query sql))
      (jdbc/execute! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn execute-one!
   ([ds qs] (execute-one! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format qs honey-sql-format-options)]
-     (trace :sql (symbol sql))
+     (trace :sql (format-query sql))
      (jdbc/execute-one! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn unqualified-kebab-fetch!
@@ -260,10 +267,3 @@
   (let [query {:delete-from table-name
                :where       where-params}]
     (execute! db query)))
-
-(defn format-query
-  [honeysql-formmated-query]
-  (let [query        (-> (first honeysql-formmated-query)
-                         (clojure.string/replace "?" "%s"))
-        placeholders (rest honeysql-formmated-query)]
-    (apply format query placeholders)))
