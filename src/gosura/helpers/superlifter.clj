@@ -84,6 +84,8 @@
                  (map :id)
                  (map str))
         base-filter-options (->> arguments-list first :filter-options)
+        relation-id (or (->> arguments-list first :agg)
+                              id-in-parent) ; 하위호환
         batch-args (->> arguments-list
                         (map #(dissoc % :page-options :filter-options))
                         (map #(s/rename-keys % {:id relation-id})))
