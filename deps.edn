@@ -1,7 +1,6 @@
 {:paths   ["src" "resources" "classes"]
  :deps    {camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.3"}
            com.github.seancorfield/honeysql    {:mvn/version "2.2.891"}
-           com.rpl/specter                     {:mvn/version "1.1.4"}
            com.taoensso/nippy                  {:mvn/version "3.1.1"}
            com.taoensso/timbre                 {:mvn/version "5.2.1"}
            com.walmartlabs/lacinia             {:mvn/version "1.1"}
@@ -26,9 +25,7 @@
 
            :build    {:deps              {com.github.liquidz/build.edn {:git/tag "0.3.90"
                                                                         :git/sha "e3a3e31"}}
-                      :ns-default        build-edn.main
-                      :deploy-repository {:username #env YOUR_USERNAME
-                                          :password #env YOUR_PASSWORD}}
+                      :ns-default        build-edn.main}
            :quickdoc {:deps      {org.babashka/cli            {:mvn/version "0.4.36"}
                                   io.github.borkdude/quickdoc {:deps/root "jvm"
                                                                :git/sha   "c5320cbe311b651a60b47f4d00d7e8ab63291b6e"}}

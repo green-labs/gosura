@@ -1,6 +1,5 @@
 (ns gosura.helpers.db
   (:require [clojure.set]
-            [com.rpl.specter :as specter]
             [honey.sql :as honeysql]
             [honey.sql.helpers :as sql-helper]
             [next.jdbc :as jdbc]
@@ -99,9 +98,12 @@
   [options]
   (let [pred #(or (nil? %)
                   (and (coll? %) (empty? %)))]
-    (specter/setval [specter/MAP-VALS pred]
-                    specter/NONE
-                    options)))
+    (reduce-kv (fn [m k v]
+                 (if (pred v)
+                   m
+                   (assoc m k v)))
+               {}
+               options)))
 
 (defn join-for-filter-options
   "지정한 규칙과 필터링 옵션에 따라 조인 조건들을 선택한다.
