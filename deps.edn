@@ -17,7 +17,8 @@
            metosin/malli                       {:mvn/version "0.8.4"}
            com.github.seancorfield/next.jdbc   {:mvn/version "1.2.780"}
            aero/aero                           {:mvn/version "1.1.6"}
-           io.github.hlship/trace              {:mvn/version "v1.0"}}
+           io.github.hlship/trace              {:git/url "https://github.com/jungwookim/trace"
+                                                :git/sha "27e0faf04fa865d902730da9b944053445f0be7d"}}
 
  :aliases {:test     {:extra-paths ["test"]
                       :extra-deps  {io.github.cognitect-labs/test-runner {:git/tag "v0.5.0"
