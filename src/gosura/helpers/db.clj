@@ -1,7 +1,6 @@
 (ns gosura.helpers.db
   (:require [clojure.set]
             [clojure.string]
-            [com.rpl.specter :as specter]
             [honey.sql :as honeysql]
             [honey.sql.helpers :as sql-helper]
             [net.lewisship.trace :refer [trace]]
