@@ -159,10 +159,10 @@
             예) [{:country-code \"JP\", :id \"1204\"}
                 {:country-code \"JP\", :id \"1205\"}
                 {:country-code \"KR\", :id \"1206\"}]
-   
+
      * 출력: [:in (:composite :country-code :id)
                  ((:composite \"JP\" \"1204\") (:composite \"JP\" \"1205\") (:composite \"KR\" \"1206\"))]
-   
+
    ## HoneySQL을 통해 SQL 문으로 변환한 결과
      => [\"WHERE (country_code, id) IN ((?, ?), (?, ?), (?, ?))\" \"JP\" \"1204\" \"JP\" \"1205\" \"KR\" \"1206\"]"
   ([batch-args]
@@ -192,37 +192,45 @@
   ([ds qs] (fetch! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format qs honey-sql-format-options)]
-     (trace :sql (format-query sql))
      (jdbc/execute! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn fetch-one!
   ([ds qs] (fetch-one! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format (sql-helper/limit qs 1) honey-sql-format-options)]
-     (trace :sql (format-query sql))
      (jdbc/execute-one! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn execute!
   ([ds qs] (execute! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format qs honey-sql-format-options)]
-     (trace :sql (format-query sql))
      (jdbc/execute! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn execute-one!
   ([ds qs] (execute-one! ds qs {}))
   ([ds qs opts]
    (let [sql (honeysql/format qs honey-sql-format-options)]
-     (trace :sql (format-query sql))
      (jdbc/execute-one! ds sql (merge {:timeout query-timeout} opts)))))
 
 (defn unqualified-kebab-fetch!
   [ds qs]
   (fetch! ds qs {:builder-fn rs/as-unqualified-kebab-maps}))
 
+(defmacro unqualified-kebab-fetch2!
+  [ds qs]
+  `(let [sql# (honeysql/format ~qs honey-sql-format-options)]
+     (trace :sql (format-query sql#))
+     (jdbc/execute! ~ds sql# (merge {:timeout query-timeout} {:builder-fn rs/as-unqualified-kebab-maps}))))
+
 (defn unqualified-kebab-fetch-one!
   [ds qs]
   (fetch-one! ds qs {:builder-fn rs/as-unqualified-kebab-maps}))
+
+(defmacro unqualified-kebab-fetch-one2!
+  [ds qs]
+  `(let [sql# (honeysql/format (sql-helper/limit ~qs 1) honey-sql-format-options)]
+     (trace :sql (format-query sql#))
+     (jdbc/execute-one! ~ds sql (merge {:timeout query-timeout} {:builder-fn rs/as-unqualified-kebab-maps}))))
 
 (defn insert-one
   "db
