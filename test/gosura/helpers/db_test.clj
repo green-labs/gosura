@@ -2,6 +2,12 @@
   (:require [clojure.test :refer [deftest is testing run-tests]]
             [gosura.helpers.db :as db]))
 
+(deftest utility-test
+  (testing "remove-empty-options"
+    (let [options {:a 1, :b [1 2 3], :c [], :d {}, :e nil, :f #{1 2}}]
+      (is (= {:a 1, :b [1 2 3], :f #{1 2}}
+             (db/remove-empty-options options))))))
+
 (deftest batch-args-filter-pred-test
   (testing "batch-args를 HoneySQL에서 사용할 수 있는 데이터로 반환합니다."
     (let [result (db/batch-args-filter-pred

@@ -1,11 +1,13 @@
-{:paths   ["src" "resources" "classes"]
+{:paths   ["src"]
  :deps    {camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.3"}
            com.github.seancorfield/honeysql    {:mvn/version "2.2.891"}
-           com.rpl/specter                     {:mvn/version "1.1.4"}
+           com.github.seancorfield/next.jdbc   {:mvn/version "1.2.780"}
            com.taoensso/nippy                  {:mvn/version "3.1.1"}
            com.taoensso/timbre                 {:mvn/version "5.2.1"}
            com.walmartlabs/lacinia             {:mvn/version "1.1"}
            failjure/failjure                   {:mvn/version "2.2.0"}
+           io.github.hlship/trace              {:git/url "https://github.com/jungwookim/trace"
+                                                :git/sha "27e0faf04fa865d902730da9b944053445f0be7d"}}
            io.sentry/sentry-clj                {:mvn/version "5.7.180"}
            medley/medley                       {:mvn/version "1.4.0"}
            org.clojure/clojure                 {:mvn/version "1.11.1"}
@@ -14,11 +16,7 @@
            org.clojure/core.match              {:mvn/version "1.0.0"}
            superlifter/superlifter             {:git/url "https://github.com/green-labs/superlifter.git"
                                                 :sha     "e0df5b36b496c485c75f38052a71b18f02772cc0"}
-           metosin/malli                       {:mvn/version "0.8.4"}
-           com.github.seancorfield/next.jdbc   {:mvn/version "1.2.780"}
-           aero/aero                           {:mvn/version "1.1.6"}
-           io.github.hlship/trace              {:git/url "https://github.com/jungwookim/trace"
-                                                :git/sha "27e0faf04fa865d902730da9b944053445f0be7d"}}
+           metosin/malli                       {:mvn/version "0.8.4"}}
 
  :aliases {:test     {:extra-paths ["test"]
                       :extra-deps  {io.github.cognitect-labs/test-runner {:git/tag "v0.5.0"
@@ -28,9 +26,7 @@
 
            :build    {:deps              {com.github.liquidz/build.edn {:git/tag "0.3.90"
                                                                         :git/sha "e3a3e31"}}
-                      :ns-default        build-edn.main
-                      :deploy-repository {:username #env YOUR_USERNAME
-                                          :password #env YOUR_PASSWORD}}
+                      :ns-default        build-edn.main}
            :quickdoc {:deps      {org.babashka/cli            {:mvn/version "0.4.36"}
                                   io.github.borkdude/quickdoc {:deps/root "jvm"
                                                                :git/sha   "c5320cbe311b651a60b47f4d00d7e8ab63291b6e"}}

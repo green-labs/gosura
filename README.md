@@ -135,6 +135,8 @@ clj -M:quickdoc
 
 출시하고자 하는 버전에 해당하는 git tag를 생성하고, `build.edn` 파일을 수정한 뒤 아래 명령어를 실행합니다.
 
+환경변수에 `CLOJARS_USERNAME`와 `CLOJARS_PASSWORD`가 지정되어 있어야 합니다.
+
 ```bash
 clj -T:build deploy
 ```
