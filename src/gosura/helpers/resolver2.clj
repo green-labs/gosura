@@ -1,6 +1,8 @@
 (ns gosura.helpers.resolver2
   "gosura.helpers.resolver의 v2입니다."
-  (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
+  (:require [camel-snake-kebab.core :as csk]
+            [com.walmartlabs.lacinia.resolve :refer [resolve-as with-context]]
+            [com.walmartlabs.lacinia.schema :refer [tag-with-type]]
             [failjure.core :as f]
             [gosura.auth :as auth]
             [gosura.helpers.error :as error]
@@ -124,10 +126,13 @@
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows]
-                       (->> rows
-                            (map #(relay/build-node % node-type post-process-row))
-                            (relay/build-connection order-by page-direction page-size cursor-id)
-                            transform-keys->camelCaseKeyword)))))))
+                       (with-context
+                         (->> rows
+                              (map #(relay/build-node % node-type post-process-row))
+                              (relay/build-connection order-by page-direction page-size cursor-id)
+                              transform-keys->camelCaseKeyword)
+                         ;; TODO: 이름 고민 필요
+                         (assoc context :superlifter-enabled? true))))))))
 
 (defn one-by
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
@@ -146,24 +151,37 @@
   ## 반환
   * 객체 하나
   "
-  [context _arguments parent {:keys [db-key
-                                     node-type
-                                     superfetcher
-                                     post-process-row
-                                     parent-id
-                                     additional-filter-opts]}]
+  [{:keys [db superlifter-enabled?]
+    :as   context} _arguments
+   parent {:keys [db-key
+                  node-type
+                  fetch-one
+                  superfetcher
+                  post-process-row
+                  parent-id
+                  additional-filter-opts]}]
   {:pre [(some? db-key)]}
-  (let [{:keys [pre-fn prop agg]} parent-id
-        load-id                   (-> parent
-                                      (or pre-fn identity)
-                                      prop)
-        superfetch-arguments      (merge additional-filter-opts
-                                         {:id           load-id
-                                          :page-options nil
-                                          :agg          agg})
-        superfetch-id             (hash superfetch-arguments)]
-    (with-superlifter (:superlifter context)
-      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-          (prom/then (fn [rows] (-> (first rows)
-                                    (relay/build-node node-type post-process-row)
-                                    transform-keys->camelCaseKeyword)))))))
+  ;; TODO 코드 정리 필요
+  (if superlifter-enabled?
+    (let [{:keys [pre-fn prop agg]} parent-id
+          load-id                   (-> parent
+                                        (or pre-fn identity)
+                                        prop)
+          superfetch-arguments      (merge additional-filter-opts
+                                           {:id           load-id
+                                            :page-options nil
+                                            :agg          agg})
+          superfetch-id             (hash superfetch-arguments)]
+      (with-superlifter (:superlifter context)
+        (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+            (prom/then (fn [rows] (-> (first rows)
+                                      (relay/build-node node-type post-process-row)
+                                      transform-keys->camelCaseKeyword))))))
+    (let [{:keys [pre-fn prop agg]} parent-id
+          load-id                   (-> parent
+                                        (or pre-fn identity)
+                                        prop)
+          filter-options            (relay/build-filter-options {agg load-id} additional-filter-opts)
+          result                    (fetch-one db filter-options {})]
+      (-> (relay/build-node result node-type post-process-row)
+          (tag-with-type (csk/->PascalCaseKeyword node-type))))))
