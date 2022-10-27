@@ -132,6 +132,7 @@
                               (relay/build-connection order-by page-direction page-size cursor-id)
                               transform-keys->camelCaseKeyword)
                          ;; TODO: 이름 고민 필요
+                         ;; TODO: Connection 뿐 아니라 List 일때도 적용 필요
                          (assoc context :superlifter-enabled? true))))))))
 
 (defn one-by
