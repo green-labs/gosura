@@ -6,29 +6,31 @@ Data-driven GraphQL Resolvers on [lacinia](https://github.com/walmartlabs/lacini
 
 기본적으로 GraphQL [relay](https://relay.dev/) 스펙을 이용한 어플리케이션 설계에 유용하도록 만들어져있습니다. 그리고 [EDN](https://github.com/edn-format/edn)을 이용하여 선언적으로 GraphQL query 및 mutation이 만들어지도록 하였습니다.
 
-We are writing diverse and repetitive GraphQL queries and mutations where we are building general-purposed applications. When you follow [GraphQL](https://graphql.org/) and even [relay](https://relay.dev/), we should handle the relay specification with Clojure code. It's pretty annoying with us. So, we decided to make some helpers and [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) for data-driven resolvers.
+The GraphQL queries and mutations we write on daily basis are often repetitive, being mostly plain CRUDs on certain schemas. 
+If one is using [relay](https://relay.dev/) on top of GraphQL, there are specifications that require implementations on server side that are laborious and redundant; and here comes Gosura to rescue.
+Gosura is a [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) and a bundle of helpers that make data-driven resolvers; it aims to solve the aforementioned problems.
 
 # Features
 - An [EDN](https://github.com/edn-format/edn)-based GraphQL resolver language.
-- Following GraphQL relay specifications.
-- Generating query resolvers in a declarative way.
+- Support GraphQL relay specifications.
+- Generation of query resolvers in a declarative way.
 - Simple mapping 1:1, 1:N, N:M relations.
-- Covering N+1 queries over [superlifter](https://github.com/oliyh/superlifter)
+- Support N+1 queries over [superlifter](https://github.com/oliyh/superlifter)
 
 # Caveats
-- currently only support mysql8.
-- superlifter solves N+1 query but it doesn't take a optimal way in superlifter.
-- not enough docstring and documentation.
+- currently supporting mysql8 only.
+- suboptimal solution to N+1 problem (with superlifter).
+- scant documentation.
 
 # Installation
-Use git dependency:
+git:
 ```clojure
 green-labs/gosura {:git/url "https://github.com/green-labs/gosura"
                    :git/sha "f1d586669f37a3ca99e14739f9abfb1a02128274"}
 ```
 
 # Core
-This is almost full configs you're able to set.
+Below is the list of a full configuration.
 ```clojure
 {:target-ns             animal.resolve ; a generated resolver's namespace
  :node-type             :animal ; node-type for relay
@@ -61,8 +63,8 @@ Let's start with creating a simple resolver containing queries for connection, c
 
 ```
 
-Then, you might be able to think that you need to create a db-fetcher, superfetcher!
-Here's things.
+Then, you may think that you need to create a db-fetcher, superfetcher!
+Here's a get-go.
 
 `db-fetcher`
 ```clojure
@@ -99,7 +101,8 @@ Here's things.
                      :filter-key    :ids})
 ```
 
-`generate-all` must be executed before lacinia compiles schema because `generate-all` has to make all the resolvers in edn where we define. In order to use a tagged literal `#var`, make sure you need to use `gosura.edn/read-config`.
+`generate-all` must be executed before lacinia compiles schema because `generate-all` has to make all the resolvers in edn where we define.
+In order to use a tagged literal `#var`, make sure you need to use `gosura.edn/read-config`.
 ```clojure
 (require '[gosura.core :as gosura]
           [gosura.edn])
@@ -116,10 +119,10 @@ Here's things.
 (gosura/generate-all gosura-resolvers)
 ```
 
-When your server is executed, lacinia is run successfully with generated resolvers.
+When your server is started, lacinia will generate resolvers.
 
 # API docs
-See [docs](API.md). You can call and make a quickdoc using
+See [docs](API.md). You can make a quickdoc using
 ```clojure
 clj -M:quickdoc
 ```
@@ -127,8 +130,8 @@ clj -M:quickdoc
 - not stable
 
 # Todo
-- documenations for lacinia compiler to use symbolic resolve in schema.
-- documenations for lacinia schema examples
+- Documenations for lacinia compiler to use symbolic resolve in schema.
+- Documenations for lacinia schema examples
 
 # Deploy
 ## Clojars
