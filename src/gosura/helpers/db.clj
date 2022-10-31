@@ -1,5 +1,6 @@
 (ns gosura.helpers.db
   (:require [clojure.set]
+            [clojure.string]
             [honey.sql :as honeysql]
             [honey.sql.helpers :as sql-helper]
             [next.jdbc :as jdbc]
@@ -180,6 +181,12 @@
 (def honey-sql-format-options {:dialect      :mysql
                                :quoted       true
                                :quoted-snake true})
+(defn format-query
+  [honeysql-formmated-query]
+  (let [query        (-> (first honeysql-formmated-query)
+                         (clojure.string/replace "?" "%s"))
+        placeholders (rest honeysql-formmated-query)]
+    (symbol (apply format query placeholders))))
 
 (defn fetch!
   ([ds qs] (fetch! ds qs {}))
@@ -209,9 +216,21 @@
   [ds qs]
   (fetch! ds qs {:builder-fn rs/as-unqualified-kebab-maps}))
 
+(defmacro unqualified-kebab-fetch2!
+  [ds qs]
+  `(let [sql# (honeysql/format ~qs honey-sql-format-options)]
+     (trace :sql (format-query sql#))
+     (jdbc/execute! ~ds sql# (merge {:timeout query-timeout} {:builder-fn rs/as-unqualified-kebab-maps}))))
+
 (defn unqualified-kebab-fetch-one!
   [ds qs]
   (fetch-one! ds qs {:builder-fn rs/as-unqualified-kebab-maps}))
+
+(defmacro unqualified-kebab-fetch-one2!
+  [ds qs]
+  `(let [sql# (honeysql/format (sql-helper/limit ~qs 1) honey-sql-format-options)]
+     (trace :sql (format-query sql#))
+     (jdbc/execute-one! ~ds sql (merge {:timeout query-timeout} {:builder-fn rs/as-unqualified-kebab-maps}))))
 
 (defn insert-one
   "db
