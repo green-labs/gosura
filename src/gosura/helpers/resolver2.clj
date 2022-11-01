@@ -9,7 +9,8 @@
             [gosura.helpers.resolver :refer [common-pre-process-arguments
                                              keys-not-found
                                              nullify-empty-string-arguments parse-fdecl]]
-            [gosura.helpers.superlifter :refer [with-superlifter]]
+            [gosura.helpers.superlifter :refer [with-superlifter
+                                                superfetcher-v2]]
             [gosura.util :as util :refer [transform-keys->camelCaseKeyword
                                           transform-keys->kebab-case-keyword
                                           update-resolver-result]]
@@ -124,10 +125,11 @@
                                      :agg          agg})
         superfetch-id (hash superfetch-arguments)
         superfetcher-name (gensym (str "FetchBy" (csk/->PascalCase (name prop))))
-        superfetcher `(superfetcher-v2 ~superfetcher-name {:db-key        ~db-key
-                                                           :table-fetcher ~fetch})]
+        ->superfetcher-name (symbol (str "->" superfetcher-name))
+        _ `(superfetcher-v2 ~superfetcher-name {:db-key        ~db-key
+                                                :table-fetcher ~fetch})]
     (with-superlifter (:superlifter context)
-      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+      (-> (superlifter-api/enqueue! db-key (->superfetcher-name superfetch-id superfetch-arguments))
           (prom/then (fn [rows]
                        (->> rows
                             (map #(relay/build-node % node-type post-process-row))
@@ -168,10 +170,11 @@
                                           :agg          agg})
         superfetch-id             (hash superfetch-arguments)
         superfetcher-name         (gensym (str "FetchBy" (csk/->PascalCase (name prop))))
-        superfetcher              `(superfetcher-v2 ~superfetcher-name {:db-key        ~db-key
-                                                                        :table-fetcher ~fetch})]
+        ->superfetcher-name       (symbol (str "->" superfetcher-name))
+        _              `(superfetcher-v2 ~superfetcher-name {:db-key        ~db-key
+                                                             :table-fetcher ~fetch})]
     (with-superlifter (:superlifter context)
-      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+      (-> (superlifter-api/enqueue! db-key (->superfetcher-name superfetch-id superfetch-arguments))
           (prom/then (fn [rows] (-> (first rows)
                                     (relay/build-node node-type post-process-row)
                                     transform-keys->camelCaseKeyword)))))))
