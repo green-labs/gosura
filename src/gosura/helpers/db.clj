@@ -3,6 +3,7 @@
             [clojure.string]
             [honey.sql :as honeysql]
             [honey.sql.helpers :as sql-helper]
+            [net.lewisship.trace :refer [trace]]
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as rs]))
 
@@ -230,7 +231,7 @@
   [ds qs]
   `(let [sql# (honeysql/format (sql-helper/limit ~qs 1) honey-sql-format-options)]
      (trace :sql (format-query sql#))
-     (jdbc/execute-one! ~ds sql (merge {:timeout query-timeout} {:builder-fn rs/as-unqualified-kebab-maps}))))
+     (jdbc/execute-one! ~ds sql# (merge {:timeout query-timeout} {:builder-fn rs/as-unqualified-kebab-maps}))))
 
 (defn insert-one
   "db
