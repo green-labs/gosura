@@ -140,13 +140,26 @@
             join-rules)))
 
 (defn add-page-options
+  "
+  페이징을 위해 HoneySQL 데이터에 ORDER BY, OFFSET, LIMIT 을 추가합니다.
+  (주의) tie가 발생하지 않음을 보장하기 위해 :id 컬럼을 order-direction에 따라 정렬합니다.
+
+   sql - honeysql 데이터
+   args
+    :order-by - 정렬하고자 하는 key, :id 컬럼과 달라야 함
+    :order-direction - :asc(기본값) 혹은 :desc, optional
+    :offset
+    :limit
+   table-name-alias - 컬럼에 alias가 되어있는 경우, optional
+  "
   ([sql {:keys [order-direction order-by limit offset]} table-name-alias]
    (let [order-by        (col-with-table-name table-name-alias order-by)
          id              (col-with-table-name table-name-alias :id)
          order-direction (or order-direction :asc)]
      (cond-> sql
-       order-by (assoc :order-by [[order-by order-direction]
-                                  [id       order-direction]])
+       order-by (assoc :order-by (if (= order-by id)
+                                   [[order-by order-direction]]
+                                   [[order-by order-direction] [id order-direction]]))
        offset (assoc :offset offset)
        limit (assoc :limit limit))))
   ([sql page-options]
