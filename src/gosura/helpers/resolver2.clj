@@ -122,12 +122,13 @@
                                      :page-options page-options
                                      :agg          agg})
         superfetch-id (hash superfetch-arguments)
-        superfetcher-name (gensym (str "FetchBy" (csk/->PascalCase (name prop))))
-        ->superfetcher-name (symbol (str "->" superfetcher-name))
-        _ `(superfetcher-v2 ~superfetcher-name {:db-key        ~db-key
-                                                :table-fetcher ~fetch})]
+        superfetcher-name (symbol (str "FetchBy" (csk/->PascalCase (name prop))))
+        map->superfetcher-name (symbol (str "map->" superfetcher-name))]
+    (eval `(superfetcher-v2 ~superfetcher-name {:db-key        ~db-key
+                                                :table-fetcher ~fetch}))
     (with-superlifter (:superlifter context)
-      (-> (superlifter-api/enqueue! db-key (->superfetcher-name superfetch-id superfetch-arguments))
+      (-> (superlifter-api/enqueue! db-key (eval `(~map->superfetcher-name {:id        ~superfetch-id
+                                                                            :arguments ~superfetch-arguments})))
           (prom/then (fn [rows]
                        (->> rows
                             (map #(relay/build-node % node-type post-process-row))
@@ -165,12 +166,13 @@
                                           :page-options nil
                                           :agg          agg})
         superfetch-id             (hash superfetch-arguments)
-        superfetcher-name         (gensym (str "FetchBy" (csk/->PascalCase (name prop))))
-        ->superfetcher-name       (symbol (str "->" superfetcher-name))
-        _              `(superfetcher-v2 ~superfetcher-name {:db-key        ~db-key
-                                                             :table-fetcher ~fetch})]
+        superfetcher-name (symbol (str "FetchBy" (csk/->PascalCase (name prop))))
+        map->superfetcher-name (symbol (str "map->" superfetcher-name))]
+    (eval `(superfetcher-v2 ~superfetcher-name {:db-key        ~db-key
+                                                :table-fetcher ~fetch}))
     (with-superlifter (:superlifter context)
-      (-> (superlifter-api/enqueue! db-key (->superfetcher-name superfetch-id superfetch-arguments))
+      (-> (superlifter-api/enqueue! db-key (eval `(~map->superfetcher-name {:id        ~superfetch-id
+                                                                            :arguments ~superfetch-arguments})))
           (prom/then (fn [rows] (-> (first rows)
                                     (relay/build-node node-type post-process-row)
                                     transform-keys->camelCaseKeyword)))))))
