@@ -1,8 +1,9 @@
 (ns gosura.helpers.db
   (:require [clojure.set]
-            [com.rpl.specter :as specter]
+            [clojure.string]
             [honey.sql :as honeysql]
             [honey.sql.helpers :as sql-helper]
+            [net.lewisship.trace :refer [trace]]
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as rs]))
 
@@ -99,9 +100,12 @@
   [options]
   (let [pred #(or (nil? %)
                   (and (coll? %) (empty? %)))]
-    (specter/setval [specter/MAP-VALS pred]
-                    specter/NONE
-                    options)))
+    (reduce-kv (fn [m k v]
+                 (if (pred v)
+                   m
+                   (assoc m k v)))
+               {}
+               options)))
 
 (defn join-for-filter-options
   "지정한 규칙과 필터링 옵션에 따라 조인 조건들을 선택한다.
@@ -178,6 +182,12 @@
 (def honey-sql-format-options {:dialect      :mysql
                                :quoted       true
                                :quoted-snake true})
+(defn format-query
+  [honeysql-formmated-query]
+  (let [query        (-> (first honeysql-formmated-query)
+                         (clojure.string/replace "?" "%s"))
+        placeholders (rest honeysql-formmated-query)]
+    (symbol (apply format query placeholders))))
 
 (defn fetch!
   ([ds qs] (fetch! ds qs {}))
@@ -207,9 +217,21 @@
   [ds qs]
   (fetch! ds qs {:builder-fn rs/as-unqualified-kebab-maps}))
 
+(defmacro unqualified-kebab-fetch2!
+  [ds qs]
+  `(let [sql# (honeysql/format ~qs honey-sql-format-options)]
+     (trace :sql (format-query sql#))
+     (jdbc/execute! ~ds sql# (merge {:timeout query-timeout} {:builder-fn rs/as-unqualified-kebab-maps}))))
+
 (defn unqualified-kebab-fetch-one!
   [ds qs]
   (fetch-one! ds qs {:builder-fn rs/as-unqualified-kebab-maps}))
+
+(defmacro unqualified-kebab-fetch-one2!
+  [ds qs]
+  `(let [sql# (honeysql/format (sql-helper/limit ~qs 1) honey-sql-format-options)]
+     (trace :sql (format-query sql#))
+     (jdbc/execute-one! ~ds sql# (merge {:timeout query-timeout} {:builder-fn rs/as-unqualified-kebab-maps}))))
 
 (defn insert-one
   "db

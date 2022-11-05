@@ -111,9 +111,7 @@
                       common-pre-process-arguments
                       (nullify-empty-string-arguments [:after :before]))
         {:keys [pre-fn prop agg]} parent-id
-        load-id (-> parent
-                    (or pre-fn identity)
-                    prop)
+        load-id ((or pre-fn identity) (prop parent))
         {:keys [order-by
                 page-direction
                 page-size
@@ -161,9 +159,7 @@
                                      additional-filter-opts]}]
   {:pre [(some? db-key)]}
   (let [{:keys [pre-fn prop agg]} parent-id
-        load-id                   (-> parent
-                                      (or pre-fn identity)
-                                      prop)
+        load-id                   ((or pre-fn identity) (prop parent))
         superfetch-arguments      (merge additional-filter-opts
                                          {:id           load-id
                                           :page-options nil
