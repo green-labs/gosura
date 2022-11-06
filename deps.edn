@@ -2,8 +2,7 @@
  :deps    {camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.3"}
            com.github.seancorfield/honeysql    {:mvn/version "2.2.891"}
            com.github.seancorfield/next.jdbc   {:mvn/version "1.2.780"}
-           com.taoensso/nippy                  {:mvn/version "3.1.1"}
-           com.taoensso/timbre                 {:mvn/version "5.2.1"}
+           com.taoensso/nippy                  {:mvn/version "3.2.0"}
            com.walmartlabs/lacinia             {:mvn/version "1.1"}
            failjure/failjure                   {:mvn/version "2.2.0"}
            io.github.hlship/trace              {:git/url "https://github.com/jungwookim/trace"
@@ -11,7 +10,6 @@
            io.sentry/sentry-clj                {:mvn/version "5.7.180"}
            medley/medley                       {:mvn/version "1.4.0"}
            org.clojure/clojure                 {:mvn/version "1.11.1"}
-           org.clojure/data.json               {:mvn/version "2.4.0"}
            org.clojure/tools.logging           {:mvn/version "1.2.4"}
            org.clojure/core.match              {:mvn/version "1.0.0"}
            superlifter/superlifter             {:git/url "https://github.com/green-labs/superlifter.git"
