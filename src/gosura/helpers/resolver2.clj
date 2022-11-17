@@ -145,7 +145,8 @@
   ## 반환
   * 객체 하나
   "
-  [context _arguments parent {:keys [db-key
+  [context _arguments parent {:keys [target-ns
+                                     db-key
                                      node-type
                                      fetch
                                      post-process-row
@@ -160,7 +161,7 @@
                                           :agg          agg})
         superfetch-id             (hash superfetch-arguments)
         superfetcher-name (symbol (str "FetchBy" (csk/->PascalCase (name prop))))
-        map->superfetcher-name (symbol (str "map->" superfetcher-name))]
+        map->superfetcher-name (symbol (str target-ns "/map->" superfetcher-name))]
 
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (eval `(~map->superfetcher-name {:id        ~superfetch-id

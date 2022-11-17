@@ -170,7 +170,8 @@
                                                    _ (when (seq required-keys)
                                                        (f/fail (format "%s keys are needed in parent" required-keys)))
                                                    resolver-fn (find-resolver-fn resolver)
-                                                   added-params (merge params {:additional-filter-opts (merge auth-filter-opts
+                                                   added-params (merge params {:target-ns target-ns
+                                                                               :additional-filter-opts (merge auth-filter-opts
                                                                                                               config-filter-opts)})]
                                                   (cond-> (resolver-fn ctx args parent added-params)
                                                     return-camel-case? (util/update-resolver-result transform-keys->camelCaseKeyword))
