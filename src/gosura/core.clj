@@ -16,10 +16,11 @@
             [gosura.helpers.relay :as relay]
             [gosura.helpers.resolver :as r]
             [gosura.helpers.resolver2 :as r2]
+            [gosura.helpers.superlifter :refer [superfetcher-v2]]
             [gosura.schema :as schema]
-            [gosura.util :as util :refer [transform-keys->camelCaseKeyword
-                                          transform-keys->kebab-case-keyword
-                                          requiring-var!]]
+            [gosura.util :as util :refer [requiring-var!
+                                          transform-keys->camelCaseKeyword
+                                          transform-keys->kebab-case-keyword]]
             [malli.core :as m]
             [malli.error :as me]
             [medley.core :as medley]))
@@ -81,6 +82,17 @@
     (catch Exception e
       (f/fail (format "Can't find resolver-fn because of %s" (ex-message e))))))
 
+(defn generate-superfetcher
+  "config의 정보를 바탕으로 target-ns에 superfetcher를 생성(eval)합니다."
+  [target-ns {:keys [fetch db-key parent-id] :as _config}]
+  (let [{:keys [prop]} parent-id
+        superfetcher-name (symbol (str "FetchBy" (csk/->PascalCase (name prop))))]
+    (binding [*ns* (find-ns target-ns)]
+      (eval `(superfetcher-v2 ~superfetcher-name {:db-key        ~db-key
+                                                  :table-fetcher ~fetch})))
+    (log/info (format "Gosura has generated superfetcher => %s"
+                      (str target-ns "/" superfetcher-name)))))
+
 (defn generate-one
   "gosura resolver-config edn 을 받아
    :target-ns 에 resolver-fn 을 생성(intern)합니다.
@@ -114,6 +126,8 @@
                 filters]} resolver-config]
     (when (nil? (find-ns target-ns)) (create-ns target-ns))
     (doseq [[resolver params] resolvers]
+      (when (re-matches #"one-by-(.*)" (name resolver))
+        (generate-superfetcher target-ns (merge params resolver-config)))
       (let [params (merge {:node-type        node-type
                            :db-key           db-key
                            :post-process-row (if (nil? post-process-row) identity (requiring-var! post-process-row))
