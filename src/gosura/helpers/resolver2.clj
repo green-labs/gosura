@@ -150,7 +150,7 @@
                                      fetch
                                      post-process-row
                                      parent-id
-                                     additional-filter-opts]}]
+                                     additional-filter-opts] :as _config}]
   {:pre [(some? db-key)]}
   (let [{:keys [pre-fn prop agg]} parent-id
         load-id                   ((or pre-fn identity) (prop parent))
