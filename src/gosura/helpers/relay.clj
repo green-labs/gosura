@@ -190,6 +190,7 @@
                     {:side      :client
                      :caused-by {:arguments (select-keys arguments [:after :before])}}))))
 
+(def default-page-size 10)
 (defn build-page-options
   "relay connection 조회에 필요한 page options를 빌드합니다.
    (default) 10개의 데이터를 id기준으로 정방향으로 오름차순으로 가지고 옵니다"
@@ -202,9 +203,11 @@
   (let [page-direction (cond first :forward
                              last :backward
                              :else :forward)
-        limit (or (case page-direction
-                    :forward first
-                    :backward last) 10)
+        page-size (or (case page-direction
+                        :forward first
+                        :backward last)
+                      default-page-size)
+        limit (+ page-size 2)
         cursor (when-let [encoded-cursor (case page-direction
                                            :forward after
                                            :backward before)]
@@ -224,8 +227,8 @@
      :page-direction       page-direction
      :cursor-id            cursor-id
      :cursor-ordered-value (clojure.core/first cursor-ordered-values)
-     :limit                (+ limit 2)
-     :page-size            limit}))
+     :limit                limit
+     :page-size            page-size}))
 
 (defn decode-global-ids-by-keys
   "arguments 맵에서 ks의 키값 값을 재귀적으로 찾아 DB ID로 디코드합니다."
