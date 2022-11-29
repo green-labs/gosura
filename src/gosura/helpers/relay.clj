@@ -48,14 +48,20 @@
 
 (defn decode-cursor [cursor]
   (try
-    (let [[id ordered-values]
-          (-> cursor
-              (#(.decode (Base64/getDecoder) %))
-              nippy/thaw)]
-      {:id id, :ordered-values ordered-values})
-    (catch ExceptionInfo _
+    (let [decoded-bytes (base64-decode cursor)]
+      (try
+        ;; nippy/thaw 로 디코드되는 경우 식별자 기반 커서로 해석
+        (let [id-based-cursor     (nippy/thaw decoded-bytes)
+              [id ordered-values] id-based-cursor]
+          {:id id, :ordered-values ordered-values})
+        (catch ExceptionInfo _exception-info
+          ;; String. 으로 디코드되는 경우 오프셋 기반 커서로 해석
+          (let [offset-based-cursor   (String. decoded-bytes)
+                [_placeholder offset] (clojure.string/split offset-based-cursor #":")]
+            {:offset (parse-long offset)}))))
+    (catch Exception _exception
       (throw (ex-info (str "Cursor cannot be decoded: " cursor)
-                      {:side :client
+                      {:side      :client
                        :caused-by {:cursor cursor}})))))
 
 (defn encode-arguments
@@ -196,7 +202,8 @@
    (default) 10개의 데이터를 id기준으로 정방향으로 오름차순으로 가지고 옵니다"
   [{:keys [first last
            after before
-           order-by order-direction]
+           order-by order-direction
+           offset-based-pagination]
     :or {order-by        :id
          order-direction :ASC} :as args}]
   (validate-connection-arguments args)
@@ -212,8 +219,9 @@
                                            :forward after
                                            :backward before)]
                  (decode-cursor encoded-cursor))
-        cursor-ordered-values (:ordered-values cursor)
-        cursor-id (:id cursor)
+        cursor-ordered-values (when-not offset-based-pagination (:ordered-values cursor))
+        cursor-id (when-not offset-based-pagination (:id cursor))
+        offset (when offset-based-pagination (:offset cursor))
         order-by (csk/->kebab-case-keyword order-by)
         order-direction (csk/->kebab-case-keyword order-direction)  ; ASC/DESC -> asc/desc
         order-direction (get #{:asc :desc} order-direction :asc)
@@ -227,7 +235,7 @@
      :page-direction       page-direction
      :cursor-id            cursor-id
      :cursor-ordered-value (clojure.core/first cursor-ordered-values)
-     :limit                limit
+     :limit                (if offset-based-pagination [limit offset] limit)
      :page-size            page-size}))
 
 (defn decode-global-ids-by-keys
@@ -243,3 +251,8 @@
                    :else (assoc m k v)))
                {}
                arguments)))
+
+(comment
+  (decode-cursor "TlBZAHFkAW4BZAE=")  ;; => {:id 1, :ordered-values [1]})
+  (decode-cursor "b2Zmc2V0OjM=")      ;; => {:offset "3"}
+  )

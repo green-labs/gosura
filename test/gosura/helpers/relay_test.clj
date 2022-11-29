@@ -289,7 +289,20 @@
       (is (= result expected))))
   (testing "row에 nil이 들어갔을 때, nil이 반환된다"
     (let [result (gosura-relay/build-node nil :test)]
-      (is (= result nil)))))
+      (is (= result nil))))
+  (testing "offset-based-pagination 을 실행하면 SQL LIMIT 이 [LIMIT, OFFSET] 형태로 작성되며 cursor-id 와 cursor-ordered-value 는 nil 이 된다."
+    (let [args            {:first                   4
+                           :after                   "b2Zmc2V0OjM="
+                           :offset-based-pagination true}
+          result          (gosura-relay/build-page-options args)
+          expected-result {:order-by             :id
+                           :order-direction      :asc
+                           :page-direction       :forward
+                           :cursor-id            nil
+                           :cursor-ordered-value nil
+                           :limit                [6 3]
+                           :page-size            4}]
+      (is (= result expected-result)))))
 
 (deftest build-connection-test
   (let [rows  [{:id    1
@@ -477,4 +490,5 @@
            {:a "100", :b "bm90aWNlOjEwMA==", :c {:d ["100" "100"]}}))))
 
 (comment
-  (run-tests))
+  (run-tests)
+  )
