@@ -235,7 +235,8 @@
      :page-direction       page-direction
      :cursor-id            cursor-id
      :cursor-ordered-value (clojure.core/first cursor-ordered-values)
-     :limit                (if offset-based-pagination [limit offset] limit)
+     :limit                limit
+     :offset               offset
      :page-size            page-size}))
 
 (defn decode-global-ids-by-keys

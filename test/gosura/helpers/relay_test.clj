@@ -113,6 +113,7 @@
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                12
+                           :offset               nil
                            :page-size            10}]
       (is (= result expected-result))))
   (testing "first만 있을 때 first 개수 + 2만큼 limit이 잘 설정된다"
@@ -124,6 +125,7 @@
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                5
+                           :offset               nil
                            :page-size            3}]
       (is (= result expected-result))))
   (testing "order-by만 있을 때 설정이 잘 된다"
@@ -135,6 +137,7 @@
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                12
+                           :offset               nil
                            :page-size            10}]
       (is (= result expected-result))))
   (testing "order-direction만 있을 때 설정이 잘 된다"
@@ -146,6 +149,7 @@
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                12
+                           :offset               nil
                            :page-size            10}]
       (is (= result expected-result))))
   (testing "order-direction, order-by가 같이 있을 때,설정이 잘 된다"
@@ -158,6 +162,7 @@
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                12
+                           :offset               nil
                            :page-size            10}]
       (is (= result expected-result))))
   (testing "order-direction에 이상한 값이 들어와도 asc 기본값으로 잘 설정된다"
@@ -169,6 +174,7 @@
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                12
+                           :offset               nil
                            :page-size            10}]
       (is (= result expected-result))))
   (testing "first가 있고 order-direction이 asc일 때, order-direction은 asc이다"
@@ -181,6 +187,7 @@
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                5
+                           :offset               nil
                            :page-size            3}]
       (is (= result expected-result))))
   (testing "first가 있고 order-direction이 desc일 때, order-direction은 desc이다"
@@ -193,6 +200,7 @@
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                5
+                           :offset               nil
                            :page-size            3}]
       (is (= result expected-result))))
   (testing "last가 있고 order-direction이 asc일 때, order-direction은 desc이다"
@@ -205,6 +213,7 @@
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                5
+                           :offset               nil
                            :page-size            3}]
       (is (= result expected-result))))
   (testing "last가 있고 order-direction이 desc일 때, order-direction은 asc이다"
@@ -217,6 +226,7 @@
                            :cursor-id            nil
                            :cursor-ordered-value nil
                            :limit                5
+                           :offset               nil
                            :page-size            3}]
       (is (= result expected-result))))
   (testing "first-after 조합일 때 cursor-id와 cursor-ordered-value를 잘 설정한다"
@@ -229,6 +239,7 @@
                            :cursor-id            1
                            :cursor-ordered-value 1
                            :limit                5
+                           :offset               nil
                            :page-size            3}]
       (is (= result expected-result))))
   (testing "last-before 조합일 때 cursor-id와 cursor-ordered-value를 잘 설정한다"
@@ -241,7 +252,22 @@
                            :cursor-id            1
                            :cursor-ordered-value 1
                            :limit                5
+                           :offset               nil
                            :page-size            3}]
+      (is (= result expected-result))))
+  (testing "offset-based-pagination 을 실행하면 :offset이 입력되며 cursor-id 와 cursor-ordered-value 는 nil 이 된다."
+    (let [args            {:first                   4
+                           :after                   "b2Zmc2V0OjM="
+                           :offset-based-pagination true}
+          result          (gosura-relay/build-page-options args)
+          expected-result {:order-by             :id
+                           :order-direction      :asc
+                           :page-direction       :forward
+                           :cursor-id            nil
+                           :cursor-ordered-value nil
+                           :limit                6
+                           :offset               3
+                           :page-size            4}]
       (is (= result expected-result))))
   (testing "first-before 조합은 유효하지 않은 호출이다"
     (let [args {:first  3
@@ -289,20 +315,7 @@
       (is (= result expected))))
   (testing "row에 nil이 들어갔을 때, nil이 반환된다"
     (let [result (gosura-relay/build-node nil :test)]
-      (is (= result nil))))
-  (testing "offset-based-pagination 을 실행하면 SQL LIMIT 이 [LIMIT, OFFSET] 형태로 작성되며 cursor-id 와 cursor-ordered-value 는 nil 이 된다."
-    (let [args            {:first                   4
-                           :after                   "b2Zmc2V0OjM="
-                           :offset-based-pagination true}
-          result          (gosura-relay/build-page-options args)
-          expected-result {:order-by             :id
-                           :order-direction      :asc
-                           :page-direction       :forward
-                           :cursor-id            nil
-                           :cursor-ordered-value nil
-                           :limit                [6 3]
-                           :page-size            4}]
-      (is (= result expected-result)))))
+      (is (= result nil)))))
 
 (deftest build-connection-test
   (let [rows  [{:id    1
