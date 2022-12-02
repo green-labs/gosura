@@ -1,6 +1,6 @@
 (ns gosura.core-test
   (:require [clojure.set :as set]
-            [clojure.test :refer [deftest is run-test testing]]
+            [clojure.test :refer [deftest is testing]]
             [failjure.core :as f]
             [gosura.core :as gosura]
             [gosura.edn :refer [read-config]]
@@ -46,6 +46,3 @@
   #_(testing "resolve-by-fk가 정상 작동한다")
   #_(testing "resolve-by-example-id가 정상 작동한다")
   #_(testing "resolve-node가 정상 작동한다"))
-
-(comment
-  (run-test gosura-resolver-generate-one-test))

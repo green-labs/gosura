@@ -1,7 +1,6 @@
 (ns gosura.helpers.resolver2
   "gosura.helpers.resolver의 v2입니다."
-  (:require [camel-snake-kebab.core :as csk]
-            [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
+  (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [failjure.core :as f]
             [gosura.auth :as auth]
             [gosura.helpers.error :as error]
@@ -135,8 +134,8 @@
   * arguments 쿼리 입력
   * parent    부모 노드
   * config    리졸버 동작 설정
-    * :db-key 사용할 DB 이름
-    * :fetch fetch 함수
+    * :db-key            사용할 DB 이름
+    * :superfetcher      슈퍼페처
     * :post-process-row  결과 객체 목록 후처리 함수 (예: identity)
     * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id :agg :id} {:prop :user-id :agg :id}
      * :pre-fn: 전처리
@@ -145,13 +144,12 @@
   ## 반환
   * 객체 하나
   "
-  [context _arguments parent {:keys [target-ns
-                                     db-key
+  [context _arguments parent {:keys [db-key
                                      node-type
-                                     fetch
+                                     superfetcher
                                      post-process-row
                                      parent-id
-                                     additional-filter-opts] :as _config}]
+                                     additional-filter-opts]}]
   {:pre [(some? db-key)]}
   (let [{:keys [pre-fn prop agg]} parent-id
         load-id                   ((or pre-fn identity) (prop parent))
@@ -159,13 +157,9 @@
                                          {:id           load-id
                                           :page-options nil
                                           :agg          agg})
-        superfetch-id             (hash superfetch-arguments)
-        superfetcher-name (symbol (str "FetchBy" (csk/->PascalCase (name prop))))
-        map->superfetcher-name (symbol (str target-ns "/map->" superfetcher-name))]
-
+        superfetch-id             (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
-      (-> (superlifter-api/enqueue! db-key (eval `(~map->superfetcher-name {:id        ~superfetch-id
-                                                                            :arguments ~superfetch-arguments})))
+      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows] (-> (first rows)
                                     (relay/build-node node-type post-process-row)
                                     transform-keys->camelCaseKeyword)))))))

@@ -7,8 +7,4 @@
                                   :table-fetcher clojure.core/identity}
              :resolve-by-fk      {:settings     {:auth clojure.core/identity}
                                   :superfetcher clojure.core/identity
-                                  :fk-in-parent :test-id}
-             :one-by-xxx         {:settings  {:auth clojure.core/identity}
-                                  :fetch     #var clojure.core/identity
-                                  :parent-id {:prop :xxx
-                                              :agg :aaa}}}}
+                                  :fk-in-parent :test-id}}}
