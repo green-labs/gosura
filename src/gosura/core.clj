@@ -126,10 +126,12 @@
                                                   [{:keys [auth]} settings
                                                    auth-filter-opts (auth/->auth-result auth ctx)
                                                    config-filter-opts (auth/config-filter-opts filters ctx)
+                                                   resolver-filter-opts (auth/config-filter-opts (:filters params) ctx)
                                                    filter-options (merge {:id (or (:db-id this)
                                                                                   (:id this))}
                                                                          auth-filter-opts
-                                                                         config-filter-opts)
+                                                                         config-filter-opts
+                                                                         resolver-filter-opts)
                                                    rows (table-fetcher (get ctx db-key) filter-options {})
                                                    _ (when (empty? rows)
                                                        (f/fail "NotExistData"))]
