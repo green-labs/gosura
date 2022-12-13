@@ -126,10 +126,12 @@
                                                   [{:keys [auth]} settings
                                                    auth-filter-opts (auth/->auth-result auth ctx)
                                                    config-filter-opts (auth/config-filter-opts filters ctx)
+                                                   resolver-filter-opts (auth/config-filter-opts (:filters params) ctx)
                                                    filter-options (merge {:id (or (:db-id this)
                                                                                   (:id this))}
                                                                          auth-filter-opts
-                                                                         config-filter-opts)
+                                                                         config-filter-opts
+                                                                         resolver-filter-opts)
                                                    rows (table-fetcher (get ctx db-key) filter-options {})
                                                    _ (when (empty? rows)
                                                        (f/fail "NotExistData"))]
@@ -151,13 +153,15 @@
                                                    {:keys [args parent]} (->kebab-case kebab-case? args parent)
                                                    auth-filter-opts (auth/->auth-result auth ctx)
                                                    config-filter-opts (auth/config-filter-opts filters ctx)
+                                                   resolver-filter-opts (auth/config-filter-opts (:filters params) ctx)
                                                    required-keys-in-parent (remove nil? [fk-in-parent pk-list-name-in-parent])
                                                    required-keys (s/difference (set required-keys-in-parent) (set (keys parent)))
                                                    _ (when (seq required-keys)
                                                        (f/fail (format "%s keys are needed in parent" required-keys)))
                                                    resolver-fn (find-resolver-fn resolver)
                                                    added-params (merge params {:additional-filter-opts (merge auth-filter-opts
-                                                                                                              config-filter-opts)})]
+                                                                                                              config-filter-opts
+                                                                                                              resolver-filter-opts)})]
                                                   (cond-> (resolver-fn ctx args parent added-params)
                                                     return-camel-case? (util/update-resolver-result transform-keys->camelCaseKeyword))
                                                   (f/when-failed [e]
