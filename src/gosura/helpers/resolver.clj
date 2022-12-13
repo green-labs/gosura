@@ -33,7 +33,7 @@
         (keep #(when-not (% ~parent) %))
         (into [])))
 
-(defmacro wrap-resolver-body
+(defmacro ^{:deprecated true} wrap-resolver-body
   "GraphQL 리졸버가 공통으로 해야 할 auth 처리, case 변환 처리를 resolver body의 앞뒤에서 해 주도록 wrapping합니다.
 
   this, ctx, arg, parent: 상위 리졸버 생성 매크로에서 만든 심벌
@@ -78,7 +78,7 @@
      :args args
      :body body}))
 
-(defmacro defresolver
+(defmacro ^{:deprecated true} defresolver
   "lacinia 용 resolver 함수를 만듭니다.
 
   입력
