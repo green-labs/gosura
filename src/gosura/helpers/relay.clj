@@ -253,6 +253,33 @@
                {}
                arguments)))
 
+(defmulti decode-all-global-ids
+  (fn [arguments]
+    (type arguments)))
+
+(defmethod decode-all-global-ids clojure.lang.PersistentVector
+  [args]
+  (update-vals args decode-all-global-ids))
+
+(defmethod decode-all-global-ids clojure.lang.PersistentList
+  [args]
+  (decode-all-global-ids (into [] args)))
+
+(defmethod decode-all-global-ids clojure.lang.IPersistentMap
+  [args]
+  (update-vals args decode-all-global-ids))
+
+(defmethod decode-all-global-ids java.lang.String
+  [v]
+  (try
+    (decode-global-id->db-id v)
+    (catch Exception _
+      v)))
+
+(defmethod decode-all-global-ids :default
+  [v]
+  v)
+
 (comment
   (decode-cursor "TlBZAHFkAW4BZAE=")  ;; => {:id 1, :ordered-values [1]})
   (decode-cursor "b2Zmc2V0OjM=")      ;; => {:offset "3"}
