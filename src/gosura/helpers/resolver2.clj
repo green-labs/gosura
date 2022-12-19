@@ -32,8 +32,7 @@
   (let [{:keys [auth kebab-case? return-camel-case? required-keys-in-parent filters decode-ids-by-keys decode-base64-encoded-vals]
          :or   {kebab-case?             true
                 return-camel-case?      true
-                required-keys-in-parent []
-                decode-base64-encoded-vals true}} option
+                required-keys-in-parent []}} option
         result (gensym 'result_)
         auth-filter-opts `(auth/->auth-result ~auth ~ctx)
         config-filter-opts `(auth/config-filter-opts ~filters ~ctx)
