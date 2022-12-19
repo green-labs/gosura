@@ -25,7 +25,7 @@
    - :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)
    - :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다.
    - :decode-ids-by-keys - 키 목록을 받아서 resolver args의 global id들을 db id로 변환 해줍니다.
-   - :decode-base64-encoded-vals - base64 인코딩된 값을 전부 디코딩하고 id값을 반환합니다.
+   - :decode-base64-encoded-vals - <node-type>:<ID> 형식으로 base64 인코딩된 relayID 값을 전부 디코딩하고 <ID>값을 String으로 반환합니다.
    - :filters - args에 추가할 key-value 값을 필터로 넣습니다.
   "
   [{:keys [this ctx arg parent]} option args body]

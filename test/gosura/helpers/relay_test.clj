@@ -510,6 +510,9 @@
            {:a "100"})))
   (testing "decode vector"
     (is (= (gosura-relay/decode-all-global-ids ["bm90aWNlOjEwMA==" "bm90aWNlOjEwMA=="])
+           '("100" "100"))))
+  (testing "decode list"
+    (is (= (gosura-relay/decode-all-global-ids '("bm90aWNlOjEwMA==" "bm90aWNlOjEwMA=="))
            ["100" "100"])))
   (testing "decode vector in map"
     (is (= (gosura-relay/decode-all-global-ids {:a ["bm90aWNlOjEwMA==" "bm90aWNlOjEwMA=="]})
