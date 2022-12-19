@@ -283,12 +283,4 @@
 (comment
   (decode-cursor "TlBZAHFkAW4BZAE=")  ;; => {:id 1, :ordered-values [1]})
   (decode-cursor "b2Zmc2V0OjM=")      ;; => {:offset "3"}
-  (reduce-kv (fn [acc k v]
-               (prn acc k v)
-               (assoc acc k (decode-all-global-ids v)))
-             []
-             '(1 2))
-  (into [] '(1 2))
-  (update-vals '(1 2) inc)
-  (update-vals [1 2] inc)
   )
