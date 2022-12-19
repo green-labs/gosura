@@ -500,8 +500,43 @@
                                                     :b "bm90aWNlOjEwMA=="
                                                     :c {:d ["bm90aWNlOjEwMA==" "bm90aWNlOjEwMA=="]}}
                                                    [:a :d])
-           {:a "100", :b "bm90aWNlOjEwMA==", :c {:d ["100" "100"]}}))))
+           {:a "100"
+            :b "bm90aWNlOjEwMA=="
+            :c {:d ["100" "100"]}}))))
+
+(deftest decode-all-global-ids
+  (testing "decode key"
+    (is (= (gosura-relay/decode-all-global-ids {:a "bm90aWNlOjEwMA=="})
+           {:a "100"})))
+  (testing "decode vector"
+    (is (= (gosura-relay/decode-all-global-ids ["bm90aWNlOjEwMA==" "bm90aWNlOjEwMA=="])
+           ["100" "100"])))
+  (testing "decode vector in map"
+    (is (= (gosura-relay/decode-all-global-ids {:a ["bm90aWNlOjEwMA==" "bm90aWNlOjEwMA=="]})
+           {:a ["100" "100"]})))
+  (testing "nested"
+    (is (= (gosura-relay/decode-all-global-ids {:a "bm90aWNlOjEwMA=="
+                                                :b "bm90aWNlOjEwMA=="
+                                                :c {:d ["bm90aWNlOjEwMA==" "bm90aWNlOjEwMA=="]}})
+           {:a "100"
+            :b "100"
+            :c {:d ["100" "100"]}})))
+  (testing "not encoded string is okay"
+    (is (= (gosura-relay/decode-all-global-ids {:a "bm90aWNlOjEwMA=="
+                                                :b "100"
+                                                :c {:d ["bm90aWNlOjEwMA==" "bm90aWNlOjEwMA=="]}})
+           {:a "100"
+            :b "100"
+            :c {:d ["100" "100"]}})))
+  (testing "keyword and number is okay"
+    (is (= (gosura-relay/decode-all-global-ids {:a "bm90aWNlOjEwMA=="
+                                                :b 100
+                                                :f :100
+                                                :c {:d ["bm90aWNlOjEwMA==" "bm90aWNlOjEwMA=="]}})
+           {:a "100"
+            :b 100
+            :f :100
+            :c {:d ["100" "100"]}}))))
 
 (comment
-  (run-tests)
-  )
+  (run-tests))

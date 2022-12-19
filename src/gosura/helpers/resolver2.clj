@@ -25,19 +25,22 @@
    - :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)
    - :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다.
    - :decode-ids-by-keys - 키 목록을 받아서 resolver args의 global id들을 db id로 변환 해줍니다.
+   - :decode-base64-encoded-vals - base64 인코딩된 값을 전부 디코딩하고 id값을 반환합니다.
    - :filters - args에 추가할 key-value 값을 필터로 넣습니다.
   "
   [{:keys [this ctx arg parent]} option args body]
-  (let [{:keys [auth kebab-case? return-camel-case? required-keys-in-parent filters decode-ids-by-keys]
+  (let [{:keys [auth kebab-case? return-camel-case? required-keys-in-parent filters decode-ids-by-keys decode-base64-encoded-vals]
          :or   {kebab-case?             true
                 return-camel-case?      true
-                required-keys-in-parent []}} option
+                required-keys-in-parent []
+                decode-base64-encoded-vals true}} option
         result (gensym 'result_)
         auth-filter-opts `(auth/->auth-result ~auth ~ctx)
         config-filter-opts `(auth/config-filter-opts ~filters ~ctx)
         arg `(merge ~arg ~auth-filter-opts ~config-filter-opts)
         arg' (if kebab-case? `(transform-keys->kebab-case-keyword ~arg) arg)
         arg' (if decode-ids-by-keys `(relay/decode-global-ids-by-keys ~arg' ~decode-ids-by-keys) arg')
+        arg' (if decode-base64-encoded-vals `(relay/decode-all-global-ids ~arg') arg')
         parent' (if kebab-case? `(transform-keys->kebab-case-keyword ~parent) parent)
         keys-not-found `(keys-not-found ~parent' ~required-keys-in-parent)
         params (if (nil? this) [ctx arg' parent'] [this ctx arg' parent'])
