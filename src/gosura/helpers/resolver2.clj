@@ -1,6 +1,7 @@
 (ns gosura.helpers.resolver2
   "gosura.helpers.resolver의 v2입니다."
-  (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
+  (:require [clojure.string :as string]
+            [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [failjure.core :as f]
             [gosura.auth :as auth]
             [gosura.helpers.error :as error]
@@ -13,7 +14,8 @@
                                           transform-keys->kebab-case-keyword
                                           update-resolver-result]]
             [promesa.core :as prom]
-            [superlifter.api :as superlifter-api]))
+            [superlifter.api :as superlifter-api])
+  (:import [org.apache.commons.lang.exception ExceptionUtils]))
 
 (defmacro wrap-resolver-body
   "GraphQL 리졸버가 공통으로 해야 할 auth 처리, case 변환 처리를 resolver body의 앞뒤에서 해 주도록 wrapping합니다.
@@ -47,7 +49,17 @@
        (if (or (nil? ~auth-filter-opts)
                (and ~auth-filter-opts
                     (not (f/failed? ~auth-filter-opts))))
-         (let [~result (do (let ~let-mapping ~@body))]
+         (let [~result (do (let ~let-mapping
+                             (try
+                               ~@body
+                               (catch Exception e#
+                                 (resolve-as
+                                  nil
+                                  {:message (.getMessage e#)
+                                   :stacktrace
+                                   (->> (ExceptionUtils/getStackTrace e#)
+                                        (string/split-lines)
+                                        (map #(string/replace-first % #"\t" "  ")))})))))]
            (cond-> ~result
              ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
          (resolve-as nil {:message "Unauthorized"})))))
@@ -98,11 +110,11 @@
   * 객체 목록
   "
   [context arguments parent {:keys [db-key
-                                     node-type
-                                     superfetcher
-                                     parent-id
-                                     post-process-row
-                                     additional-filter-opts]}]
+                                    node-type
+                                    superfetcher
+                                    parent-id
+                                    post-process-row
+                                    additional-filter-opts]}]
   {:pre [(some? db-key)]}
   (let [arguments (-> arguments
                       common-pre-process-arguments
