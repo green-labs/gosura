@@ -13,6 +13,7 @@
             [gosura.util :as util :refer [transform-keys->camelCaseKeyword
                                           transform-keys->kebab-case-keyword
                                           update-resolver-result]]
+            [io.aviso.exception :as e]
             [promesa.core :as prom]
             [superlifter.api :as superlifter-api])
   (:import [org.apache.commons.lang3.exception ExceptionUtils]))
@@ -23,12 +24,17 @@
     `(try
        ~@body
        (catch Exception e#
-         (resolve-as
-          nil
-          {:message    (.getMessage e#)
-           :stacktrace (->> (ExceptionUtils/getStackTrace e#)
-                            (string/split-lines)
-                            (map #(string/replace-first % #"\t" "  ")))})))
+         (let [stacktrace# (ExceptionUtils/getStackTrace e#)
+               analyses#   (e/analyze-exception e# nil)]
+           (resolve-as
+            nil
+            {:message           (.getMessage e#)
+             :trace             (error/primary-trace analyses#)
+             :pretty            (map error/analyzed->formatted analyses#)
+             :stacktrace        (->> stacktrace#
+                                     (string/split-lines)
+                                     (map #(string/replace-first % #"\t" "  ")))
+             :print-stack-trace stacktrace#}))))
     body))
 
 (defmacro wrap-resolver-body
