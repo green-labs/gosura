@@ -15,7 +15,21 @@
                                           update-resolver-result]]
             [promesa.core :as prom]
             [superlifter.api :as superlifter-api])
-  (:import [org.apache.commons.lang.exception ExceptionUtils]))
+  (:import [org.apache.commons.lang3.exception ExceptionUtils]))
+
+(defmacro wrap-catch-body
+  [catch-exceptions? body]
+  (if catch-exceptions?
+    `(try
+       ~@body
+       (catch Exception e#
+         (resolve-as
+          nil
+          {:message    (.getMessage e#)
+           :stacktrace (->> (ExceptionUtils/getStackTrace e#)
+                            (string/split-lines)
+                            (map #(string/replace-first % #"\t" "  ")))})))
+    body))
 
 (defmacro wrap-resolver-body
   "GraphQL 리졸버가 공통으로 해야 할 auth 처리, case 변환 처리를 resolver body의 앞뒤에서 해 주도록 wrapping합니다.
@@ -25,14 +39,17 @@
    - :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
    - :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
    - :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)
+   - :catch-exceptions? - 리졸버에서 발생하는 예외를 포착하여 :errors 응답으로 반환 (기본값 true)
    - :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다.
    - :decode-ids-by-keys - 키 목록을 받아서 resolver args의 global id들을 db id로 변환 해줍니다.
    - :filters - args에 추가할 key-value 값을 필터로 넣습니다.
   "
   [{:keys [this ctx arg parent]} option args body]
-  (let [{:keys [auth kebab-case? return-camel-case? required-keys-in-parent filters decode-ids-by-keys]
+  (let [{:keys [auth kebab-case? return-camel-case? required-keys-in-parent
+                filters decode-ids-by-keys catch-exceptions?]
          :or   {kebab-case?             true
                 return-camel-case?      true
+                catch-exceptions?       true
                 required-keys-in-parent []}} option
         result (gensym 'result_)
         auth-filter-opts `(auth/->auth-result ~auth ~ctx)
@@ -49,17 +66,7 @@
        (if (or (nil? ~auth-filter-opts)
                (and ~auth-filter-opts
                     (not (f/failed? ~auth-filter-opts))))
-         (let [~result (do (let ~let-mapping
-                             (try
-                               ~@body
-                               (catch Exception e#
-                                 (resolve-as
-                                  nil
-                                  {:message (.getMessage e#)
-                                   :stacktrace
-                                   (->> (ExceptionUtils/getStackTrace e#)
-                                        (string/split-lines)
-                                        (map #(string/replace-first % #"\t" "  ")))})))))]
+         (let [~result (do (let ~let-mapping (wrap-catch-body ~catch-exceptions? ~body)))]
            (cond-> ~result
              ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
          (resolve-as nil {:message "Unauthorized"})))))
@@ -81,6 +88,7 @@
   :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
   :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
   :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)
+  :catch-exceptions? - 리졸버에서 발생하는 예외를 포착하여 :errors 응답으로 반환 (기본값 true)
   :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다.
   :filters - 특정 필터 로직을 넣습니다"
   {:arglists '([name doc-string? option? args & body])}
