@@ -1,7 +1,8 @@
 (ns gosura.helpers.resolver-test
-  (:require [clojure.test :refer [deftest is run-tests testing]]
+  (:require [clojure.test :refer [are deftest is run-tests testing]]
             [gosura.helpers.resolver :as gosura-resolver]
-            [gosura.helpers.resolver2 :as gosura-resolver2]))
+            [gosura.helpers.resolver2 :as gosura-resolver2]) 
+  (:import [clojure.lang ExceptionInfo]))
 
 (deftest decode-global-id-in-arguments-test
   (testing "argments에 -id로 끝나는 것들이 nil이면 디코딩하지 않고 그대로 둔다"
@@ -203,7 +204,29 @@
           parent {}
           result (test-resolver-6 ctx arg parent)]
       (is (= (-> result
-                 :arg) {:testCol "1"})))))
+                 :arg) {:testCol "1"}))))
+  (testing "에러가 던져졌을 때 GraphQL errors를 반환한다"
+    (let [_            (gosura-resolver2/defresolver test-resolver-7
+                         [_ctx _arg _parent]
+                         (throw (ex-info "something wrong!" {})))
+          ctx    {}
+          arg    {}
+          parent {}
+          resolved (test-resolver-7 ctx arg parent)
+          message (get-in resolved [:resolved-value :data :message])
+          stacktrace (get-in resolved [:resolved-value :data :stacktrace])]
+      (are [expected result] (= expected result)
+        "something wrong!" message
+        (some? stacktrace) true)))
+  (testing "catch-exceptions? 설정이 false일 때 에러가 던져지면 그대로 throw한다"
+    (let [_            (gosura-resolver2/defresolver test-resolver-8
+                         {:catch-exceptions? false}
+                         [_ctx _arg _parent]
+                         (throw (ex-info "something wrong!" {})))
+          ctx    {}
+          arg    {}
+          parent {}]
+      (is (thrown? ExceptionInfo (test-resolver-8 ctx arg parent))))))
 
 (comment
   (run-tests))
