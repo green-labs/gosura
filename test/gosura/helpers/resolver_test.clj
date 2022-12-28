@@ -1,7 +1,7 @@
 (ns gosura.helpers.resolver-test
   (:require [clojure.test :refer [are deftest is run-tests testing]]
             [gosura.helpers.resolver :as gosura-resolver]
-            [gosura.helpers.resolver2 :as gosura-resolver2]) 
+            [gosura.helpers.resolver2 :as gosura-resolver2])
   (:import [clojure.lang ExceptionInfo]))
 
 (deftest decode-global-id-in-arguments-test
@@ -214,10 +214,16 @@
           parent {}
           resolved (test-resolver-7 ctx arg parent)
           message (get-in resolved [:resolved-value :data :message])
-          stacktrace (get-in resolved [:resolved-value :data :stacktrace])]
+          trace (get-in resolved [:resolved-value :data :trace])
+          pretty (get-in resolved [:resolved-value :data :pretty])
+          stacktrace (get-in resolved [:resolved-value :data :stacktrace])
+          print-stack-trace (get-in resolved [:resolved-value :data :print-stack-trace])]
       (are [expected result] (= expected result)
         "something wrong!" message
-        (some? stacktrace) true)))
+        (some? trace) true
+        (some? pretty) true
+        (some? stacktrace) true
+        (some? print-stack-trace) true)))
   (testing "catch-exceptions? 설정이 false일 때 에러가 던져지면 그대로 throw한다"
     (let [_            (gosura-resolver2/defresolver test-resolver-8
                          {:catch-exceptions? false}
