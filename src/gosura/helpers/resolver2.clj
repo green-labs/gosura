@@ -13,7 +13,6 @@
             [gosura.util :as util :refer [transform-keys->camelCaseKeyword
                                           transform-keys->kebab-case-keyword
                                           update-resolver-result]]
-            [io.aviso.exception :as e]
             [io.aviso.repl :as aviso-repl]
             [promesa.core :as prom]
             [superlifter.api :as superlifter-api])
