@@ -26,7 +26,8 @@
           {:message    (ex-message e#)
            :info       (ex-data e#)
            :type       (.getName (class e#))
-           :stacktrace (.getStackTrace e#)})))
+           :stacktrace (->> (.getStackTrace e#)
+                            (map str))})))
     body))
 
 (defmacro wrap-resolver-body
