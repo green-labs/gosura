@@ -1,7 +1,6 @@
 (ns gosura.helpers.resolver2
   "gosura.helpers.resolver의 v2입니다."
-  (:require [clojure.tools.logging :as log]
-            [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
+  (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [failjure.core :as f]
             [gosura.auth :as auth]
             [gosura.helpers.error :as error]
@@ -22,7 +21,6 @@
     `(try
        ~@body
        (catch Exception e#
-         (log/error e#)
          (resolve-as
           nil
           {:message    (ex-message e#)
