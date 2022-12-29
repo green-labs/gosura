@@ -28,7 +28,7 @@
          (resolve-as
           nil
           {:message           (ex-message e#)
-           :type              (type e#)
+           :type              (.getName (class e))
            :stacktrace        (->> (ExceptionUtils/getStackTrace e#)
                                    (string/split-lines)
                                    (map #(string/replace-first % #"\t" "  ")))})))
