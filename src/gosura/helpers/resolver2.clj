@@ -22,7 +22,7 @@
     `(try
        ~@body
        (catch Exception e#
-         (log/error e#)
+         (log/error e# (ex-message e#))
          (resolve-as
           nil
           {:message    (ex-message e#)
