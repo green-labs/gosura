@@ -220,7 +220,6 @@
         "something wrong!" message
         (some? type') true
         (some? stacktrace) true)))
-
   (testing "catch-exceptions? 설정이 false일 때 에러가 던져지면 그대로 throw한다"
     (let [_            (gosura-resolver2/defresolver test-resolver-8
                          {:catch-exceptions? false}
