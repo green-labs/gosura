@@ -1,7 +1,6 @@
 (ns gosura.helpers.resolver2
   "gosura.helpers.resolver의 v2입니다."
-  (:require [clojure.string :as string]
-            [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
+  (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [failjure.core :as f]
             [gosura.auth :as auth]
             [gosura.helpers.error :as error]
@@ -14,8 +13,7 @@
                                           transform-keys->kebab-case-keyword
                                           update-resolver-result]]
             [promesa.core :as prom]
-            [superlifter.api :as superlifter-api])
-  (:import [org.apache.commons.lang3.exception ExceptionUtils]))
+            [superlifter.api :as superlifter-api]))
 
 (defmacro wrap-catch-body
   [catch-exceptions? body]
@@ -25,11 +23,10 @@
        (catch Exception e#
          (resolve-as
           nil
-          {:message           (ex-message e#)
-           :type              (.getName (class e#))
-           :stacktrace        (->> (ExceptionUtils/getStackTrace e#)
-                                   (string/split-lines)
-                                   (map #(string/replace-first % #"\t" "  ")))})))
+          {:message    (ex-message e#)
+           :info       (ex-data e#)
+           :type       (.getName (class e#))
+           :stacktrace (.getStackTrace e#)})))
     body))
 
 (defmacro wrap-resolver-body
