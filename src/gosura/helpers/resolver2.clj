@@ -24,7 +24,7 @@
          (resolve-as
           nil
           {:message    (ex-message e#)
-           :info       (ex-data e#)
+           :info       (str e#)
            :type       (.getName (class e#))
            :stacktrace (->> (.getStackTrace e#)
                             (map str))})))

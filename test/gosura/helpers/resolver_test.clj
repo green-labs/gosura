@@ -214,10 +214,12 @@
           parent {}
           resolved (test-resolver-7 ctx arg parent)
           message (get-in resolved [:resolved-value :data :message])
+          info (get-in resolved [:resolved-value :data :info])
           type' (get-in resolved [:resolved-value :data :type])
           stacktrace (get-in resolved [:resolved-value :data :stacktrace])]
       (are [expected result] (= expected result)
-        "something wrong!" message
+        "something wrong!"  message
+        "clojure.lang.ExceptionInfo: something wrong! {}" info
         (some? type') true
         (some? stacktrace) true)))
   (testing "catch-exceptions? 설정이 false일 때 에러가 던져지면 그대로 throw한다"
