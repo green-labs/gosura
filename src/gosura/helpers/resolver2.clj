@@ -13,7 +13,6 @@
             [gosura.util :as util :refer [transform-keys->camelCaseKeyword
                                           transform-keys->kebab-case-keyword
                                           update-resolver-result]]
-            [io.aviso.repl :as aviso-repl]
             [promesa.core :as prom]
             [superlifter.api :as superlifter-api])
   (:import [org.apache.commons.lang3.exception ExceptionUtils]))
@@ -24,7 +23,6 @@
     `(try
        ~@body
        (catch Exception e#
-         (aviso-repl/pretty-pst e# 10)
          (resolve-as
           nil
           {:message           (ex-message e#)
