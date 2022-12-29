@@ -214,16 +214,13 @@
           parent {}
           resolved (test-resolver-7 ctx arg parent)
           message (get-in resolved [:resolved-value :data :message])
-          trace (get-in resolved [:resolved-value :data :trace])
-          pretty (get-in resolved [:resolved-value :data :pretty])
-          stacktrace (get-in resolved [:resolved-value :data :stacktrace])
-          print-stack-trace (get-in resolved [:resolved-value :data :print-stack-trace])]
+          type' (get-in resolved [:resolved-value :data :type])
+          stacktrace (get-in resolved [:resolved-value :data :stacktrace])]
       (are [expected result] (= expected result)
         "something wrong!" message
-        (some? trace) true
-        (some? pretty) true
-        (some? stacktrace) true
-        (some? print-stack-trace) true)))
+        (some? type') true
+        (some? stacktrace) true)))
+
   (testing "catch-exceptions? 설정이 false일 때 에러가 던져지면 그대로 throw한다"
     (let [_            (gosura-resolver2/defresolver test-resolver-8
                          {:catch-exceptions? false}

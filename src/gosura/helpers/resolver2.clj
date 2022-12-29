@@ -14,6 +14,7 @@
                                           transform-keys->kebab-case-keyword
                                           update-resolver-result]]
             [io.aviso.exception :as e]
+            [io.aviso.repl :as aviso-repl]
             [promesa.core :as prom]
             [superlifter.api :as superlifter-api])
   (:import [org.apache.commons.lang3.exception ExceptionUtils]))
@@ -24,17 +25,14 @@
     `(try
        ~@body
        (catch Exception e#
-         (let [stacktrace# (ExceptionUtils/getStackTrace e#)
-               analyses#   (e/analyze-exception e# nil)]
-           (resolve-as
-            nil
-            {:message           (.getMessage e#)
-             :trace             (error/primary-trace analyses#)
-             :pretty            (map error/analyzed->formatted analyses#)
-             :stacktrace        (->> stacktrace#
-                                     (string/split-lines)
-                                     (map #(string/replace-first % #"\t" "  ")))
-             :print-stack-trace stacktrace#}))))
+         (aviso-repl/pretty-pst e# 10)
+         (resolve-as
+          nil
+          {:message           (ex-message e#)
+           :type              (type e#)
+           :stacktrace        (->> (ExceptionUtils/getStackTrace e#)
+                                   (string/split-lines)
+                                   (map #(string/replace-first % #"\t" "  ")))})))
     body))
 
 (defmacro wrap-resolver-body
