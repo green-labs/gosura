@@ -1,7 +1,6 @@
 (ns gosura.helpers.resolver2
   "gosura.helpers.resolver의 v2입니다."
-  (:require [clojure.tools.logging :as log]
-            [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
+  (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [failjure.core :as f]
             [gosura.auth :as auth]
             [gosura.helpers.error :as error]
@@ -14,7 +13,8 @@
                                           transform-keys->kebab-case-keyword
                                           update-resolver-result]]
             [promesa.core :as prom]
-            [superlifter.api :as superlifter-api]))
+            [superlifter.api :as superlifter-api]
+            [taoensso.timbre :as log]))
 
 (defmacro wrap-catch-body
   [catch-exceptions? body]
