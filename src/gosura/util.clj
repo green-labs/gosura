@@ -53,6 +53,18 @@
   [m ks f]
   (reduce #(update %1 %2 f) m ks))
 
+(defn update-existing
+  ([m k f]
+   (if-let [kv (find m k)] (assoc m k (f (val kv))) m))
+  ([m k f x]
+   (if-let [kv (find m k)] (assoc m k (f (val kv) x)) m))
+  ([m k f x y]
+   (if-let [kv (find m k)] (assoc m k (f (val kv) x y)) m))
+  ([m k f x y z]
+   (if-let [kv (find m k)] (assoc m k (f (val kv) x y z)) m))
+  ([m k f x y z & more]
+   (if-let [kv (find m k)] (assoc m k (apply f (val kv) x y z more)) m)))
+
 (defn stringify-ids
   "행의 ID들(열이 id, 그리고 -id로 끝나는 것들)을 문자열로 변경한다."
   [row]

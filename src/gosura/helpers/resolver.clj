@@ -22,8 +22,8 @@
             [gosura.helpers.superlifter :refer [with-superlifter]]
             [gosura.util :as util :refer [transform-keys->camelCaseKeyword
                                           transform-keys->kebab-case-keyword
-                                          update-resolver-result]]
-            [medley.core :as medley]
+                                          update-resolver-result
+                                          update-existing]]
             [promesa.core :as prom]
             [superlifter.api :as superlifter-api]))
 
@@ -136,14 +136,14 @@
   "인자 맵의 ID들(열이 ids, 그리고 -ids로 끝나는 것들)의 값을 글로벌 ID에서 ID로 디코드한다."
   [arguments]
   (-> arguments
-      (medley/update-existing :ids #(map relay/decode-global-id->db-id %))
+      (update-existing :ids #(map relay/decode-global-id->db-id %))
       (decode-value-in-args "-ids" #(map relay/decode-global-id->db-id %))))
 
 (defn decode-global-id-in-arguments
   "인자 맵의 ID들(열이 id, 그리고 -id로 끝나는 것들)의 값을 글로벌 ID에서 ID로 디코드한다."
   [arguments]
   (-> arguments
-      (medley/update-existing :id relay/decode-global-id->db-id)
+      (update-existing :id relay/decode-global-id->db-id)
       (decode-value-in-args "-id" relay/decode-global-id->db-id)))
 
 (defn common-pre-process-arguments

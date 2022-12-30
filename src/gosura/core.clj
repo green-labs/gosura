@@ -19,10 +19,10 @@
             [gosura.schema :as schema]
             [gosura.util :as util :refer [transform-keys->camelCaseKeyword
                                           transform-keys->kebab-case-keyword
-                                          requiring-var!]]
+                                          requiring-var!
+                                          update-existing]]
             [malli.core :as m]
-            [malli.error :as me]
-            [medley.core :as medley]))
+            [malli.error :as me]))
 
 (defn- ->kebab-case
   [kebab-case? args parent]
@@ -48,12 +48,12 @@
   [params]
   (-> params
       auth-symbol->requiring-var!
-      (medley/update-existing :table-fetcher requiring-var!)
-      (medley/update-existing :pre-process-arguments requiring-var!)
-      (medley/update-existing :post-process-row requiring-var!)
-      (medley/update-existing :superfetcher requiring-var!)
-      (medley/update-existing :mutation-fn requiring-var!)
-      (medley/update-existing :fetch-one requiring-var!)))
+      (update-existing :table-fetcher requiring-var!)
+      (update-existing :pre-process-arguments requiring-var!)
+      (update-existing :post-process-row requiring-var!)
+      (update-existing :superfetcher requiring-var!)
+      (update-existing :mutation-fn requiring-var!)
+      (update-existing :fetch-one requiring-var!)))
 
 (defn find-resolver-fn
   "resolver-key 에 따라 적절한 resolver-fn 함수를 리턴한다.
