@@ -1,6 +1,6 @@
 (ns gosura.helpers.resolver2
   "gosura.helpers.resolver의 v2입니다."
-  (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
+  (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as] :as resolve]
             [failjure.core :as f]
             [gosura.auth :as auth]
             [gosura.helpers.error :as error]
@@ -20,7 +20,7 @@
   [catch-exceptions? body]
   (if catch-exceptions?
     `(try
-       ~@body
+       ~body
        (catch Exception e#
          (log/error e#)
          (resolve-as
@@ -30,6 +30,19 @@
            :type       (.getName (class e#))
            :stacktrace (->> (.getStackTrace e#)
                             (map str))})))
+    body))
+
+(defmacro wrap-async-body
+  [async? body]
+  (if async?
+    `(let [result# (resolve/resolve-promise)]
+       (.start (Thread.
+                #(try
+                   (resolve/deliver! result# ~body)
+                   (catch Throwable t#
+                     (resolve/deliver! result# nil
+                                       {:message (str "Exception: " (.getMessage t#))})))))
+       result#)
     body))
 
 (defmacro wrap-resolver-body
@@ -47,10 +60,11 @@
   "
   [{:keys [this ctx arg parent]} option args body]
   (let [{:keys [auth kebab-case? return-camel-case? required-keys-in-parent
-                filters decode-ids-by-keys catch-exceptions?]
+                filters decode-ids-by-keys catch-exceptions? async?]
          :or   {kebab-case?             true
                 return-camel-case?      true
                 catch-exceptions?       true
+                async?                  false
                 required-keys-in-parent []}} option
         result (gensym 'result_)
         auth-filter-opts `(auth/->auth-result ~auth ~ctx)
@@ -67,7 +81,9 @@
        (if (or (nil? ~auth-filter-opts)
                (and ~auth-filter-opts
                     (not (f/failed? ~auth-filter-opts))))
-         (let [~result (do (let ~let-mapping (wrap-catch-body ~catch-exceptions? ~body)))]
+         (let [~result (do (let ~let-mapping (->> ~@body
+                                                  (wrap-async-body ~async?)
+                                                  (wrap-catch-body ~catch-exceptions?))))]
            (cond-> ~result
              ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
          (resolve-as nil {:message "Unauthorized"})))))
