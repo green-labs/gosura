@@ -7,3 +7,11 @@
    (error nil resolver-errors))
   ([resolved-value resolver-errors]
    (resolve-as resolved-value resolver-errors)))
+
+(defn error-response
+  [throwable]
+  {:message    (ex-message throwable)
+   :info       (str throwable)
+   :type       (.getName (class throwable))
+   :stacktrace (->> (.getStackTrace throwable)
+                    (map str))})

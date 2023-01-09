@@ -25,11 +25,7 @@
          (log/error e#)
          (resolve-as
           nil
-          {:message    (ex-message e#)
-           :info       (str e#)
-           :type       (.getName (class e#))
-           :stacktrace (->> (.getStackTrace e#)
-                            (map str))})))
+          (error/error-response e#))))
     body))
 
 (defmacro wrap-async-body
@@ -40,8 +36,7 @@
                 #(try
                    (resolve/deliver! result# ~body)
                    (catch Throwable t#
-                     (resolve/deliver! result# nil
-                                       {:message (str "Exception: " (.getMessage t#))})))))
+                     (resolve/deliver! result# nil (error/error-response t#))))))
        result#)
     body))
 
