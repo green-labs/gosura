@@ -79,16 +79,17 @@
   (get-in ctx [:identity :cc]))
 
 (def auth-column-name :userId)
-(def arg-in-resolver (atom {}))
 
 (gosura-resolver2/defresolver test-resolver
   {:auth [user-auth auth-column-name]}
   [ctx arg parent]
-  (reset! arg-in-resolver arg)
   {:ctx    ctx
    :arg    arg
    :parent parent})
 
+(comment
+  (test-resolver {:identity {:id "1"}} {:intArg 1
+                                        :strArg "str"} {}))
 (deftest defresolver2-test
   (testing "auth 설정이 잘 동작한다"
     (let [ctx    {:identity {:id "1"}}
@@ -100,11 +101,19 @@
                  :arg
                  :userId) "1"))))
   (testing "arg/parent가 default True로 kebab-case 설정이 잘 동작한다"
-    (let [ctx    {:identity {:id "1"}}
+    (let [arg-in-resolver (atom {})
+          _ (gosura-resolver2/defresolver test-resolver-1
+              {:auth [user-auth auth-column-name]}
+              [ctx arg parent]
+              (reset! arg-in-resolver arg)
+              {:ctx    ctx
+               :arg    arg
+               :parent parent})
+          ctx    {:identity {:id "1"}}
           arg    {:intArg 1
                   :strArg "str"}
           parent {}
-          _      (test-resolver ctx arg parent)]
+          _      (test-resolver-1 ctx arg parent)]
       (is (= @arg-in-resolver {:int-arg 1
                                :str-arg "str"
                                :user-id "1"}))))
@@ -148,7 +157,6 @@
                    {:auth    [user-auth auth-column-name]
                     :filters {:country-code get-country-code}}
                    [ctx arg parent]
-                   (reset! arg-in-resolver arg)
                    {:ctx    ctx
                     :arg    arg
                     :parent parent})
