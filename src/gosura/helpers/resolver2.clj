@@ -28,13 +28,18 @@
           (error/error-response e#))))
     body))
 
+(defn transform-body
+  [body return-camel-case?]
+  (cond-> body
+    return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
+
 (defmacro wrap-async-body
-  [async? body]
+  [async? return-camel-case? body]
   (if async?
     `(let [result# (resolve/resolve-promise)]
        (.start (Thread.
                 #(try
-                   (resolve/deliver! result# ~body)
+                   (resolve/deliver! result# (transform-body ~body ~return-camel-case?))
                    (catch Throwable t#
                      (resolve/deliver! result# nil (error/error-response t#))))))
        result#)
@@ -77,10 +82,9 @@
                (and ~auth-filter-opts
                     (not (f/failed? ~auth-filter-opts))))
          (let [~result (do (let ~let-mapping (->> ~@body
-                                                  (wrap-async-body ~async?)
+                                                  (wrap-async-body ~async? ~return-camel-case?)
                                                   (wrap-catch-body ~catch-exceptions?))))]
-           (cond-> ~result
-             ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
+           (transform-body ~result ~return-camel-case?))
          (resolve-as nil {:message "Unauthorized"})))))
 
 
