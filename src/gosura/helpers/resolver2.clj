@@ -37,11 +37,11 @@
   [async? return-camel-case? body]
   (if async?
     `(let [result# (resolve/resolve-promise)]
-       (.start (Thread.
-                #(try
-                   (resolve/deliver! result# (transform-body ~body ~return-camel-case?))
-                   (catch Throwable t#
-                     (resolve/deliver! result# nil (error/error-response t#))))))
+       (prom/future
+         (try
+           (resolve/deliver! result# (transform-body ~body ~return-camel-case?))
+           (catch Throwable t#
+             (resolve/deliver! result# nil (error/error-response t#)))))
        result#)
     body))
 
@@ -129,7 +129,7 @@
     * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id :agg :id} {:prop :user-id :agg :id}
      * :pre-fn: 전처리
      * :prop: 부모로부터 전달 받는 키값
-     * :agg: 데이터를 모으는 키값 
+     * :agg: 데이터를 모으는 키값
   ## 반환
   * 객체 목록
   "
@@ -176,7 +176,7 @@
     * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id :agg :id} {:prop :user-id :agg :id}
      * :pre-fn: 전처리
      * :prop: 부모로부터 전달 받는 키값
-     * :agg: 데이터를 모으는 키값 
+     * :agg: 데이터를 모으는 키값
   ## 반환
   * 객체 하나
   "
