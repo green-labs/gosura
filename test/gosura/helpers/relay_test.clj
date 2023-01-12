@@ -16,10 +16,10 @@
       (is (= result expected-result))))
   (testing "Base64 인코딩된 값이 Node가 아닐 때, nil을 반환한다"
     (let [encoded-id ".+/ss"]
-      (is nil? (gosura-relay/decode-id encoded-id))))
+      (is (nil? (gosura-relay/decode-id encoded-id)))))
   (testing "str이 아닌 타입이 입력되었을 때, nil을 반환한다"
     (let [encoded-id 1]
-      (is nil? (gosura-relay/decode-id encoded-id)))))
+      (is (nil? (gosura-relay/decode-id encoded-id))))))
 
 (deftest encode-node-id-test
   (testing "encode-node-id에 전달되는 값은 map이어야 한다"
