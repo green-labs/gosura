@@ -28,15 +28,14 @@
    \"bm90aWNlLTI=\" -> {:node-type \"notice\", :db-id \"2\"}
    주의: decode된 db id는 string임."
   [id]
-  (when-not (string? id)
-    (throw (ex-info "node id must be string" {:invalid-id id})))
-  (let [[_ node-type db-id] (re-matches #"^(.*):(.*)$"
-                                        (String. (.decode (Base64/getDecoder) id)))
+  (when-not (string? id) nil)
+  (let [decoded (try (String. (.decode (Base64/getDecoder) id))
+                     (catch IllegalArgumentException _ ""))
+        [_ node-type db-id] (re-matches #"^(.*):(.*)$" decoded)
         decoded-result {:node-type (keyword node-type)
                         :db-id db-id}]
-    (when-not (m/validate gosura-schema/decoded-id-schema decoded-result)
-      (throw (ex-info "Invalid node id" {:decoded-id decoded-result})))
-    decoded-result))
+    (when (m/validate gosura-schema/decoded-id-schema decoded-result)
+      decoded-result)))
 
 (defn decode-global-id->db-id [global-id]
   (some-> global-id decode-id :db-id))
