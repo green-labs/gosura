@@ -205,14 +205,27 @@
           result (test-resolver-6 ctx arg parent)]
       (is (= (-> result
                  :arg) {:testCol "1"}))))
+  (testing "잘못된 형식의 id가 입력되었을 때 decode-ids-by-keys가 nil을 넘겨준다"
+    (let [_      (gosura-resolver2/defresolver test-resolver-7
+                   {:decode-ids-by-keys [:test-col]}
+                   [ctx arg parent]
+                   {:ctx    ctx
+                    :arg    arg
+                    :parent parent})
+          ctx    {}
+          arg    {:test-col ".."}
+          parent {}
+          result (test-resolver-7 ctx arg parent)]
+      (is (= (-> result
+                 :arg) {:testCol nil}))))
   (testing "에러가 던져졌을 때 GraphQL errors를 반환한다"
-    (let [_            (gosura-resolver2/defresolver test-resolver-7
+    (let [_            (gosura-resolver2/defresolver test-resolver-8
                          [_ctx _arg _parent]
                          (throw (ex-info "something wrong!" {})))
           ctx    {}
           arg    {}
           parent {}
-          resolved (test-resolver-7 ctx arg parent)
+          resolved (test-resolver-8 ctx arg parent)
           message (get-in resolved [:resolved-value :data :message])
           info (get-in resolved [:resolved-value :data :info])
           type' (get-in resolved [:resolved-value :data :type])
@@ -223,14 +236,14 @@
         (some? type') true
         (some? stacktrace) true)))
   (testing "catch-exceptions? 설정이 false일 때 에러가 던져지면 그대로 throw한다"
-    (let [_            (gosura-resolver2/defresolver test-resolver-8
+    (let [_            (gosura-resolver2/defresolver test-resolver-9
                          {:catch-exceptions? false}
                          [_ctx _arg _parent]
                          (throw (ex-info "something wrong!" {})))
           ctx    {}
           arg    {}
           parent {}]
-      (is (thrown? ExceptionInfo (test-resolver-8 ctx arg parent))))))
+      (is (thrown? ExceptionInfo (test-resolver-9 ctx arg parent))))))
 
 (comment
   (run-tests))
