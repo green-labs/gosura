@@ -1,6 +1,6 @@
 (ns gosura.helpers.resolver2
   "gosura.helpers.resolver의 v2입니다."
-  (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
+  (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as] :as resolve]
             [failjure.core :as f]
             [gosura.auth :as auth]
             [gosura.helpers.error :as error]
@@ -20,16 +20,29 @@
   [catch-exceptions? body]
   (if catch-exceptions?
     `(try
-       ~@body
+       ~body
        (catch Exception e#
          (log/error e#)
          (resolve-as
           nil
-          {:message    (ex-message e#)
-           :info       (str e#)
-           :type       (.getName (class e#))
-           :stacktrace (->> (.getStackTrace e#)
-                            (map str))})))
+          (error/error-response e#))))
+    body))
+
+(defn transform-body
+  [body return-camel-case?]
+  (cond-> body
+    return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
+
+(defmacro wrap-async-body
+  [async? return-camel-case? body]
+  (if async?
+    `(let [result# (resolve/resolve-promise)]
+       (prom/future
+         (try
+           (resolve/deliver! result# (transform-body ~body ~return-camel-case?))
+           (catch Throwable t#
+             (resolve/deliver! result# nil (error/error-response t#)))))
+       result#)
     body))
 
 (defmacro wrap-resolver-body
@@ -47,10 +60,11 @@
   "
   [{:keys [this ctx arg parent]} option args body]
   (let [{:keys [auth kebab-case? return-camel-case? required-keys-in-parent
-                filters decode-ids-by-keys catch-exceptions?]
+                filters decode-ids-by-keys catch-exceptions? async?]
          :or   {kebab-case?             true
                 return-camel-case?      true
                 catch-exceptions?       true
+                async?                  false
                 required-keys-in-parent []}} option
         result (gensym 'result_)
         auth-filter-opts `(auth/->auth-result ~auth ~ctx)
@@ -67,9 +81,10 @@
        (if (or (nil? ~auth-filter-opts)
                (and ~auth-filter-opts
                     (not (f/failed? ~auth-filter-opts))))
-         (let [~result (do (let ~let-mapping (wrap-catch-body ~catch-exceptions? ~body)))]
-           (cond-> ~result
-             ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
+         (let [~result (do (let ~let-mapping (->> ~@body
+                                                  (wrap-async-body ~async? ~return-camel-case?)
+                                                  (wrap-catch-body ~catch-exceptions?))))]
+           (transform-body ~result ~return-camel-case?))
          (resolve-as nil {:message "Unauthorized"})))))
 
 
@@ -114,7 +129,7 @@
     * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id :agg :id} {:prop :user-id :agg :id}
      * :pre-fn: 전처리
      * :prop: 부모로부터 전달 받는 키값
-     * :agg: 데이터를 모으는 키값 
+     * :agg: 데이터를 모으는 키값
   ## 반환
   * 객체 목록
   "
@@ -161,7 +176,7 @@
     * :parent-id: 부모로부터 전달되는 id 정보 예) {:pre-fn relay/decode-global-id->db-id :prop :id :agg :id} {:prop :user-id :agg :id}
      * :pre-fn: 전처리
      * :prop: 부모로부터 전달 받는 키값
-     * :agg: 데이터를 모으는 키값 
+     * :agg: 데이터를 모으는 키값
   ## 반환
   * 객체 하나
   "
