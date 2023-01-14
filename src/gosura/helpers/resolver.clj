@@ -195,8 +195,7 @@
                       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
                           (prom/then (fn [rows]
                                        (-> (first rows)
-                                           (relay/build-node node-type post-process-row)
-                                           transform-keys->camelCaseKeyword)))))))
+                                           (relay/build-node node-type post-process-row))))))))
 
 (defn resolve-by-fk
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
@@ -228,8 +227,7 @@
     (with-superlifter (:superlifter context)
                       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
                           (prom/then (fn [rows] (-> (first rows)
-                                                    (relay/build-node node-type post-process-row)
-                                                    transform-keys->camelCaseKeyword)))))))
+                                                    (relay/build-node node-type post-process-row))))))))
 
 (defn resolve-connection
   "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
@@ -268,8 +266,7 @@
         rows (table-fetcher db filter-options page-options)]
     (->> rows
          (map #(relay/build-node % node-type post-process-row))
-         (relay/build-connection order-by page-direction page-size cursor-id)
-         transform-keys->camelCaseKeyword)))
+         (relay/build-connection order-by page-direction page-size cursor-id))))
 
 ;; FIXME: N+1 쿼리임
 (defn resolve-connection-by-pk-list
@@ -307,8 +304,7 @@
         rows (table-fetcher db filter-options page-options)]
     (->> rows
          (map #(relay/build-node % node-type post-process-row))
-         (relay/build-connection order-by page-direction page-size cursor-id)
-         transform-keys->camelCaseKeyword)))
+         (relay/build-connection order-by page-direction page-size cursor-id))))
 
 (defn resolve-connection-by-fk
   "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
@@ -346,8 +342,7 @@
                           (prom/then (fn [rows]
                                        (->> rows
                                             (map #(relay/build-node % node-type post-process-row))
-                                            (relay/build-connection order-by page-direction page-size cursor-id)
-                                            transform-keys->camelCaseKeyword)))))))
+                                            (relay/build-connection order-by page-direction page-size cursor-id))))))))
 
 ; TODO 다른 mutation helper 함수와 통합
 (defn pack-mutation-result
