@@ -10,12 +10,12 @@
 
   를 resolver-fn 이라 부르자, 약속해봅니다.
   "
-  (:require [camel-snake-kebab.core :as csk]
-            [clojure.string :refer [ends-with?]]
+  (:require [clojure.string :refer [ends-with?]]
             [clojure.tools.logging :as log]
             [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [com.walmartlabs.lacinia.schema :refer [tag-with-type]]
             [gosura.auth :as auth]
+            [gosura.csk :as csk]
             [gosura.helpers.error :as error]
             [gosura.helpers.relay :as relay]
             [gosura.helpers.response :as response]
@@ -59,7 +59,7 @@
        (if ~authorized?
          (let [~result (do (let ~let-mapping ~@body))]
            (cond-> ~result
-                   ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
+             ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
          (resolve-as nil {:message "Unauthorized"})))))
 
 (defn parse-fdecl
@@ -192,11 +192,11 @@
                                      :page-options nil})
         superfetch-id (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
-                      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-                          (prom/then (fn [rows]
-                                       (-> (first rows)
-                                           (relay/build-node node-type post-process-row)
-                                           transform-keys->camelCaseKeyword)))))))
+      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+          (prom/then (fn [rows]
+                       (-> (first rows)
+                           (relay/build-node node-type post-process-row)
+                           transform-keys->camelCaseKeyword)))))))
 
 (defn resolve-by-fk
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
@@ -226,10 +226,10 @@
                                      :page-options page-options})
         superfetch-id (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
-                      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-                          (prom/then (fn [rows] (-> (first rows)
-                                                    (relay/build-node node-type post-process-row)
-                                                    transform-keys->camelCaseKeyword)))))))
+      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+          (prom/then (fn [rows] (-> (first rows)
+                                    (relay/build-node node-type post-process-row)
+                                    transform-keys->camelCaseKeyword)))))))
 
 (defn resolve-connection
   "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
@@ -342,12 +342,12 @@
                                      :page-options page-options})
         superfetch-id (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
-                      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-                          (prom/then (fn [rows]
-                                       (->> rows
-                                            (map #(relay/build-node % node-type post-process-row))
-                                            (relay/build-connection order-by page-direction page-size cursor-id)
-                                            transform-keys->camelCaseKeyword)))))))
+      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+          (prom/then (fn [rows]
+                       (->> rows
+                            (map #(relay/build-node % node-type post-process-row))
+                            (relay/build-connection order-by page-direction page-size cursor-id)
+                            transform-keys->camelCaseKeyword)))))))
 
 ; TODO 다른 mutation helper 함수와 통합
 (defn pack-mutation-result
