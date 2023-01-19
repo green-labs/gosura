@@ -1,17 +1,17 @@
 (ns gosura.util
   (:require [camel-snake-kebab.core :as csk]
             [camel-snake-kebab.extras :as cske]
-            [clojure.string :refer [ends-with?]]
+            [clojure.string :as string :refer [ends-with?]]
             [com.walmartlabs.lacinia.resolve :refer [is-resolver-result?]]
             [com.walmartlabs.lacinia.select-utils :refer [is-wrapped-value?]]
             [sentry-clj.core :as sentry]))
 
 (defn keyword-vals->string-vals
   "hash-map value 값에 keyword가 있으면 String으로 변환해준다
-   
+
    사용예시) enum 값 때문에 keyword가 들어올 일이 있음
    한계: 1 depth 까지만 적용
-   
+
    TODO) 조금 더 발전 시켜서 defresolver나 resolve-xxx 에서 무조건 이 로직을 타도록 하는 것도 좋을 듯"
   [hash-map]
   (when (map? hash-map)
@@ -20,15 +20,24 @@
                        (and (coll? val) (some keyword? val)) (assoc m key (map name val))
                        :else (assoc m key val))) {} hash-map)))
 
+(defn camelCase->kebab-case-keyword
+  [s]
+  (let [s (name s)]
+    (keyword (string/replace s #"[A-Z]" #(str "-" (string/lower-case %))))))
+
+(defn kebab-case->camelCaseKeyword [s]
+  (let [s (name s)]
+    (keyword (string/replace s #"-([a-z])" #(string/upper-case (second %))))))
+
 (defn transform-keys->kebab-case-keyword
-  "재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
+  "재귀적으로 form 안에 포함된 모든 key를 kebab-case keyword로 변환한다"
   [form]
-  (cske/transform-keys csk/->kebab-case-keyword form))
+  (cske/transform-keys camelCase->kebab-case-keyword form))
 
 (defn transform-keys->camelCaseKeyword
   "재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
   [form]
-  (cske/transform-keys csk/->camelCaseKeyword form))
+  (cske/transform-keys kebab-case->camelCaseKeyword form))
 
 (defn send-sentry-server-event
   [event]
@@ -113,3 +122,25 @@
 (defmethod qualified-symbol->requiring-var! clojure.lang.Symbol
   [sym]
   (requiring-var! sym))
+
+
+(comment
+  (camelCase->kebab-case-keyword "mycase")
+  (camelCase->kebab-case-keyword :mycase)
+  (camelCase->kebab-case-keyword "myCase")
+  (camelCase->kebab-case-keyword :myCase)
+  (camelCase->kebab-case-keyword "myCase2")
+  (camelCase->kebab-case-keyword :myCase2) ;; unhandled case
+  (camelCase->kebab-case-keyword "MyCase")
+  (camelCase->kebab-case-keyword :MyCase) ;; unhandled case
+  (camelCase->kebab-case-keyword "my-case")
+  (camelCase->kebab-case-keyword :my-case)
+  (csk/->kebab-case-keyword "mycase")
+  (csk/->kebab-case-keyword "myCase")
+  (csk/->kebab-case-keyword "myCase2")
+  (csk/->kebab-case-keyword "My_Case")
+
+  (kebab-case->camelCaseKeyword "my-case")
+  (kebab-case->camelCaseKeyword :my-case)
+  (kebab-case->camelCaseKeyword "myCase")
+  (kebab-case->camelCaseKeyword :myCase))
