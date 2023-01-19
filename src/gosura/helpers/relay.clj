@@ -1,6 +1,6 @@
 (ns gosura.helpers.relay
-  (:require [camel-snake-kebab.core :as csk]
-            [clojure.string]
+  (:require [clojure.string]
+            [gosura.csk :as csk]
             [gosura.schema :as gosura-schema]
             [gosura.util :refer [stringify-ids]]
             [malli.core :as m]
@@ -157,8 +157,8 @@
         next-rows (drop page-size remaining-rows)
         has-next? (boolean (seq next-rows))
         paged-rows (cond->> remaining-rows
-                            page-size (take page-size)
-                            (= page-direction :backward) reverse)
+                     page-size (take page-size)
+                     (= page-direction :backward) reverse)
         edges (->> paged-rows
                    (map #(node->edge order-by %)))]
     {:count     (count edges)

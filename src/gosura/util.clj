@@ -1,9 +1,9 @@
 (ns gosura.util
-  (:require [camel-snake-kebab.core :as csk]
-            [camel-snake-kebab.extras :as cske]
+  (:require [camel-snake-kebab.extras :as cske]
             [clojure.string :refer [ends-with?]]
             [com.walmartlabs.lacinia.resolve :refer [is-resolver-result?]]
             [com.walmartlabs.lacinia.select-utils :refer [is-wrapped-value?]]
+            [gosura.csk :as csk]
             [sentry-clj.core :as sentry]))
 
 (defn keyword-vals->string-vals

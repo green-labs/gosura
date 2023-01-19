@@ -25,3 +25,6 @@
 
 (def ->snake_case_keyword
   (m/lru csk/->snake_case_keyword {} :lru/threshold 512))
+
+(def ->camelCaseKeyword
+  (m/lru csk/->camelCaseKeyword {} :lru/threshold 512))
