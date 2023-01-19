@@ -23,12 +23,12 @@
 (defn transform-keys->kebab-case-keyword
   "재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
   [form]
-  (cske/transform-keys csk/->kebab-case-keyword form))
+  (cske/transform-keys csk/camelCase->kebab-case-keyword form))
 
 (defn transform-keys->camelCaseKeyword
   "재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
   [form]
-  (cske/transform-keys csk/->camelCaseKeyword form))
+  (cske/transform-keys csk/kebab-case->camelCaseKeyword form))
 
 (defn send-sentry-server-event
   [event]
