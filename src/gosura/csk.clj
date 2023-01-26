@@ -4,7 +4,7 @@
             [clojure.string :as string]))
 
 (def ->kebab-case
-  (m/lru csk/->kebab-case {} :lru/threshold 512))
+  (memoize csk/->kebab-case))
 
 (defn- request-camelCase->kebab-case-keyword
   [s]
@@ -17,31 +17,31 @@
     (keyword (string/replace s #"-([a-z])" #(string/upper-case (second %))))))
 
 (def camelCase->kebab-case-keyword
-  (m/lru request-camelCase->kebab-case-keyword {} :lru/threshold 512))
+  (memoize request-camelCase->kebab-case-keyword))
 
 (def kebab-case->camelCaseKeyword
-  (m/lru request-kebab-case->camelCaseKeyword {} :lru/threshold 512))
+  (memoize request-kebab-case->camelCaseKeyword))
 
 (def ->kebab-case-keyword
-  (m/lru csk/->kebab-case-keyword {} :lru/threshold 512))
+  (memoize csk/->kebab-case-keyword))
 
 (def ->kebab-case-string
-  (m/lru csk/->kebab-case-string {} :lru/threshold 512))
+  (memoize csk/->kebab-case-string))
 
 (def ->PascalCaseString
-  (m/lru csk/->PascalCaseString {} :lru/threshold 512))
+  (memoize csk/->PascalCaseString))
 
 (def ->PascalCaseKeyword
-  (m/lru csk/->PascalCaseKeyword {} :lru/threshold 512))
+  (memoize csk/->PascalCaseKeyword))
 
 (def ->PascalCase
-  (m/lru csk/->PascalCase {} :lru/threshold 512))
+  (memoize csk/->PascalCase))
 
 (def ->snake_case
-  (m/lru csk/->snake_case {} :lru/threshold 512))
+  (memoize csk/->snake_case))
 
 (def ->snake_case_keyword
-  (m/lru csk/->snake_case_keyword {} :lru/threshold 512))
+  (memoize csk/->snake_case_keyword))
 
 (def ->camelCaseKeyword
-  (m/lru csk/->camelCaseKeyword {} :lru/threshold 512))
+  (memoize csk/->camelCaseKeyword))
