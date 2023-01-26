@@ -8,10 +8,10 @@
 
 (defn keyword-vals->string-vals
   "hash-map value 값에 keyword가 있으면 String으로 변환해준다
-   
+
    사용예시) enum 값 때문에 keyword가 들어올 일이 있음
    한계: 1 depth 까지만 적용
-   
+
    TODO) 조금 더 발전 시켜서 defresolver나 resolve-xxx 에서 무조건 이 로직을 타도록 하는 것도 좋을 듯"
   [hash-map]
   (when (map? hash-map)
@@ -21,14 +21,18 @@
                        :else (assoc m key val))) {} hash-map)))
 
 (defn transform-keys->kebab-case-keyword
-  "재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
+  " form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
   [form]
-  (cske/transform-keys csk/camelCase->kebab-case-keyword form))
+  (if (map? form)
+    (update-keys form csk/camelCase->kebab-case-keyword)
+    form))
 
 (defn transform-keys->camelCaseKeyword
-  "재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
+  " form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
   [form]
-  (cske/transform-keys csk/kebab-case->camelCaseKeyword form))
+  (if (map? form)
+    (update-keys form csk/kebab-case->camelCaseKeyword)
+    form))
 
 (defn send-sentry-server-event
   [event]
