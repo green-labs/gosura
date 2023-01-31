@@ -1,6 +1,7 @@
 (ns gosura.helpers.resolver-test
   (:require [clojure.test :refer [are deftest is run-tests testing]]
             [gosura.helpers.resolver :as gosura-resolver]
+            [com.walmartlabs.lacinia.resolve :as resolve]
             [gosura.helpers.resolver2 :as gosura-resolver2])
   (:import [clojure.lang ExceptionInfo]))
 
@@ -79,12 +80,10 @@
   (get-in ctx [:identity :cc]))
 
 (def auth-column-name :userId)
-(def arg-in-resolver (atom {}))
 
 (gosura-resolver2/defresolver test-resolver
   {:auth [user-auth auth-column-name]}
   [ctx arg parent]
-  (reset! arg-in-resolver arg)
   {:ctx    ctx
    :arg    arg
    :parent parent})
@@ -100,11 +99,19 @@
                  :arg
                  :userId) "1"))))
   (testing "arg/parent가 default True로 kebab-case 설정이 잘 동작한다"
-    (let [ctx    {:identity {:id "1"}}
-          arg    {:intArg 1
-                  :strArg "str"}
-          parent {}
-          _      (test-resolver ctx arg parent)]
+    (let [arg-in-resolver (atom {})
+          _               (gosura-resolver2/defresolver test-resolver-1
+                            {:auth [user-auth auth-column-name]}
+                            [ctx arg parent]
+                            (reset! arg-in-resolver arg)
+                            {:ctx    ctx
+                             :arg    arg
+                             :parent parent})
+          ctx             {:identity {:id "1"}}
+          arg             {:intArg 1
+                           :strArg "str"}
+          parent          {}
+          _               (test-resolver-1 ctx arg parent)]
       (is (= @arg-in-resolver {:int-arg 1
                                :str-arg "str"
                                :user-id "1"}))))
@@ -148,7 +155,6 @@
                    {:auth    [user-auth auth-column-name]
                     :filters {:country-code get-country-code}}
                    [ctx arg parent]
-                   (reset! arg-in-resolver arg)
                    {:ctx    ctx
                     :arg    arg
                     :parent parent})
@@ -219,16 +225,16 @@
       (is (= (-> result
                  :arg) {:testCol nil}))))
   (testing "에러가 던져졌을 때 GraphQL errors를 반환한다"
-    (let [_            (gosura-resolver2/defresolver test-resolver-8
-                         [_ctx _arg _parent]
-                         (throw (ex-info "something wrong!" {})))
-          ctx    {}
-          arg    {}
-          parent {}
-          resolved (test-resolver-8 ctx arg parent)
-          message (get-in resolved [:resolved-value :data :message])
-          info (get-in resolved [:resolved-value :data :info])
-          type' (get-in resolved [:resolved-value :data :type])
+    (let [_          (gosura-resolver2/defresolver test-resolver-8
+                       [_ctx _arg _parent]
+                       (throw (ex-info "something wrong!" {})))
+          ctx        {}
+          arg        {}
+          parent     {}
+          resolved   (test-resolver-8 ctx arg parent)
+          message    (get-in resolved [:resolved-value :data :message])
+          info       (get-in resolved [:resolved-value :data :info])
+          type'      (get-in resolved [:resolved-value :data :type])
           stacktrace (get-in resolved [:resolved-value :data :stacktrace])]
       (are [expected result] (= expected result)
         "something wrong!"  message
@@ -236,14 +242,43 @@
         (some? type') true
         (some? stacktrace) true)))
   (testing "catch-exceptions? 설정이 false일 때 에러가 던져지면 그대로 throw한다"
-    (let [_            (gosura-resolver2/defresolver test-resolver-9
-                         {:catch-exceptions? false}
-                         [_ctx _arg _parent]
-                         (throw (ex-info "something wrong!" {})))
+    (let [_      (gosura-resolver2/defresolver test-resolver-8
+                   {:catch-exceptions? false}
+                   [_ctx _arg _parent]
+                   (throw (ex-info "something wrong!" {})))
           ctx    {}
           arg    {}
           parent {}]
-      (is (thrown? ExceptionInfo (test-resolver-9 ctx arg parent))))))
+      (is (thrown? ExceptionInfo (test-resolver-8 ctx arg parent)))))
+  (testing "async? 설정이 false 일 때, 원래 동작을 잘 보장한다"
+    (let [_      (gosura-resolver2/defresolver test-resolver-9
+                   {:async? false}
+                   [ctx arg parent]
+                   {:ctx    ctx
+                    :arg    arg
+                    :parent parent})
+          ctx    {:identity {:id "1"}}
+          arg    {:intArg 1
+                  :strArg "str"}
+          parent {}
+          result (test-resolver-9 ctx arg parent)]
+      (is (= result {:ctx    {:identity {:id "1"}}
+                     :arg    {:intArg 1
+                              :strArg "str"}
+                     :parent {}}))))
+  (testing "async? 설정이 true 일 때, Promise를 잘 반환한다"
+    (let [_        (gosura-resolver2/defresolver test-resolver-10
+                     {:async? true}
+                     [ctx arg parent]
+                     {:ctx    ctx
+                      :arg    arg
+                      :parent parent})
+          ctx      {:identity {:id "1"}}
+          arg      {:intArg 1
+                    :strArg "str"}
+          parent   {}
+          resolved (test-resolver-10 ctx arg parent)]
+      (is (satisfies? resolve/ResolverResultPromise resolved)))))
 
 (comment
   (run-tests))
