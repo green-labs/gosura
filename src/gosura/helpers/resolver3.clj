@@ -71,7 +71,7 @@
         nil
         (ghe/error-response e#)))))
 
-(defmacro defresolver3
+(defmacro defresolver
   {:arglists '([name doc-string? option? args & body])}
   [name & fdecl]
   (let [{:keys [doc-string option args body]}  (parse-fdecl fdecl)
@@ -103,7 +103,7 @@
            (apply-post-ops-fn# result#))))))
 
 (comment
-  (defresolver3 test-resolver-post-opts
+  (defresolver test-resolver-post-opts
     {:pre-opts  [args->kebab-case-args]
      :body-opts [wrap-catch-body]
      :post-opts [transform-result]}
@@ -111,14 +111,14 @@
     b)
   (test-resolver-post-opts {:a "a"} {:myId 1} {})
 
-  (macroexpand-1 '(defresolver3 test-resolver-post-opts
+  (macroexpand-1 '(defresolver test-resolver-post-opts
                     {:pre-opts  []
                      :body-opts [wrap-catch-body]
                      :post-opts [transform-result]}
                     [{:keys [ddb] :as a} b c]
                     b))
 
-  (defresolver3 test-resolver-pre-opts-decode-global-ids
+  (defresolver test-resolver-pre-opts-decode-global-ids
     {:pre-opts  []
      :body-opts [wrap-catch-body]
      :post-opts [transform-result]}
