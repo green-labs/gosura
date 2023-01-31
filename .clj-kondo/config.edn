@@ -8,5 +8,6 @@
            superlifter.api/def-superfetcher           clojure.core/defrecord
            gosura.helpers.resolver/defresolver        clojure.core/defn
            gosura.helpers.resolver2/defresolver       clojure.core/defn
+           gosura.helpers.resolver3/defresolver       clojure.core/defn
            gosura.helprs.resolver/wrap-resolver-body  clojure.core/defn
            gosura.helprs.resolver2/wrap-resolver-body clojure.core/defn}}
