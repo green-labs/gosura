@@ -12,8 +12,9 @@
            org.clojure/clojure                 {:mvn/version "1.11.1"}
            org.clojure/tools.logging           {:mvn/version "1.2.4"}
            org.clojure/core.match              {:mvn/version "1.0.0"}
-           superlifter/superlifter             {:git/url "https://github.com/green-labs/superlifter.git"
-                                                :sha     "e0df5b36b496c485c75f38052a71b18f02772cc0"}
+           superlifter/superlifter {:local/root "../superlifter"}
+           ;superlifter/superlifter             {:git/url "https://github.com/green-labs/superlifter.git"
+           ;                                     :sha     "e0df5b36b496c485c75f38052a71b18f02772cc0"}
            metosin/malli                       {:mvn/version "0.8.4"}}
 
  :aliases {:test     {:extra-paths ["test"]
