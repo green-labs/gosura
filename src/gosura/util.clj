@@ -4,7 +4,8 @@
             [clojure.string :as string :refer [ends-with?]]
             [com.walmartlabs.lacinia.resolve :refer [is-resolver-result?]]
             [com.walmartlabs.lacinia.select-utils :refer [is-wrapped-value?]]
-            [sentry-clj.core :as sentry]))
+            [sentry-clj.core :as sentry])
+  (:import (com.google.common.base CaseFormat)))
 
 (defn keyword-vals->string-vals
   "hash-map value 값에 keyword가 있으면 String으로 변환해준다
@@ -22,12 +23,12 @@
 
 (defn camelCase->kebab-case-keyword
   [s]
-  (let [s (name s)]
-    (keyword (string/replace s #"[A-Z]" #(str "-" (string/lower-case %))))))
+  (keyword (.to CaseFormat/LOWER_CAMEL
+                CaseFormat/LOWER_HYPHEN (name s))))
 
 (defn kebab-case->camelCaseKeyword [s]
-  (let [s (name s)]
-    (keyword (string/replace s #"-([a-z])" #(string/upper-case (second %))))))
+  (keyword (.to CaseFormat/LOWER_HYPHEN
+                CaseFormat/LOWER_CAMEL (name s))))
 
 (defn transform-keys->kebab-case-keyword
   "재귀적으로 form 안에 포함된 모든 key를 kebab-case keyword로 변환한다"
@@ -123,7 +124,6 @@
   [sym]
   (requiring-var! sym))
 
-
 (comment
   (camelCase->kebab-case-keyword "mycase")
   (camelCase->kebab-case-keyword :mycase)
@@ -131,16 +131,30 @@
   (camelCase->kebab-case-keyword :myCase)
   (camelCase->kebab-case-keyword "myCase2")
   (camelCase->kebab-case-keyword :myCase2) ;; unhandled case
+  (camelCase->kebab-case-keyword "myCase21")
+  (camelCase->kebab-case-keyword :myCase21) ;; unhandled case
   (camelCase->kebab-case-keyword "MyCase")
-  (camelCase->kebab-case-keyword :MyCase) ;; unhandled case
+  (camelCase->kebab-case-keyword :MyCase)
+  (camelCase->kebab-case-keyword "My_Case")
+  (camelCase->kebab-case-keyword :My_Case) ;; unhandled case
   (camelCase->kebab-case-keyword "my-case")
   (camelCase->kebab-case-keyword :my-case)
+  (camelCase->kebab-case-keyword "my_case")
+  (camelCase->kebab-case-keyword :my_case)
+  (camelCase->kebab-case-keyword "code1Name")
+
   (csk/->kebab-case-keyword "mycase")
+  (csk/->kebab-case-keyword "code1Name")
   (csk/->kebab-case-keyword "myCase")
   (csk/->kebab-case-keyword "myCase2")
+  (csk/->kebab-case-keyword "myCase21")
   (csk/->kebab-case-keyword "My_Case")
+  (csk/->kebab-case-keyword "MyCase")
+  (csk/->kebab-case-keyword "myCase2Oh")
+  (csk/->kebab-case-keyword "myCase22Oh")
 
   (kebab-case->camelCaseKeyword "my-case")
   (kebab-case->camelCaseKeyword :my-case)
   (kebab-case->camelCaseKeyword "myCase")
-  (kebab-case->camelCaseKeyword :myCase))
+  (kebab-case->camelCaseKeyword :myCase)
+  )
