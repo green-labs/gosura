@@ -21,14 +21,34 @@
                        (and (coll? val) (some keyword? val)) (assoc m key (map name val))
                        :else (assoc m key val))) {} hash-map)))
 
+(defn- lower_camel->hypen
+  [s]
+  (.to CaseFormat/LOWER_CAMEL
+       CaseFormat/LOWER_HYPHEN (name s)))
+
+(defn- lower-hypen->camel
+  [s]
+  (.to CaseFormat/LOWER_HYPHEN
+       CaseFormat/LOWER_CAMEL (name s)))
+
 (defn camelCase->kebab-case-keyword
   [s]
-  (keyword (.to CaseFormat/LOWER_CAMEL
-                CaseFormat/LOWER_HYPHEN (name s))))
+  (keyword (lower_camel->hypen s)))
 
 (defn kebab-case->camelCaseKeyword [s]
-  (keyword (.to CaseFormat/LOWER_HYPHEN
-                CaseFormat/LOWER_CAMEL (name s))))
+  (keyword (lower-hypen->camel s)))
+
+(defn camelCase->kebab-case
+  [s]
+  (if (keyword? s)
+    (camelCase->kebab-case-keyword s)
+    (lower_camel->hypen s)))
+
+(defn kebab-case->camelCase
+  [s]
+  (if (keyword? s)
+    (kebab-case->camelCaseKeyword s)
+    (lower-hypen->camel s)))
 
 (defn transform-keys->kebab-case-keyword
   "재귀적으로 form 안에 포함된 모든 key를 kebab-case keyword로 변환한다"
@@ -152,6 +172,7 @@
   (csk/->kebab-case-keyword "MyCase")
   (csk/->kebab-case-keyword "myCase2Oh")
   (csk/->kebab-case-keyword "myCase22Oh")
+  (csk/->kebab-case :myCase22Oh)
 
   (kebab-case->camelCaseKeyword "my-case")
   (kebab-case->camelCaseKeyword :my-case)
