@@ -67,5 +67,8 @@
 (defn transform-keys-kebab-case->camelCase [m]
   (transform-keys kebab-case-keyword->camelCaseKeyowrd m))
 
-(defn transform-keys-snake_case_->kebab-case [m]
+(defn transform-keys-snake_case->kebab-case [m]
   (transform-keys snake_case_keyword->kebab-case-keyword m))
+
+(defn transform-keys-kebab-case->snake_case [m]
+  (transform-keys kebab-case-keyword->snake_case_keyword m))
