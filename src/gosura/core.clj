@@ -6,21 +6,20 @@
    gosura 에서 생성하는 resolver-fn 이 부적합 할 때는 따로 작성하는 것이 더 적절할 수 있습니다.
 
    주의) resolver-config edn 에 사용하는 ns 는 (ns 선언만 있는 빈 파일을 만들고) 그 네임스페이스를 사용하세요."
-  (:require [camel-snake-kebab.core :as csk]
-            [clojure.set :as s]
+  (:require [clojure.set :as s]
             [clojure.tools.logging :as log]
             [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [com.walmartlabs.lacinia.schema :refer [tag-with-type]]
             [failjure.core :as f]
             [gosura.auth :as auth]
+            [gosura.csk :as csk]
             [gosura.helpers.relay :as relay]
             [gosura.helpers.resolver :as r]
             [gosura.helpers.resolver2 :as r2]
             [gosura.schema :as schema]
-            [gosura.util :as util :refer [transform-keys->camelCaseKeyword
-                                          transform-keys->kebab-case-keyword
-                                          requiring-var!
-                                          update-existing]]
+            [gosura.util :as util :refer [requiring-var!
+                                          transform-keys->camelCaseKeyword
+                                          transform-keys->kebab-case-keyword update-existing]]
             [malli.core :as m]
             [malli.error :as me]))
 
@@ -119,7 +118,8 @@
                            :post-process-row (if (nil? post-process-row) identity (requiring-var! post-process-row))
                            :pre-process-arguments (if (nil? pre-process-arguments) identity (requiring-var! pre-process-arguments))}
                           (symbol->requiring-var! params))
-            {:keys [table-fetcher node-type post-process-row db-key settings fk-in-parent pk-list-name-in-parent]} params]
+            {:keys [table-fetcher node-type post-process-row db-key settings fk-in-parent pk-list-name-in-parent return-camel-case?]
+             :or {return-camel-case? true}} params]
         (if (= :resolve-node resolver)
           (intern target-ns (symbol resolver) (defmethod relay/node-resolver node-type [this ctx _args _parent]
                                                 (f/attempt-all
@@ -137,8 +137,8 @@
                                                        (f/fail "NotExistData"))]
                                                   (-> (first rows)
                                                       (relay/build-node node-type post-process-row)
-                                                      transform-keys->camelCaseKeyword
-                                                      (tag-with-type (csk/->PascalCaseKeyword node-type)))
+                                                      (partial transform-keys->camelCaseKeyword return-camel-case?)
+                                                      (tag-with-type (csk/kebab-case-keyword->PascalCaseKeyword node-type)))
                                                   (f/when-failed [e]
                                                     (log/error e)
                                                     (resolve-as nil {:resolver (format "%s/%s" (str target-ns) (name resolver))

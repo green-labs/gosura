@@ -1,6 +1,6 @@
 (ns gosura.helpers.relay
-  (:require [camel-snake-kebab.core :as csk]
-            [clojure.string]
+  (:require [clojure.string]
+            [gosura.csk :as csk]
             [gosura.schema :as gosura-schema]
             [gosura.util :refer [stringify-ids]]
             [malli.core :as m]
@@ -198,13 +198,18 @@
 (def default-page-size 10)
 (defn build-page-options
   "relay connection 조회에 필요한 page options를 빌드합니다.
-   (default) 10개의 데이터를 id기준으로 정방향으로 오름차순으로 가지고 옵니다"
+   (default) 10개의 데이터를 id기준으로 정방향으로 오름차순으로 가지고 옵니다
+   
+   인자
+   - :kebab-case? - order-by, order-direction를 kebab-case로 변환할지 설정합니다. (기본값 true)"
   [{:keys [first last
            after before
            order-by order-direction
-           offset-based-pagination]
+           offset-based-pagination
+           kebab-case?]
     :or {order-by        :id
-         order-direction :ASC} :as args}]
+         order-direction :ASC
+         kebab-case?     true} :as args}]
   (validate-connection-arguments args)
   (let [page-direction (cond first :forward
                              last :backward
@@ -221,8 +226,8 @@
         cursor-ordered-values (when-not offset-based-pagination (:ordered-values cursor))
         cursor-id (when-not offset-based-pagination (:id cursor))
         offset (when offset-based-pagination (:offset cursor))
-        order-by (csk/->kebab-case-keyword order-by)
-        order-direction (csk/->kebab-case-keyword order-direction)  ; ASC/DESC -> asc/desc
+        order-by  (cond-> order-by kebab-case? csk/camelCaseKeyword->kebab-case-keyword)
+        order-direction (cond-> order-direction kebab-case? csk/UPPER_SNAKE_CASE_KEYWORD->kebab-case-keyword) ; ASC/DESC -> asc/desc
         order-direction (get #{:asc :desc} order-direction :asc)
         order-direction (case page-direction
                           :forward order-direction

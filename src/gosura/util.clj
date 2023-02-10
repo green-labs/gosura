@@ -1,9 +1,8 @@
 (ns gosura.util
-  (:require [camel-snake-kebab.core :as csk]
-            [camel-snake-kebab.extras :as cske]
-            [clojure.string :refer [ends-with?]]
+  (:require [clojure.string :refer [ends-with?]]
             [com.walmartlabs.lacinia.resolve :refer [is-resolver-result?]]
             [com.walmartlabs.lacinia.select-utils :refer [is-wrapped-value?]]
+            [gosura.csk :as csk]
             [sentry-clj.core :as sentry]))
 
 (defn keyword-vals->string-vals
@@ -22,13 +21,21 @@
 
 (defn transform-keys->kebab-case-keyword
   "재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
-  [form]
-  (cske/transform-keys csk/->kebab-case-keyword form))
+  ^{:deprecated true}
+  ([form]
+   (transform-keys->kebab-case-keyword true form))
+  ^{:deprecated true}
+  ([transform? form]
+   (cond-> form transform? csk/transform-keys-camelCase->kebab-case)))
 
 (defn transform-keys->camelCaseKeyword
   "재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
-  [form]
-  (cske/transform-keys csk/->camelCaseKeyword form))
+  ^{:deprecated true}
+  ([form]
+   (transform-keys->camelCaseKeyword true form))
+  ^{:deprecated true}
+  ([transform? form]
+   (cond-> form transform? csk/transform-keys-kebab-case->camelCase)))
 
 (defn send-sentry-server-event
   [event]

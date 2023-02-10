@@ -123,7 +123,8 @@
                                     superfetcher
                                     parent-id
                                     post-process-row
-                                    additional-filter-opts]}]
+                                    additional-filter-opts
+                                    return-camel-case?] :or {return-camel-case? true}}]
   {:pre [(some? db-key)]}
   (let [arguments (-> arguments
                       common-pre-process-arguments
@@ -146,7 +147,7 @@
                        (->> rows
                             (map #(relay/build-node % node-type post-process-row))
                             (relay/build-connection order-by page-direction page-size cursor-id)
-                            transform-keys->camelCaseKeyword)))))))
+                            (partial transform-keys->camelCaseKeyword return-camel-case?))))))))
 
 (defn one-by
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
@@ -170,7 +171,8 @@
                                      superfetcher
                                      post-process-row
                                      parent-id
-                                     additional-filter-opts]}]
+                                     additional-filter-opts
+                                     return-camel-case?] :or {return-camel-case? true}}]
   {:pre [(some? db-key)]}
   (let [{:keys [pre-fn prop agg]} parent-id
         load-id                   ((or pre-fn identity) (prop parent))
@@ -183,4 +185,4 @@
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows] (-> (first rows)
                                     (relay/build-node node-type post-process-row)
-                                    transform-keys->camelCaseKeyword)))))))
+                                    (partial transform-keys->camelCaseKeyword return-camel-case?))))))))
