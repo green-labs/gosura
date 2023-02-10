@@ -3,15 +3,14 @@
   (:require [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [failjure.core :as f]
             [gosura.auth :as auth]
+            [gosura.csk :as csk]
             [gosura.helpers.error :as error]
             [gosura.helpers.relay :as relay]
             [gosura.helpers.resolver :refer [common-pre-process-arguments
                                              keys-not-found
                                              nullify-empty-string-arguments parse-fdecl]]
             [gosura.helpers.superlifter :refer [with-superlifter]]
-            [gosura.util :as util :refer [transform-keys->camelCaseKeyword
-                                          transform-keys->kebab-case-keyword
-                                          update-resolver-result]]
+            [gosura.util :as util :refer [update-resolver-result]]
             [promesa.core :as prom]
             [superlifter.api :as superlifter-api]
             [taoensso.timbre :as log]))
@@ -48,17 +47,17 @@
   [{:keys [this ctx arg parent]} option args body]
   (let [{:keys [auth kebab-case? return-camel-case? required-keys-in-parent
                 filters decode-ids-by-keys catch-exceptions?]
-         :or   {kebab-case?             true
-                return-camel-case?      true
+         :or   {kebab-case?             false
+                return-camel-case?      false
                 catch-exceptions?       true
                 required-keys-in-parent []}} option
         result (gensym 'result_)
         auth-filter-opts `(auth/->auth-result ~auth ~ctx)
         config-filter-opts `(auth/config-filter-opts ~filters ~ctx)
         arg `(merge ~arg ~auth-filter-opts ~config-filter-opts)
-        arg' (if kebab-case? `(transform-keys->kebab-case-keyword ~arg) arg)
+        arg' (if kebab-case? `(csk/transform-keys-camelCase->kebab-case ~arg) arg)
         arg' (if decode-ids-by-keys `(relay/decode-global-ids-by-keys ~arg' ~decode-ids-by-keys) arg')
-        parent' (if kebab-case? `(transform-keys->kebab-case-keyword ~parent) parent)
+        parent' (if kebab-case? `(csk/transform-keys-camelCase->kebab-case ~parent) parent)
         keys-not-found `(keys-not-found ~parent' ~required-keys-in-parent)
         params (if (nil? this) [ctx arg' parent'] [this ctx arg' parent'])
         let-mapping (vec (interleave args params))]
@@ -69,7 +68,7 @@
                     (not (f/failed? ~auth-filter-opts))))
          (let [~result (do (let ~let-mapping (wrap-catch-body ~catch-exceptions? ~body)))]
            (cond-> ~result
-             ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
+             ~return-camel-case? (update-resolver-result csk/transform-keys-kebab-case->camelCase)))
          (resolve-as nil {:message "Unauthorized"})))))
 
 
@@ -145,8 +144,7 @@
           (prom/then (fn [rows]
                        (->> rows
                             (map #(relay/build-node % node-type post-process-row))
-                            (relay/build-connection order-by page-direction page-size cursor-id)
-                            transform-keys->camelCaseKeyword)))))))
+                            (relay/build-connection order-by page-direction page-size cursor-id))))))))
 
 (defn one-by
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
@@ -182,5 +180,4 @@
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows] (-> (first rows)
-                                    (relay/build-node node-type post-process-row)
-                                    transform-keys->camelCaseKeyword)))))))
+                                    (relay/build-node node-type post-process-row))))))))

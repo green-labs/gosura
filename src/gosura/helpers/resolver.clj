@@ -10,20 +10,19 @@
 
   를 resolver-fn 이라 부르자, 약속해봅니다.
   "
-  (:require [camel-snake-kebab.core :as csk]
-            [clojure.string :refer [ends-with?]]
+  (:require [clojure.string :refer [ends-with?]]
             [clojure.tools.logging :as log]
             [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [com.walmartlabs.lacinia.schema :refer [tag-with-type]]
             [gosura.auth :as auth]
+            [gosura.csk :as csk]
             [gosura.helpers.error :as error]
             [gosura.helpers.relay :as relay]
             [gosura.helpers.response :as response]
             [gosura.helpers.superlifter :refer [with-superlifter]]
             [gosura.util :as util :refer [transform-keys->camelCaseKeyword
                                           transform-keys->kebab-case-keyword
-                                          update-resolver-result
-                                          update-existing]]
+                                          update-existing update-resolver-result]]
             [promesa.core :as prom]
             [superlifter.api :as superlifter-api]))
 
@@ -59,7 +58,7 @@
        (if ~authorized?
          (let [~result (do (let ~let-mapping ~@body))]
            (cond-> ~result
-                   ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
+             ~return-camel-case? (update-resolver-result transform-keys->camelCaseKeyword)))
          (resolve-as nil {:message "Unauthorized"})))))
 
 (defn parse-fdecl
@@ -110,7 +109,7 @@
   [node-type & fdecl]
   (let [{:keys [option args body]} (parse-fdecl fdecl)
         node-type (keyword node-type)
-        node-type-pascal (csk/->PascalCaseKeyword node-type)]
+        node-type-pascal (csk/kebab-case-keyword->PascalCaseKeyword node-type)]
     `(defmethod relay/node-resolver ~node-type [this# ctx# arg# parent#]
        (let [result# (wrap-resolver-body {:this this#
                                           :ctx ctx#
@@ -192,11 +191,10 @@
                                      :page-options nil})
         superfetch-id (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
-                      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-                          (prom/then (fn [rows]
-                                       (-> (first rows)
-                                           (relay/build-node node-type post-process-row)
-                                           transform-keys->camelCaseKeyword)))))))
+      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+          (prom/then (fn [rows]
+                       (-> (first rows)
+                           (relay/build-node node-type post-process-row))))))))
 
 (defn resolve-by-fk
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
@@ -226,10 +224,10 @@
                                      :page-options page-options})
         superfetch-id (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
-                      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-                          (prom/then (fn [rows] (-> (first rows)
-                                                    (relay/build-node node-type post-process-row)
-                                                    transform-keys->camelCaseKeyword)))))))
+      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+          (prom/then (fn [rows] (-> (first rows)
+                                    (relay/build-node node-type post-process-row)
+                                    transform-keys->camelCaseKeyword)))))))
 
 (defn resolve-connection
   "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
@@ -268,8 +266,7 @@
         rows (table-fetcher db filter-options page-options)]
     (->> rows
          (map #(relay/build-node % node-type post-process-row))
-         (relay/build-connection order-by page-direction page-size cursor-id)
-         transform-keys->camelCaseKeyword)))
+         (relay/build-connection order-by page-direction page-size cursor-id))))
 
 ;; FIXME: N+1 쿼리임
 (defn resolve-connection-by-pk-list
@@ -307,8 +304,7 @@
         rows (table-fetcher db filter-options page-options)]
     (->> rows
          (map #(relay/build-node % node-type post-process-row))
-         (relay/build-connection order-by page-direction page-size cursor-id)
-         transform-keys->camelCaseKeyword)))
+         (relay/build-connection order-by page-direction page-size cursor-id))))
 
 (defn resolve-connection-by-fk
   "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
@@ -342,20 +338,18 @@
                                      :page-options page-options})
         superfetch-id (hash superfetch-arguments)]
     (with-superlifter (:superlifter context)
-                      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
-                          (prom/then (fn [rows]
-                                       (->> rows
-                                            (map #(relay/build-node % node-type post-process-row))
-                                            (relay/build-connection order-by page-direction page-size cursor-id)
-                                            transform-keys->camelCaseKeyword)))))))
+      (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
+          (prom/then (fn [rows]
+                       (->> rows
+                            (map #(relay/build-node % node-type post-process-row))
+                            (relay/build-connection order-by page-direction page-size cursor-id))))))))
 
 ; TODO 다른 mutation helper 함수와 통합
 (defn pack-mutation-result
   "Lacinia 변환 리졸버 응답용 변환 내역을 꾸며 반환한다."
   [db db-fetcher filter-options {:keys [node-type post-process-row]}]
   {:result (-> (first (db-fetcher db filter-options nil))
-               (relay/build-node node-type post-process-row)
-               transform-keys->camelCaseKeyword)})
+               (relay/build-node node-type post-process-row))})
 
 (defn resolve-create-one
   [ctx args _parent {:keys [node-type
@@ -469,5 +463,4 @@
         filter-options (relay/build-filter-options arguments additional-filter-opts)
         row            (fetch-one db filter-options {})]
     (-> (relay/build-node row node-type post-process-row)
-        transform-keys->camelCaseKeyword
-        (tag-with-type (csk/->PascalCaseKeyword node-type)))))
+        (tag-with-type (csk/kebab-case-keyword->PascalCaseKeyword node-type)))))

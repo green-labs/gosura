@@ -1,6 +1,5 @@
 (ns gosura.helpers.relay
-  (:require [camel-snake-kebab.core :as csk]
-            [clojure.string]
+  (:require [clojure.string]
             [gosura.schema :as gosura-schema]
             [gosura.util :refer [stringify-ids]]
             [malli.core :as m]
@@ -221,8 +220,6 @@
         cursor-ordered-values (when-not offset-based-pagination (:ordered-values cursor))
         cursor-id (when-not offset-based-pagination (:id cursor))
         offset (when offset-based-pagination (:offset cursor))
-        order-by (csk/->kebab-case-keyword order-by)
-        order-direction (csk/->kebab-case-keyword order-direction)  ; ASC/DESC -> asc/desc
         order-direction (get #{:asc :desc} order-direction :asc)
         order-direction (case page-direction
                           :forward order-direction

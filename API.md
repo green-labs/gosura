@@ -1187,24 +1187,6 @@ qualified-symbol을 var로 변환합니다
 ```
 
 
-행의 ID들(열이 id, 그리고 -id로 끝나는 것들)을 문자열로 변경한다.
-<br><sub>[source](https://github.com/green-labs/gosura/blob/master/src/gosura/util.clj#L56-L63)</sub>
-## `transform-keys->camelCaseKeyword`
-``` clojure
-
-(transform-keys->camelCaseKeyword form)
-```
-
-
-재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다
-<br><sub>[source](https://github.com/green-labs/gosura/blob/master/src/gosura/util.clj#L28-L31)</sub>
-## `transform-keys->kebab-case-keyword`
-``` clojure
-
-(transform-keys->kebab-case-keyword form)
-```
-
-
 재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다
 <br><sub>[source](https://github.com/green-labs/gosura/blob/master/src/gosura/util.clj#L23-L26)</sub>
 ## `update-resolver-result`
