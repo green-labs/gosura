@@ -119,7 +119,7 @@
                                           :parent parent#} ~option ~args ~body)]
          (-> result#
              (relay/build-node ~node-type)
-             ~(transform-keys->camelCaseKeyword)
+             ~transform-keys->camelCaseKeyword
              (tag-with-type ~node-type-pascal))))))
 
 ;;; Utility functions
