@@ -118,9 +118,8 @@
                            :post-process-row (if (nil? post-process-row) identity (requiring-var! post-process-row))
                            :pre-process-arguments (if (nil? pre-process-arguments) identity (requiring-var! pre-process-arguments))}
                           (symbol->requiring-var! params))
-            {:keys [table-fetcher node-type post-process-row db-key settings fk-in-parent pk-list-name-in-parent return-camel-case?]
-             :or {return-camel-case? true}} params
-
+            {:keys [table-fetcher node-type post-process-row db-key settings fk-in-parent pk-list-name-in-parent]} params
+            {:keys [return-camel-case?] :or {return-camel-case? true}} settings
             transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
         (if (= :resolve-node resolver)
           (intern target-ns (symbol resolver) (defmethod relay/node-resolver node-type [this ctx _args _parent]

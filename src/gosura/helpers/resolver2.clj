@@ -124,9 +124,10 @@
                                     parent-id
                                     post-process-row
                                     additional-filter-opts
-                                    return-camel-case?] :or {return-camel-case? true}}]
+                                    settings]}]
   {:pre [(some? db-key)]}
-  (let [arguments (-> arguments
+  (let [{:keys [return-camel-case?] :or {return-camel-case? true}} settings
+        arguments (-> arguments
                       common-pre-process-arguments
                       (nullify-empty-string-arguments [:after :before]))
         {:keys [pre-fn prop agg]} parent-id
@@ -173,9 +174,10 @@
                                      post-process-row
                                      parent-id
                                      additional-filter-opts
-                                     return-camel-case?] :or {return-camel-case? true}}]
+                                     settings]}]
   {:pre [(some? db-key)]}
-  (let [{:keys [pre-fn prop agg]} parent-id
+  (let [{:keys [return-camel-case?] :or {return-camel-case? true}} settings
+        {:keys [pre-fn prop agg]} parent-id
         load-id                   ((or pre-fn identity) (prop parent))
         superfetch-arguments      (merge additional-filter-opts
                                          {:id           load-id

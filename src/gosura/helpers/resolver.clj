@@ -187,9 +187,10 @@
   [context _arguments parent {:keys [db-key node-type superfetcher
                                      post-process-row
                                      additional-filter-opts
-                                     return-camel-case?] :or {return-camel-case? true}}]
+                                     settings]}]
   {:pre [(some? db-key)]}
-  (let [parent-id (-> parent :id relay/decode-global-id->db-id)
+  (let [{:keys [return-camel-case?] :or {return-camel-case? true}} settings
+        parent-id (-> parent :id relay/decode-global-id->db-id)
         superfetch-arguments (merge additional-filter-opts
                                     {:id           parent-id
                                      :page-options nil})
@@ -221,9 +222,10 @@
   [context _arguments parent {:keys [db-key node-type superfetcher
                                      post-process-row fk-in-parent
                                      additional-filter-opts
-                                     return-camel-case?] :or {return-camel-case? true}}]
+                                     settings]}]
   {:pre [(some? db-key)]}
-  (let [fk (get parent fk-in-parent)
+  (let [{:keys [return-camel-case?] :or {return-camel-case? true}} settings
+        fk (get parent fk-in-parent)
         ; TODO: 생각해볼 점: 여기서 fk가 nil이면 아래의 로직을 안 타고 바로 nil을 반환해도 될 것 같음
         page-options nil  ; don't limit page size to 1 because superfetcher fetches many rows
         superfetch-arguments (merge additional-filter-opts
@@ -383,8 +385,9 @@
   
    * config
      * :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)"
-  [db db-fetcher filter-options {:keys [node-type post-process-row return-camel-case?] :or {return-camel-case? true}}]
-  (let [transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
+  [db db-fetcher filter-options {:keys [node-type post-process-row settings]}]
+  (let [{:keys [return-camel-case?] :or {return-camel-case? true}} settings
+        transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     {:result (-> (first (db-fetcher db filter-options nil))
                  (relay/build-node node-type post-process-row)
                  transform-keys->camelCaseKeyword)}))
