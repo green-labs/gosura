@@ -22,20 +22,14 @@
 (defn transform-keys->kebab-case-keyword
   "재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
   ^{:deprecated true}
-  ([form]
-   (transform-keys->kebab-case-keyword true form))
-  ^{:deprecated true}
-  ([transform? form]
-   (cond-> form transform? csk/transform-keys-camelCase->kebab-case)))
+  [form]
+  (csk/transform-keys-camelCase->kebab-case form))
 
 (defn transform-keys->camelCaseKeyword
   "재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
   ^{:deprecated true}
-  ([form]
-   (transform-keys->camelCaseKeyword true form))
-  ^{:deprecated true}
-  ([transform? form]
-   (cond-> form transform? csk/transform-keys-kebab-case->camelCase)))
+  [form]
+  (csk/transform-keys-kebab-case->camelCase form))
 
 (defn send-sentry-server-event
   [event]

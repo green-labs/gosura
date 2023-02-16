@@ -149,18 +149,12 @@
 
 (defn common-pre-process-arguments
   "인자 맵에 일반적인 전처리를 한다."
-  ([arguments]
-   (common-pre-process-arguments true arguments))
   ^{:deprecated true}
-  ([kebab-case? arguments]
-   (let [transform-keys->kebab-case-keyword (if kebab-case?
-                                              transform-keys->kebab-case-keyword
-                                              identity)]
-     (->> arguments
-          transform-keys->kebab-case-keyword ; it will be deleted
-          util/keyword-vals->string-vals
-          decode-global-ids-in-arguments
-          decode-global-id-in-arguments))))
+  [arguments]
+  (->> arguments
+       util/keyword-vals->string-vals
+       decode-global-ids-in-arguments
+       decode-global-id-in-arguments))
 
 (defn nullify-empty-string-arguments
   [arguments ks]
@@ -272,8 +266,10 @@
                               :or {kebab-case? true
                                    return-camel-case? true}}]
   (let [db (get context db-key)
+        transform-keys-camelCase->kebab-case (if kebab-case? csk/transform-keys-camelCase->kebab-case identity)
         arguments (-> arguments
-                      (partial common-pre-process-arguments kebab-case?)
+                      transform-keys-camelCase->kebab-case
+                      common-pre-process-arguments
                       (nullify-empty-string-arguments [:after :before])
                       pre-process-arguments)
         {:keys [order-by
@@ -314,8 +310,10 @@
                                   return-camel-case? true}}]
   {:pre [(some? db-key)]}
   (let [db (get context db-key)
+        transform-keys-camelCase->kebab-case (if kebab-case? csk/transform-keys-camelCase->kebab-case identity)
         arguments (-> arguments
-                      (partial common-pre-process-arguments kebab-case?)
+                      transform-keys-camelCase->kebab-case
+                      common-pre-process-arguments
                       (nullify-empty-string-arguments [:after :before]))
         {:keys [order-by
                 page-direction
@@ -355,8 +353,10 @@
                              :or {kebab-case? true
                                   return-camel-case? true}}]
   {:pre [(some? db-key)]}
-  (let [arguments (-> arguments
-                      (partial common-pre-process-arguments kebab-case?)
+  (let [transform-keys-camelCase->kebab-case (if kebab-case? csk/transform-keys-camelCase->kebab-case identity)
+        arguments (-> arguments
+                      transform-keys-camelCase->kebab-case
+                      common-pre-process-arguments
                       (nullify-empty-string-arguments [:after :before]))
         parent-id (-> parent :id relay/decode-global-id->db-id)
         {:keys [order-by
@@ -499,8 +499,10 @@
                               :or {kebab-case? true
                                    return-camel-case? true}}]
   (let [db             (get context db-key)
+        transform-keys-camelCase->kebab-case (if kebab-case? csk/transform-keys-camelCase->kebab-case identity)
         arguments      (-> arguments
-                           (partial common-pre-process-arguments kebab-case?)
+                           transform-keys-camelCase->kebab-case
+                           common-pre-process-arguments
                            pre-process-arguments)
         filter-options (relay/build-filter-options arguments additional-filter-opts)
         row            (fetch-one db filter-options {})
