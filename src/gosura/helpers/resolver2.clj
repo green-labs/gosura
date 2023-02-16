@@ -140,14 +140,15 @@
                                     {:id           load-id
                                      :page-options page-options
                                      :agg          agg})
-        superfetch-id (hash superfetch-arguments)]
+        superfetch-id (hash superfetch-arguments)
+        transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows]
                        (->> rows
                             (map #(relay/build-node % node-type post-process-row))
                             (relay/build-connection order-by page-direction page-size cursor-id)
-                            (partial transform-keys->camelCaseKeyword return-camel-case?))))))))
+                            transform-keys->camelCaseKeyword)))))))
 
 (defn one-by
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
@@ -180,9 +181,10 @@
                                          {:id           load-id
                                           :page-options nil
                                           :agg          agg})
-        superfetch-id             (hash superfetch-arguments)]
+        superfetch-id             (hash superfetch-arguments)
+        transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows] (-> (first rows)
                                     (relay/build-node node-type post-process-row)
-                                    (partial transform-keys->camelCaseKeyword return-camel-case?))))))))
+                                    transform-keys->camelCaseKeyword)))))))
