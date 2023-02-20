@@ -120,7 +120,7 @@
                           (symbol->requiring-var! params))
             {:keys [table-fetcher node-type post-process-row db-key settings fk-in-parent pk-list-name-in-parent]} params
             {:keys [return-camel-case?] :or {return-camel-case? true}} settings
-            transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
+            transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
         (if (= :resolve-node resolver)
           (intern target-ns (symbol resolver) (defmethod relay/node-resolver node-type [this ctx _args _parent]
                                                 (f/attempt-all
@@ -138,7 +138,7 @@
                                                       (f/fail "NotExistData"))]
                                                  (-> (first rows)
                                                      (relay/build-node node-type post-process-row)
-                                                     transform-keys->camelCaseKeyword
+                                                     transform-keys->camelCaseKeyword'
                                                      (tag-with-type (csk/kebab-case-keyword->PascalCaseKeyword node-type)))
                                                  (f/when-failed [e]
                                                                 (log/error e)

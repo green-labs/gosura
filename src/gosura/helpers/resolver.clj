@@ -111,7 +111,7 @@
         node-type (keyword node-type)
         node-type-pascal (csk/kebab-case-keyword->PascalCaseKeyword node-type)
         {:keys [return-camel-case?] :or {return-camel-case? :true}} option
-        transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     `(defmethod relay/node-resolver ~node-type [this# ctx# arg# parent#]
        (let [result# (wrap-resolver-body {:this this#
                                           :ctx ctx#
@@ -119,7 +119,7 @@
                                           :parent parent#} ~option ~args ~body)]
          (-> result#
              (relay/build-node ~node-type)
-             ~transform-keys->camelCaseKeyword
+             ~transform-keys->camelCaseKeyword'
              (tag-with-type ~node-type-pascal))))))
 
 ;;; Utility functions
@@ -195,13 +195,13 @@
                                     {:id           parent-id
                                      :page-options nil})
         superfetch-id (hash superfetch-arguments)
-        transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows]
                        (-> (first rows)
                            (relay/build-node node-type post-process-row)
-                           transform-keys->camelCaseKeyword)))))))
+                           transform-keys->camelCaseKeyword')))))))
 
 (defn resolve-by-fk
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
@@ -232,12 +232,12 @@
                                     {:id           fk
                                      :page-options page-options})
         superfetch-id (hash superfetch-arguments)
-        transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows] (-> (first rows)
                                     (relay/build-node node-type post-process-row)
-                                    transform-keys->camelCaseKeyword)))))))
+                                    transform-keys->camelCaseKeyword')))))))
 
 (defn resolve-connection
   "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
@@ -280,11 +280,11 @@
                 cursor-id] :as page-options} (relay/build-page-options arguments)
         filter-options (relay/build-filter-options arguments additional-filter-opts)
         rows (table-fetcher db filter-options page-options)
-        transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (->> rows
          (map #(relay/build-node % node-type post-process-row))
          (relay/build-connection order-by page-direction page-size cursor-id)
-         transform-keys->camelCaseKeyword)))
+         transform-keys->camelCaseKeyword')))
 
 ;; FIXME: N+1 쿼리임
 (defn resolve-connection-by-pk-list
@@ -326,11 +326,11 @@
         decoded-pk-list (map relay/decode-global-id->db-id pk-list)
         filter-options (relay/build-filter-options (assoc arguments (or pk-list-name :ids) decoded-pk-list) additional-filter-opts)
         rows (table-fetcher db filter-options page-options)
-        transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (->> rows
          (map #(relay/build-node % node-type post-process-row))
          (relay/build-connection order-by page-direction page-size cursor-id)
-         transform-keys->camelCaseKeyword)))
+         transform-keys->camelCaseKeyword')))
 
 (defn resolve-connection-by-fk
   "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
@@ -370,14 +370,14 @@
                                     {:id           parent-id
                                      :page-options page-options})
         superfetch-id (hash superfetch-arguments)
-        transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows]
                        (->> rows
                             (map #(relay/build-node % node-type post-process-row))
                             (relay/build-connection order-by page-direction page-size cursor-id)
-                            transform-keys->camelCaseKeyword)))))))
+                            transform-keys->camelCaseKeyword')))))))
 
 ; TODO 다른 mutation helper 함수와 통합
 (defn pack-mutation-result
@@ -387,10 +387,10 @@
      * :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)"
   [db db-fetcher filter-options {:keys [node-type post-process-row settings]}]
   (let [{:keys [return-camel-case?] :or {return-camel-case? true}} settings
-        transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     {:result (-> (first (db-fetcher db filter-options nil))
                  (relay/build-node node-type post-process-row)
-                 transform-keys->camelCaseKeyword)}))
+                 transform-keys->camelCaseKeyword')}))
 
 (defn resolve-create-one
   [ctx args _parent {:keys [node-type
@@ -509,7 +509,7 @@
                            pre-process-arguments)
         filter-options (relay/build-filter-options arguments additional-filter-opts)
         row            (fetch-one db filter-options {})
-        transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (-> (relay/build-node row node-type post-process-row)
-        transform-keys->camelCaseKeyword
+        transform-keys->camelCaseKeyword'
         (tag-with-type (csk/kebab-case-keyword->PascalCaseKeyword node-type)))))

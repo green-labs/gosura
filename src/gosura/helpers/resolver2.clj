@@ -142,7 +142,7 @@
                                      :page-options page-options
                                      :agg          agg})
         superfetch-id (hash superfetch-arguments)
-        transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows]
@@ -184,9 +184,9 @@
                                           :page-options nil
                                           :agg          agg})
         superfetch-id             (hash superfetch-arguments)
-        transform-keys->camelCaseKeyword (if return-camel-case? transform-keys->camelCaseKeyword identity)]
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows] (-> (first rows)
                                     (relay/build-node node-type post-process-row)
-                                    transform-keys->camelCaseKeyword)))))))
+                                    transform-keys->camelCaseKeyword')))))))
