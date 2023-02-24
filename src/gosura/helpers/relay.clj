@@ -227,7 +227,7 @@
         cursor-id (when-not offset-based-pagination (:id cursor))
         offset (when offset-based-pagination (:offset cursor))
         order-by  (cond-> order-by kebab-case? csk/camelCaseKeyword->kebab-case-keyword)
-        order-direction (cond-> order-direction kebab-case? csk/UPPER_SNAKE_CASE_KEYWORD->kebab-case-keyword) ; ASC/DESC -> asc/desc
+        order-direction (csk/UPPER_SNAKE_CASE_KEYWORD->kebab-case-keyword order-direction) ; ASC/DESC -> asc/desc
         order-direction (get #{:asc :desc} order-direction :asc)
         order-direction (case page-direction
                           :forward order-direction
