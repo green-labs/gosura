@@ -1,6 +1,6 @@
 (ns gosura.helpers.relay
   (:require [clojure.string]
-            [gosura.csk :as csk]
+            [gosura.case-format :as cf]
             [gosura.schema :as gosura-schema]
             [gosura.util :refer [stringify-ids]]
             [malli.core :as m]
@@ -226,8 +226,8 @@
         cursor-ordered-values (when-not offset-based-pagination (:ordered-values cursor))
         cursor-id (when-not offset-based-pagination (:id cursor))
         offset (when offset-based-pagination (:offset cursor))
-        order-by  (cond-> order-by kebab-case? csk/camelCaseKeyword->kebab-case-keyword)
-        order-direction (csk/UPPER_SNAKE_CASE_KEYWORD->kebab-case-keyword order-direction) ; ASC/DESC -> asc/desc
+        order-by  (cond-> order-by kebab-case? cf/camelCaseKeyword->kebab-case-keyword)
+        order-direction (cf/UPPER_SNAKE_CASE_KEYWORD->kebab-case-keyword order-direction) ; ASC/DESC -> asc/desc
         order-direction (get #{:asc :desc} order-direction :asc)
         order-direction (case page-direction
                           :forward order-direction

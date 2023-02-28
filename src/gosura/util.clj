@@ -2,7 +2,7 @@
   (:require [clojure.string :refer [ends-with?]]
             [com.walmartlabs.lacinia.resolve :refer [is-resolver-result?]]
             [com.walmartlabs.lacinia.select-utils :refer [is-wrapped-value?]]
-            [gosura.csk :as csk]
+            [gosura.case-format :as cf]
             [sentry-clj.core :as sentry]))
 
 (defn keyword-vals->string-vals
@@ -23,13 +23,13 @@
   "재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
   ^{:deprecated true}
   [form]
-  (csk/transform-keys-camelCase->kebab-case form))
+  (cf/transform-keys-camelCase->kebab-case form))
 
 (defn transform-keys->camelCaseKeyword
   "재귀적으로 form 안에 포함된 모든 key를 camelCase keyword로 변환한다"
   ^{:deprecated true}
   [form]
-  (csk/transform-keys-kebab-case->camelCase form))
+  (cf/transform-keys-kebab-case->camelCase form))
 
 (defn send-sentry-server-event
   [event]

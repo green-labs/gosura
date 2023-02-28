@@ -15,7 +15,7 @@
             [com.walmartlabs.lacinia.resolve :refer [resolve-as]]
             [com.walmartlabs.lacinia.schema :refer [tag-with-type]]
             [gosura.auth :as auth]
-            [gosura.csk :as csk]
+            [gosura.case-format :as cf]
             [gosura.helpers.error :as error]
             [gosura.helpers.relay :as relay]
             [gosura.helpers.response :as response]
@@ -109,7 +109,7 @@
   [node-type & fdecl]
   (let [{:keys [option args body]} (parse-fdecl fdecl)
         node-type (keyword node-type)
-        node-type-pascal (csk/kebab-case-keyword->PascalCaseKeyword node-type)
+        node-type-pascal (cf/kebab-case-keyword->PascalCaseKeyword node-type)
         {:keys [return-camel-case?] :or {return-camel-case? :true}} option
         transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     `(defmethod relay/node-resolver ~node-type [this# ctx# arg# parent#]
@@ -268,7 +268,7 @@
                               :or {kebab-case? true
                                    return-camel-case? true}}]
   (let [db (get context db-key)
-        transform-keys-camelCase->kebab-case (if kebab-case? csk/transform-keys-camelCase->kebab-case identity)
+        transform-keys-camelCase->kebab-case (if kebab-case? cf/transform-keys-camelCase->kebab-case identity)
         arguments (-> arguments
                       transform-keys-camelCase->kebab-case
                       common-pre-process-arguments
@@ -312,7 +312,7 @@
                                   return-camel-case? true}}]
   {:pre [(some? db-key)]}
   (let [db (get context db-key)
-        transform-keys-camelCase->kebab-case (if kebab-case? csk/transform-keys-camelCase->kebab-case identity)
+        transform-keys-camelCase->kebab-case (if kebab-case? cf/transform-keys-camelCase->kebab-case identity)
         arguments (-> arguments
                       transform-keys-camelCase->kebab-case
                       common-pre-process-arguments
@@ -355,7 +355,7 @@
                              :or {kebab-case? true
                                   return-camel-case? true}}]
   {:pre [(some? db-key)]}
-  (let [transform-keys-camelCase->kebab-case (if kebab-case? csk/transform-keys-camelCase->kebab-case identity)
+  (let [transform-keys-camelCase->kebab-case (if kebab-case? cf/transform-keys-camelCase->kebab-case identity)
         arguments (-> arguments
                       transform-keys-camelCase->kebab-case
                       common-pre-process-arguments
@@ -502,7 +502,7 @@
                               :or {kebab-case? true
                                    return-camel-case? true}}]
   (let [db             (get context db-key)
-        transform-keys-camelCase->kebab-case (if kebab-case? csk/transform-keys-camelCase->kebab-case identity)
+        transform-keys-camelCase->kebab-case (if kebab-case? cf/transform-keys-camelCase->kebab-case identity)
         arguments      (-> arguments
                            transform-keys-camelCase->kebab-case
                            common-pre-process-arguments
@@ -512,4 +512,4 @@
         transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (-> (relay/build-node row node-type post-process-row)
         transform-keys->camelCaseKeyword'
-        (tag-with-type (csk/kebab-case-keyword->PascalCaseKeyword node-type)))))
+        (tag-with-type (cf/kebab-case-keyword->PascalCaseKeyword node-type)))))

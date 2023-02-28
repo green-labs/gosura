@@ -12,7 +12,7 @@
             [com.walmartlabs.lacinia.schema :refer [tag-with-type]]
             [failjure.core :as f]
             [gosura.auth :as auth]
-            [gosura.csk :as csk]
+            [gosura.case-format :as cf]
             [gosura.helpers.relay :as relay]
             [gosura.helpers.resolver :as r]
             [gosura.helpers.resolver2 :as r2]
@@ -139,7 +139,7 @@
                                                  (-> (first rows)
                                                      (relay/build-node node-type post-process-row)
                                                      transform-keys->camelCaseKeyword'
-                                                     (tag-with-type (csk/kebab-case-keyword->PascalCaseKeyword node-type)))
+                                                     (tag-with-type (cf/kebab-case-keyword->PascalCaseKeyword node-type)))
                                                  (f/when-failed [e]
                                                                 (log/error e)
                                                                 (resolve-as nil {:resolver (format "%s/%s" (str target-ns) (name resolver))

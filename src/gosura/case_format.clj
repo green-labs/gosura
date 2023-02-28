@@ -1,4 +1,4 @@
-(ns gosura.csk
+(ns gosura.case-format
   (:require [clojure.walk :as walk])
   (:import [clojure.lang Keyword]
            [com.google.common.base CaseFormat]))
