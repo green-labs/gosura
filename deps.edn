@@ -1,5 +1,6 @@
 {:paths   ["src"]
- :deps    {com.github.seancorfield/honeysql    {:mvn/version "2.2.891"}
+ :deps    {camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.3"}
+           com.github.seancorfield/honeysql    {:mvn/version "2.2.891"}
            com.github.seancorfield/next.jdbc   {:mvn/version "1.2.780"}
            com.taoensso/nippy                  {:mvn/version "3.2.0"}
            com.walmartlabs/lacinia             {:mvn/version "1.1"}
