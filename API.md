@@ -662,7 +662,7 @@ lacinia 용 resolver 함수를 만듭니다.
   :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
   :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
   :node-type - relay resolver 일때 설정하면, edge/node와 :pageInfo의 start/endCursor 처리를 같이 해줍니다.
-  :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)
+  :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 false)
   :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다.
 <br><sub>[source](https://github.com/green-labs/gosura/blob/master/src/gosura/helpers/resolver.clj#L81-L106)</sub>
 ## `keys-not-found`
@@ -950,7 +950,7 @@ lacinia 용 resolver 함수를 만듭니다.
   가능한 설정
   :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
   :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
-  :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)
+  :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 false)
   :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다.
   :filters - 특정 필터 로직을 넣습니다
 <br><sub>[source](https://github.com/green-labs/gosura/blob/master/src/gosura/helpers/resolver2.clj#L52-L77)</sub>
@@ -970,7 +970,7 @@ GraphQL 리졸버가 공통으로 해야 할 auth 처리, case 변환 처리를 
   option: 리졸버 선언에 지정된 옵션 맵
    - :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
    - :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
-   - :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)
+   - :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 false)
    - :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다.
    - :decode-ids-by-keys - 키 목록을 받아서 resolver args의 global id들을 db id로 변환 해줍니다.
    - :filters - args에 추가할 key-value 값을 필터로 넣습니다.

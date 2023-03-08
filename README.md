@@ -42,7 +42,7 @@ Below is the list of a full configuration.
                          :resolve-connection {:table-fetcher #var animal.db/fetch
                                               :settings      {:auth               #var animal.core/auth ; set for authentification and authorization.
                                                               :kebab-case?        true ; opts ; transform args into kebeb-case. A default is true.
-                                                              :return-camel-case? true}} ; opts ; transform results into camelCase. A default value is true.
+                                                              :return-camel-case? false}} ; opts ; transform results into camelCase. A default value is true.
                          :resolve-by-fk      {:superfetcher #var animal.superfetcher/->Fetch ; superfetcher for superlifter
                                               :fk-in-parent :user-type-id}
                          :resolve-create-one {:table-fetcher #var animal.db/fetch

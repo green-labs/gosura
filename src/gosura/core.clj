@@ -119,7 +119,7 @@
                            :pre-process-arguments (if (nil? pre-process-arguments) identity (requiring-var! pre-process-arguments))}
                           (symbol->requiring-var! params))
             {:keys [table-fetcher node-type post-process-row db-key settings fk-in-parent pk-list-name-in-parent]} params
-            {:keys [return-camel-case?] :or {return-camel-case? true}} settings
+            {:keys [return-camel-case?] :or {return-camel-case? false}} settings
             transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
         (if (= :resolve-node resolver)
           (intern target-ns (symbol resolver) (defmethod relay/node-resolver node-type [this ctx _args _parent]
@@ -150,7 +150,7 @@
                                                           kebab-case?
                                                           return-camel-case?]
                                                    :or   {kebab-case?        true
-                                                          return-camel-case? true}} settings
+                                                          return-camel-case? false}} settings
                                                   {:keys [args parent]} (->kebab-case kebab-case? args parent)
                                                   auth-filter-opts (auth/->auth-result auth ctx)
                                                   config-filter-opts (auth/config-filter-opts filters ctx)

@@ -39,7 +39,7 @@
   option: 리졸버 선언에 지정된 옵션 맵
    - :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
    - :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
-   - :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)
+   - :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 false)
    - :catch-exceptions? - 리졸버에서 발생하는 예외를 포착하여 :errors 응답으로 반환 (기본값 true)
    - :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다.
    - :decode-ids-by-keys - 키 목록을 받아서 resolver args의 global id들을 db id로 변환 해줍니다.
@@ -49,7 +49,7 @@
   (let [{:keys [auth kebab-case? return-camel-case? required-keys-in-parent
                 filters decode-ids-by-keys catch-exceptions?]
          :or   {kebab-case?             true
-                return-camel-case?      true
+                return-camel-case?      false
                 catch-exceptions?       true
                 required-keys-in-parent []}} option
         result (gensym 'result_)
@@ -88,7 +88,7 @@
   가능한 설정
   :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
   :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
-  :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)
+  :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 false)
   :catch-exceptions? - 리졸버에서 발생하는 예외를 포착하여 :errors 응답으로 반환 (기본값 true)
   :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다.
   :filters - 특정 필터 로직을 넣습니다"
@@ -126,7 +126,7 @@
                                     additional-filter-opts
                                     settings]}]
   {:pre [(some? db-key)]}
-  (let [{:keys [return-camel-case?] :or {return-camel-case? true}} settings
+  (let [{:keys [return-camel-case?] :or {return-camel-case? false}} settings
         arguments (-> arguments
                       common-pre-process-arguments
                       (nullify-empty-string-arguments [:after :before]))
@@ -149,7 +149,7 @@
                        (->> rows
                             (map #(relay/build-node % node-type post-process-row))
                             (relay/build-connection order-by page-direction page-size cursor-id)
-                            transform-keys->camelCaseKeyword)))))))
+                            transform-keys->camelCaseKeyword')))))))
 
 (defn one-by
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
@@ -176,7 +176,7 @@
                                      additional-filter-opts
                                      settings]}]
   {:pre [(some? db-key)]}
-  (let [{:keys [return-camel-case?] :or {return-camel-case? true}} settings
+  (let [{:keys [return-camel-case?] :or {return-camel-case? false}} settings
         {:keys [pre-fn prop agg]} parent-id
         load-id                   ((or pre-fn identity) (prop parent))
         superfetch-arguments      (merge additional-filter-opts

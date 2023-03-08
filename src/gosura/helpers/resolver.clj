@@ -42,7 +42,7 @@
   [{:keys [this ctx arg parent]} option args body]
   (let [{:keys [auth kebab-case? return-camel-case? required-keys-in-parent]
          :or   {kebab-case?             true
-                return-camel-case?      true
+                return-camel-case?      false
                 required-keys-in-parent []}} option
 
         result (gensym 'result_)
@@ -93,7 +93,7 @@
   :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
   :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
   :node-type - relay resolver 일때 설정하면, edge/node와 :pageInfo의 start/endCursor 처리를 같이 해줍니다.
-  :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)
+  :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 false)
   :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다."
   {:arglists '([name doc-string? option? args & body])}
   [name & fdecl]
@@ -110,7 +110,7 @@
   (let [{:keys [option args body]} (parse-fdecl fdecl)
         node-type (keyword node-type)
         node-type-pascal (cf/kebab-case-keyword->PascalCaseKeyword node-type)
-        {:keys [return-camel-case?] :or {return-camel-case? :true}} option
+        {:keys [return-camel-case?] :or {return-camel-case? false}} option
         transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     `(defmethod relay/node-resolver ~node-type [this# ctx# arg# parent#]
        (let [result# (wrap-resolver-body {:this this#
@@ -189,7 +189,7 @@
                                      additional-filter-opts
                                      settings]}]
   {:pre [(some? db-key)]}
-  (let [{:keys [return-camel-case?] :or {return-camel-case? true}} settings
+  (let [{:keys [return-camel-case?] :or {return-camel-case? false}} settings
         parent-id (-> parent :id relay/decode-global-id->db-id)
         superfetch-arguments (merge additional-filter-opts
                                     {:id           parent-id
@@ -224,7 +224,7 @@
                                      additional-filter-opts
                                      settings]}]
   {:pre [(some? db-key)]}
-  (let [{:keys [return-camel-case?] :or {return-camel-case? true}} settings
+  (let [{:keys [return-camel-case?] :or {return-camel-case? false}} settings
         fk (get parent fk-in-parent)
         ; TODO: 생각해볼 점: 여기서 fk가 nil이면 아래의 로직을 안 타고 바로 nil을 반환해도 될 것 같음
         page-options nil  ; don't limit page size to 1 because superfetcher fetches many rows
@@ -266,7 +266,7 @@
                                      kebab-case?
                                      return-camel-case?]
                               :or {kebab-case? true
-                                   return-camel-case? true}}]
+                                   return-camel-case? false}}]
   (let [db (get context db-key)
         transform-keys-camelCase->kebab-case (if kebab-case? cf/transform-keys-camelCase->kebab-case identity)
         arguments (-> arguments
@@ -309,7 +309,7 @@
                                     kebab-case?
                                     return-camel-case?]
                              :or {kebab-case? true
-                                  return-camel-case? true}}]
+                                  return-camel-case? false}}]
   {:pre [(some? db-key)]}
   (let [db (get context db-key)
         transform-keys-camelCase->kebab-case (if kebab-case? cf/transform-keys-camelCase->kebab-case identity)
@@ -342,7 +342,7 @@
   * config    리졸버 동작 설정
     * :superfetcher          슈퍼페처
     * :post-process-row     결과 객체 목록 후처리 함수 (예: identity)
-    * :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)
+    * :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 false)
 
   ## 반환
   * 객체 목록
@@ -353,7 +353,7 @@
                                     kebab-case?
                                     return-camel-case?]
                              :or {kebab-case? true
-                                  return-camel-case? true}}]
+                                  return-camel-case? false}}]
   {:pre [(some? db-key)]}
   (let [transform-keys-camelCase->kebab-case (if kebab-case? cf/transform-keys-camelCase->kebab-case identity)
         arguments (-> arguments
@@ -384,9 +384,9 @@
   "Lacinia 변환 리졸버 응답용 변환 내역을 꾸며 반환한다.
   
    * config
-     * :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 true)"
+     * :return-camel-case? - 반환값을 camelCase 로 변환할지 설정합니다. (기본값 false)"
   [db db-fetcher filter-options {:keys [node-type post-process-row settings]}]
-  (let [{:keys [return-camel-case?] :or {return-camel-case? true}} settings
+  (let [{:keys [return-camel-case?] :or {return-camel-case? false}} settings
         transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     {:result (-> (first (db-fetcher db filter-options nil))
                  (relay/build-node node-type post-process-row)
@@ -500,7 +500,7 @@
                                      kebab-case?
                                      return-camel-case?]
                               :or {kebab-case? true
-                                   return-camel-case? true}}]
+                                   return-camel-case? false}}]
   (let [db             (get context db-key)
         transform-keys-camelCase->kebab-case (if kebab-case? cf/transform-keys-camelCase->kebab-case identity)
         arguments      (-> arguments
