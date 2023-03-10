@@ -15,6 +15,7 @@ pom.xml.asc
 .clj-kondo/.cache
 .lsp
 .calva
+.portal
 
 .idea/
 gosura.iml
