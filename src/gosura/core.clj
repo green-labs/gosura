@@ -111,11 +111,13 @@
                                                             me/humanize))
                     resolver-config)))
   (let [{:keys [target-ns resolvers node-type db-key post-process-row pre-process-arguments
-                filters]} resolver-config]
+                filters return-camel-case? settings]} resolver-config]
     (when (nil? (find-ns target-ns)) (create-ns target-ns))
     (doseq [[resolver params] resolvers]
-      (let [params (merge {:node-type        node-type
-                           :db-key           db-key
+      (let [params (merge {:node-type          node-type
+                           :db-key             db-key
+                           :return-camel-case? return-camel-case?
+                           :settings (merge settings {:return-camel-case? return-camel-case?})
                            :post-process-row (if (nil? post-process-row) identity (requiring-var! post-process-row))
                            :pre-process-arguments (if (nil? pre-process-arguments) identity (requiring-var! pre-process-arguments))}
                           (symbol->requiring-var! params))
