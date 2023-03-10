@@ -123,7 +123,9 @@
                                     superfetcher
                                     parent-id
                                     post-process-row
-                                    additional-filter-opts]}]
+                                    additional-filter-opts
+                                    return-camel-case?]
+                             :or {return-camel-case? true}}]
   {:pre [(some? db-key)]}
   (let [arguments (-> arguments
                       common-pre-process-arguments
@@ -139,7 +141,8 @@
                                     {:id           load-id
                                      :page-options page-options
                                      :agg          agg})
-        superfetch-id (hash superfetch-arguments)]
+        superfetch-id (hash superfetch-arguments)
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (with-superlifter (:superlifter context)
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows]
