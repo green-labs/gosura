@@ -114,19 +114,18 @@
                 filters return-camel-case? settings]} resolver-config]
     (when (nil? (find-ns target-ns)) (create-ns target-ns))
     (doseq [[resolver params] resolvers]
-      (let [params (merge {:node-type          node-type
-                           :db-key             db-key
-                           :return-camel-case? return-camel-case?
-                           :settings (if (boolean? return-camel-case?)
-                                       (merge {:return-camel-case? return-camel-case?} settings)
-                                       settings)
-                           :post-process-row (if (nil? post-process-row) identity (requiring-var! post-process-row))
-                           :pre-process-arguments (if (nil? pre-process-arguments) identity (requiring-var! pre-process-arguments))}
-                          (symbol->requiring-var! params))
-            {:keys [table-fetcher node-type post-process-row db-key settings fk-in-parent pk-list-name-in-parent return-camel-case?]} params
-            settings (if (boolean? return-camel-case?)
+      (let [settings (if (boolean? return-camel-case?)
                        (merge {:return-camel-case? return-camel-case?} settings)
                        settings)
+            params   (merge {:node-type             node-type
+                             :db-key                db-key
+                             :return-camel-case?    return-camel-case?
+                             :settings              settings
+                             :post-process-row      (if (nil? post-process-row) identity (requiring-var! post-process-row))
+                             :pre-process-arguments (if (nil? pre-process-arguments) identity (requiring-var! pre-process-arguments))}
+                            (symbol->requiring-var! params))
+            {:keys [table-fetcher node-type post-process-row db-key settings fk-in-parent pk-list-name-in-parent return-camel-case?]} params
+
             transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
         (if (= :resolve-node resolver)
           (intern target-ns (symbol resolver) (defmethod relay/node-resolver node-type [this ctx _args _parent]
