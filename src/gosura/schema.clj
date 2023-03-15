@@ -71,7 +71,7 @@
 (def node-schema
   [:map
    [:node-type keyword?]
-   [:db-id [:or string? int?]]])
+   [:db-id [:or string? integer?]]])
 
 (def decoded-id-schema
   [:map
