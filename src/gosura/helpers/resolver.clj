@@ -110,7 +110,9 @@
   [node-type & fdecl]
   (let [{:keys [option args body]} (parse-fdecl fdecl)
         node-type (keyword node-type)
-        node-type-pascal (csk/->PascalCaseKeyword node-type)]
+        node-type-pascal (csk/->PascalCaseKeyword node-type)
+        {:keys [return-camel-case?] :or {return-camel-case? true}} option
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     `(defmethod relay/node-resolver ~node-type [this# ctx# arg# parent#]
        (let [result# (wrap-resolver-body {:this this#
                                           :ctx ctx#
@@ -118,7 +120,7 @@
                                           :parent parent#} ~option ~args ~body)]
          (-> result#
              (relay/build-node ~node-type)
-             transform-keys->camelCaseKeyword
+             ~transform-keys->camelCaseKeyword'
              (tag-with-type ~node-type-pascal))))))
 
 ;;; Utility functions
@@ -184,19 +186,22 @@
   "
   [context _arguments parent {:keys [db-key node-type superfetcher
                                      post-process-row
-                                     additional-filter-opts]}]
+                                     additional-filter-opts
+                                     return-camel-case?]
+                              :or {return-camel-case? true}}]
   {:pre [(some? db-key)]}
   (let [parent-id (-> parent :id relay/decode-global-id->db-id)
         superfetch-arguments (merge additional-filter-opts
                                     {:id           parent-id
                                      :page-options nil})
-        superfetch-id (hash superfetch-arguments)]
+        superfetch-id (hash superfetch-arguments)
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (with-superlifter (:superlifter context)
                       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
                           (prom/then (fn [rows]
                                        (-> (first rows)
                                            (relay/build-node node-type post-process-row)
-                                           transform-keys->camelCaseKeyword)))))))
+                                           transform-keys->camelCaseKeyword')))))))
 
 (defn resolve-by-fk
   "Lacinia 리졸버로서 config 설정에 따라 단건 조회 쿼리를 처리한다.
@@ -216,7 +221,9 @@
   "
   [context _arguments parent {:keys [db-key node-type superfetcher
                                      post-process-row fk-in-parent
-                                     additional-filter-opts]}]
+                                     additional-filter-opts
+                                     return-camel-case?]
+                              :or {return-camel-case? true}}]
   {:pre [(some? db-key)]}
   (let [fk (get parent fk-in-parent)
         ; TODO: 생각해볼 점: 여기서 fk가 nil이면 아래의 로직을 안 타고 바로 nil을 반환해도 될 것 같음
@@ -224,12 +231,13 @@
         superfetch-arguments (merge additional-filter-opts
                                     {:id           fk
                                      :page-options page-options})
-        superfetch-id (hash superfetch-arguments)]
+        superfetch-id (hash superfetch-arguments)
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (with-superlifter (:superlifter context)
                       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
                           (prom/then (fn [rows] (-> (first rows)
                                                     (relay/build-node node-type post-process-row)
-                                                    transform-keys->camelCaseKeyword)))))))
+                                                    transform-keys->camelCaseKeyword')))))))
 
 (defn resolve-connection
   "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
@@ -254,7 +262,9 @@
                                      table-fetcher
                                      pre-process-arguments
                                      post-process-row
-                                     additional-filter-opts]}]
+                                     additional-filter-opts
+                                     return-camel-case?]
+                              :or {return-camel-case? true}}]
   (let [db (get context db-key)
         arguments (-> arguments
                       common-pre-process-arguments
@@ -265,11 +275,12 @@
                 page-size
                 cursor-id] :as page-options} (relay/build-page-options arguments)
         filter-options (relay/build-filter-options arguments additional-filter-opts)
-        rows (table-fetcher db filter-options page-options)]
+        rows (table-fetcher db filter-options page-options)
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (->> rows
          (map #(relay/build-node % node-type post-process-row))
          (relay/build-connection order-by page-direction page-size cursor-id)
-         transform-keys->camelCaseKeyword)))
+         transform-keys->camelCaseKeyword')))
 
 ;; FIXME: N+1 쿼리임
 (defn resolve-connection-by-pk-list
@@ -290,7 +301,9 @@
   "
   [context arguments parent {:keys [db-key node-type table-fetcher pk-list-name
                                     post-process-row pk-list-name-in-parent
-                                    additional-filter-opts]}]
+                                    additional-filter-opts
+                                    return-camel-case?]
+                             :or {return-camel-case? true}}]
   {:pre [(some? db-key)]}
   (let [db (get context db-key)
         arguments (-> arguments
@@ -304,11 +317,12 @@
         pk-list (get parent pk-list-name-in-parent)
         decoded-pk-list (map relay/decode-global-id->db-id pk-list)
         filter-options (relay/build-filter-options (assoc arguments (or pk-list-name :ids) decoded-pk-list) additional-filter-opts)
-        rows (table-fetcher db filter-options page-options)]
+        rows (table-fetcher db filter-options page-options)
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (->> rows
          (map #(relay/build-node % node-type post-process-row))
          (relay/build-connection order-by page-direction page-size cursor-id)
-         transform-keys->camelCaseKeyword)))
+         transform-keys->camelCaseKeyword')))
 
 (defn resolve-connection-by-fk
   "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
@@ -326,7 +340,9 @@
   "
   [context arguments parent {:keys [db-key node-type superfetcher
                                     post-process-row
-                                    additional-filter-opts]}]
+                                    additional-filter-opts
+                                    return-camel-case?]
+                             :or {return-camel-case? true}}]
   {:pre [(some? db-key)]}
   (let [arguments (-> arguments
                       common-pre-process-arguments
@@ -340,14 +356,15 @@
         superfetch-arguments (merge additional-filter-opts
                                     {:id           parent-id
                                      :page-options page-options})
-        superfetch-id (hash superfetch-arguments)]
+        superfetch-id (hash superfetch-arguments)
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (with-superlifter (:superlifter context)
                       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
                           (prom/then (fn [rows]
                                        (->> rows
                                             (map #(relay/build-node % node-type post-process-row))
                                             (relay/build-connection order-by page-direction page-size cursor-id)
-                                            transform-keys->camelCaseKeyword)))))))
+                                            transform-keys->camelCaseKeyword')))))))
 
 ; TODO 다른 mutation helper 함수와 통합
 (defn pack-mutation-result
@@ -365,7 +382,9 @@
                             mutation-tag
                             additional-filter-opts
                             pre-process-arguments
-                            post-process-row]}]
+                            post-process-row]
+                     :or {pre-process-arguments identity
+                          post-process-row identity}}]
   (let [db (db-key ctx)
         {:keys [input]} args
         input (merge (-> input
@@ -393,7 +412,9 @@
                             mutation-tag
                             additional-filter-opts
                             pre-process-arguments
-                            post-process-row]}]
+                            post-process-row]
+                     :or {pre-process-arguments identity
+                          post-process-row identity}}]
   (let [db (db-key ctx)
         {:keys [input id]} args
         decoded-id (relay/decode-global-id->db-id id)
@@ -437,7 +458,9 @@
                             mutation-tag
                             additional-filter-opts
                             pre-process-arguments
-                            post-process-row]}]
+                            post-process-row]
+                     :or {pre-process-arguments identity
+                          post-process-row identity}}]
   (let [db              (db-key ctx)
         {:keys [input]} args
         input           (merge (-> input
@@ -461,13 +484,18 @@
                                      fetch-one
                                      pre-process-arguments
                                      post-process-row
-                                     additional-filter-opts]}]
+                                     additional-filter-opts
+                                     return-camel-case?]
+                              :or {pre-process-arguments identity
+                                   post-process-row identity
+                                   return-camel-case? true}}]
   (let [db             (get context db-key)
         arguments      (-> arguments
                            common-pre-process-arguments
                            pre-process-arguments)
         filter-options (relay/build-filter-options arguments additional-filter-opts)
-        row            (fetch-one db filter-options {})]
+        row            (fetch-one db filter-options {})
+        transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
     (-> (relay/build-node row node-type post-process-row)
-        transform-keys->camelCaseKeyword
+        transform-keys->camelCaseKeyword'
         (tag-with-type (csk/->PascalCaseKeyword node-type)))))

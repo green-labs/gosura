@@ -25,6 +25,7 @@
    [:db-key {:optional true} keyword?]
    [:post-process-row {:optional true} [:or symbol? [:fn var?]]]
    [:pre-process-arguments {:optional true} [:or symbol? [:fn var?]]]
+   [:return-camel-case? {:optional true} boolean?]
    [:table-fetcher [:or symbol? [:fn var?]]]])
 
 (def base-root-query-one-config-schema
@@ -34,6 +35,7 @@
    [:db-key {:optional true} keyword?]
    [:post-process-row {:optional true} [:or symbol? [:fn var?]]]
    [:pre-process-arguments {:optional true} [:or symbol? [:fn var?]]]
+   [:return-camel-case? {:optional true} boolean?]
    [:fetch-one [:or symbol? [:fn var?]]]])
 
 (def resolvers-map-schema
@@ -45,6 +47,8 @@
    [:post-process-row {:optional true} [:or symbol? [:fn var?]]]
    [:filters {:optional true} map?]
    [:pre-process-arguments {:optional true} [:or symbol? [:fn var?]]]
+   [:settings {:optional true} resolver-settings-schema]
+   [:return-camel-case? {:optional true} boolean?]
    [:resolvers [:map
                 [:resolve-connection {:optional true} base-root-query-multi-config-schema]
                 [:resolve-one {:optional true} base-root-query-one-config-schema]
@@ -53,6 +57,7 @@
                                                   [:node-type {:optional true} keyword?]
                                                   [:db-key {:optional true} keyword?]
                                                   [:post-process-row {:optional true} [:or symbol? [:fn var?]]]
+                                                  [:return-camel-case? {:optional true} boolean?]
                                                   [:superfetcher [:or symbol? [:fn var?]]]
                                                   [:fk-in-parent keyword?]]]
                 [:resolve-create-one {:optional true} base-mutation-config-schema]
