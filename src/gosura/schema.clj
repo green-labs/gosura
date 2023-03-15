@@ -77,3 +77,11 @@
   [:map
    [:node-type keyword?]
    [:db-id string?]])
+
+(comment
+  (require '[malli.core :as malli])
+  @(def big-integer-db-id (biginteger 1004))
+  (instance? java.math.BigInteger big-integer-db-id)  ;; => true
+  (malli/validate node-schema {:node-type :some-type :db-id big-integer-db-id})
+  (malli/validate node-schema {:node-type :some-type :db-id 1004})
+  (malli/validate node-schema {:node-type :some-type :db-id "1004"}))
