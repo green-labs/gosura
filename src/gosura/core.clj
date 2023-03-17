@@ -74,7 +74,7 @@
       #"resolve-delete-one" r/resolve-delete-one
       #"resolve-update-multi" r/resolve-update-multi
       #"resolve-one" r/resolve-one
-      
+
       ;; resolver2
       #"connection-by-(.*)" r2/connection-by
       #"one-by-(.*)" r2/one-by)
@@ -111,22 +111,31 @@
                                                             me/humanize))
                     resolver-config)))
   (let [{:keys [target-ns resolvers node-type db-key post-process-row pre-process-arguments
-                filters return-camel-case? settings]} resolver-config]
+                filters return-camel-case? settings]} resolver-config
+        root-settings-return-camel-case? (:return-camel-case? settings)
+        root-return-camel-case? return-camel-case?]
     (when (nil? (find-ns target-ns)) (create-ns target-ns))
     (doseq [[resolver params] resolvers]
-      (let [settings (if (boolean? return-camel-case?)
-                       (merge {:return-camel-case? return-camel-case?} settings)
-                       settings)
-            params   (merge {:node-type             node-type
-                             :db-key                db-key
-                             :return-camel-case?    return-camel-case?
-                             :settings              settings
-                             :post-process-row      (if (nil? post-process-row) identity (requiring-var! post-process-row))
-                             :pre-process-arguments (if (nil? pre-process-arguments) identity (requiring-var! pre-process-arguments))}
-                            (symbol->requiring-var! params))
+      (let [params (merge {:node-type             node-type
+                           :db-key                db-key
+                           :post-process-row      (if (nil? post-process-row) identity (requiring-var! post-process-row))
+                           :pre-process-arguments (if (nil? pre-process-arguments) identity (requiring-var! pre-process-arguments))}
+                          (symbol->requiring-var! params))
+            resolver-settings-return-camel-case? (get-in params [:settings :return-camel-case?])
+            resolver-return-camel-case? (:return-camel-case? params)
             {:keys [table-fetcher node-type post-process-row db-key settings fk-in-parent pk-list-name-in-parent return-camel-case?]} params
-
-            transform-keys->camelCaseKeyword' (if return-camel-case? transform-keys->camelCaseKeyword identity)]
+            ; resolvers.settings.return-camel-case? >
+            ; resolvers.return-camel-case? >
+            ; resolver-config.settings.return-camel-case?
+            ; resolver-config.return-camel-case?
+            ; 위에서 부터 더 높은 우선 순위를 가진다.
+            return-camel-case?' (cond
+                                  (boolean? resolver-settings-return-camel-case?) resolver-settings-return-camel-case?
+                                  (boolean? resolver-return-camel-case?) resolver-return-camel-case?
+                                  (boolean? root-settings-return-camel-case?) root-settings-return-camel-case?
+                                  (boolean? root-return-camel-case?) root-return-camel-case?
+                                  :esle true)
+            transform-keys->camelCaseKeyword' (if return-camel-case?' transform-keys->camelCaseKeyword identity)]
         (if (= :resolve-node resolver)
           (intern target-ns (symbol resolver) (defmethod relay/node-resolver node-type [this ctx _args _parent]
                                                 (f/attempt-all
@@ -156,7 +165,7 @@
                                                            kebab-case?
                                                            return-camel-case?]
                                                     :or   {kebab-case?        true
-                                                           return-camel-case? true}} settings
+                                                           return-camel-case? return-camel-case?'}} settings
                                                    {:keys [args parent]} (->kebab-case kebab-case? args parent)
                                                    auth-filter-opts (auth/->auth-result auth ctx)
                                                    config-filter-opts (auth/config-filter-opts filters ctx)
@@ -168,7 +177,8 @@
                                                    resolver-fn (find-resolver-fn resolver)
                                                    added-params (merge params {:additional-filter-opts (merge auth-filter-opts
                                                                                                               config-filter-opts
-                                                                                                              resolver-filter-opts)})]
+                                                                                                              resolver-filter-opts)}
+                                                                       {:return-camel-case? return-camel-case?'})]
                                                   (cond-> (resolver-fn ctx args parent added-params)
                                                     return-camel-case? (util/update-resolver-result transform-keys->camelCaseKeyword))
                                                   (f/when-failed [e]
