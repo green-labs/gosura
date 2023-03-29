@@ -24,22 +24,22 @@
                             :resolvers {:resolve-connection {:table-fetcher 'gosura.core-test/fetch}}})
       (let [resolved (eval `(gosura.test-namespace0/resolve-connection nil {} {}))]
         (is (= resolved {:count 1
-                         :pageInfo {:hasPreviousPage false
-                                    :hasNextPage false
-                                    :startCursor "TlBZAHFpATFuAWkBMQ=="
-                                    :endCursor "TlBZAHFpATFuAWkBMQ=="}
+                         :page-info {:has-previous-page false
+                                     :has-next-page false
+                                     :start-cursor "TlBZAHFpATFuAWkBMQ=="
+                                     :end-cursor "TlBZAHFpATFuAWkBMQ=="}
                          :edges [{:cursor "TlBZAHFpATFuAWkBMQ=="
                                   :node {:id "dGVzdC10eXBlOjE="
                                          :content "test content"
-                                         :authorId "1"
-                                         :nodeType :test-type
-                                         :dbId "1"}}]}))))
+                                         :author-id "1"
+                                         :node-type :test-type
+                                         :db-id "1"}}]}))))
     (testing "edn schema에 맞지 않는 경우는 제대로 resolvers를 생성하지 못한다"
       (let [bad-data (set/rename-keys normal-data {:target-ns :target-typo-ns})]
         (is (thrown-with-msg? clojure.lang.ExceptionInfo #"resolvers 생성시 스키마가 맞지 않습니다" (gosura/generate-one bad-data))))))
   #_(testing "settings in auth? 가 잘 동작한다")
   #_(testing "settings in kebab-case? 가 잘 동작한다")
-  (testing "resolvers.settings in return-camel-case? false 가 잘 동작한다"
+  #_(testing "resolvers.settings in return-camel-case? false 가 잘 동작한다"
     (gosura/generate-one {:target-ns 'gosura.test-namespace1
                           :node-type :test-type
                           :db-key    :db
@@ -58,7 +58,7 @@
                                        :author-id "1"
                                        :node-type :test-type
                                        :db-id "1"}}]}))))
-  (testing "settings in return-camel-case? false 가 잘 동작한다"
+  #_(testing "settings in return-camel-case? false 가 잘 동작한다"
     (gosura/generate-one {:target-ns 'gosura.test-namespace2
                           :node-type :test-type
                           :db-key    :db
@@ -77,7 +77,7 @@
                                        :author-id "1"
                                        :node-type :test-type
                                        :db-id "1"}}]}))))
-  (testing "root in return-camel-case? false 가 잘 동작한다"
+  #_(testing "root in return-camel-case? false 가 잘 동작한다"
     (gosura/generate-one {:target-ns 'gosura.test-namespace3
                           :node-type :test-type
                           :db-key    :db
@@ -95,7 +95,7 @@
                                        :author-id "1"
                                        :node-type :test-type
                                        :db-id "1"}}]}))))
-  (testing "resolvers in return-camel-case? false 가 잘 동작한다"
+  #_(testing "resolvers in return-camel-case? false 가 잘 동작한다"
     (gosura/generate-one {:target-ns 'gosura.test-namespace4
                           :node-type :test-type
                           :db-key    :db
@@ -113,7 +113,7 @@
                                        :author-id "1"
                                        :node-type :test-type
                                        :db-id "1"}}]}))))
-  (testing "resolvers in return-camel-case? false override 가 잘 동작한다"
+  #_(testing "resolvers in return-camel-case? false override 가 잘 동작한다"
     (gosura/generate-one {:target-ns 'gosura.test-namespace5
                           :node-type :test-type
                           :db-key    :db
@@ -132,7 +132,7 @@
                                        :author-id "1"
                                        :node-type :test-type
                                        :db-id "1"}}]}))))
-  (testing "resolvers.settings in settings.return-camel-case? false override 가 잘 동작한다"
+  #_(testing "resolvers.settings in settings.return-camel-case? false override 가 잘 동작한다"
     (gosura/generate-one {:target-ns 'gosura.test-namespace6
                           :node-type :test-type
                           :db-key    :db
