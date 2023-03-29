@@ -17,20 +17,11 @@
             [gosura.helpers.resolver :as r]
             [gosura.helpers.resolver2 :as r2]
             [gosura.schema :as schema]
-            [gosura.util :as util :refer [transform-keys->camelCaseKeyword
-                                          transform-keys->kebab-case-keyword
-                                          requiring-var!
-                                          update-existing]]
+            [gosura.util :as util :refer [requiring-var!
+                                          transform-keys->camelCaseKeyword
+                                          transform-keys->kebab-case-keyword update-existing]]
             [malli.core :as m]
             [malli.error :as me]))
-
-(defn- ->kebab-case
-  [kebab-case? args parent]
-  (if kebab-case?
-    {:args   (transform-keys->kebab-case-keyword args)
-     :parent (transform-keys->kebab-case-keyword parent)}
-    {:args   args
-     :parent parent}))
 
 (defn-
   ^{:deprecated "0.2.8"}
@@ -147,7 +138,7 @@
                                                            kebab-case?
                                                            return-camel-case?]
                                                     :or   {kebab-case? true}} settings
-                                                   {:keys [args parent]} (->kebab-case kebab-case? args parent)
+                                                   args' (if kebab-case? (transform-keys->kebab-case-keyword args) args)
                                                    auth-filter-opts (auth/->auth-result auth ctx)
                                                    config-filter-opts (auth/config-filter-opts filters ctx)
                                                    resolver-filter-opts (auth/config-filter-opts (:filters params) ctx)
@@ -159,7 +150,7 @@
                                                    added-params (merge params {:additional-filter-opts (merge auth-filter-opts
                                                                                                               config-filter-opts
                                                                                                               resolver-filter-opts)})]
-                                                  (cond-> (resolver-fn ctx args parent added-params)
+                                                  (cond-> (resolver-fn ctx args' parent added-params)
                                                     return-camel-case? (util/update-resolver-result transform-keys->camelCaseKeyword))
                                                   (f/when-failed [e]
                                                     (log/error e)

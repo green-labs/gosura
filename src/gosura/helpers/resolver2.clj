@@ -38,7 +38,7 @@
   this, ctx, arg, parent: 상위 리졸버 생성 매크로에서 만든 심벌
   option: 리졸버 선언에 지정된 옵션 맵
    - :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
-   - :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
+   - :kebab-case? - arg 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
    - :catch-exceptions? - 리졸버에서 발생하는 예외를 포착하여 :errors 응답으로 반환 (기본값 true)
    - :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다.
    - :decode-ids-by-keys - 키 목록을 받아서 resolver args의 global id들을 db id로 변환 해줍니다.
@@ -56,9 +56,8 @@
         arg `(merge ~arg ~auth-filter-opts ~config-filter-opts)
         arg' (if kebab-case? `(transform-keys->kebab-case-keyword ~arg) arg)
         arg' (if decode-ids-by-keys `(relay/decode-global-ids-by-keys ~arg' ~decode-ids-by-keys) arg')
-        parent' (if kebab-case? `(transform-keys->kebab-case-keyword ~parent) parent)
-        keys-not-found `(keys-not-found ~parent' ~required-keys-in-parent)
-        params (if (nil? this) [ctx arg' parent'] [this ctx arg' parent'])
+        keys-not-found `(keys-not-found ~parent ~required-keys-in-parent)
+        params (if (nil? this) [ctx arg' parent] [this ctx arg' parent])
         let-mapping (vec (interleave args params))]
     `(if (seq ~keys-not-found)
        (error/error {:message (format "%s keys are needed in parent" ~keys-not-found)})
@@ -84,7 +83,7 @@
 
   가능한 설정
   :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
-  :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
+  :kebab-case? - arg 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
   :catch-exceptions? - 리졸버에서 발생하는 예외를 포착하여 :errors 응답으로 반환 (기본값 true)
   :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다.
   :filters - 특정 필터 로직을 넣습니다"

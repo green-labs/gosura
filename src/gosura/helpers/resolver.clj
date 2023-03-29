@@ -48,9 +48,8 @@
         result (gensym 'result_)
         authorized? `(auth/apply-fn-with-ctx-at-first ~auth ~ctx)
         arg' (if kebab-case? `(transform-keys->kebab-case-keyword ~arg) arg)
-        parent' (if kebab-case? `(transform-keys->kebab-case-keyword ~parent) parent)
-        keys-not-found `(keys-not-found ~parent' ~required-keys-in-parent)
-        params (if (nil? this) [ctx arg' parent'] [this ctx arg' parent'])
+        keys-not-found `(keys-not-found ~parent ~required-keys-in-parent)
+        params (if (nil? this) [ctx arg' parent] [this ctx arg' parent])
         let-mapping (vec (interleave args params))]
 
     `(if (seq ~keys-not-found)
@@ -90,7 +89,7 @@
 
   가능한 설정
   :auth - 인증함수를 넣습니다. gosura.auth의 설명을 참고해주세요.
-  :kebab-case? - arg/parent 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
+  :kebab-case? - arg 의 key를 kebab-case로 변환할지 설정합니다. (기본값 true)
   :node-type - relay resolver 일때 설정하면, edge/node와 :pageInfo의 start/endCursor 처리를 같이 해줍니다.
   :required-keys-in-parent - 부모(hash-map)로부터 필요한 required keys를 설정합니다."
   {:arglists '([name doc-string? option? args & body])}
