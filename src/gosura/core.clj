@@ -135,8 +135,7 @@
           (intern target-ns (symbol resolver) (fn [ctx args parent]
                                                 (f/attempt-all
                                                   [{:keys [auth
-                                                           kebab-case?
-                                                           return-camel-case?]
+                                                           kebab-case?]
                                                     :or   {kebab-case? true}} settings
                                                    args' (if kebab-case? (transform-keys->kebab-case-keyword args) args)
                                                    auth-filter-opts (auth/->auth-result auth ctx)
@@ -150,8 +149,7 @@
                                                    added-params (merge params {:additional-filter-opts (merge auth-filter-opts
                                                                                                               config-filter-opts
                                                                                                               resolver-filter-opts)})]
-                                                  (cond-> (resolver-fn ctx args' parent added-params)
-                                                    return-camel-case? (util/update-resolver-result transform-keys->camelCaseKeyword))
+                                                  (resolver-fn ctx args' parent added-params)
                                                   (f/when-failed [e]
                                                     (log/error e)
                                                     (resolve-as nil {:resolver (format "%s/%s" (str target-ns) (name resolver))
