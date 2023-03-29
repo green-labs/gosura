@@ -22,7 +22,6 @@
             [gosura.helpers.superlifter :refer [with-superlifter]]
             [gosura.util :as util :refer [transform-keys->camelCaseKeyword
                                           transform-keys->kebab-case-keyword
-                                          update-resolver-result
                                           update-existing]]
             [promesa.core :as prom]
             [superlifter.api :as superlifter-api]))

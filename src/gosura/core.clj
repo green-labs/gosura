@@ -18,7 +18,6 @@
             [gosura.helpers.resolver2 :as r2]
             [gosura.schema :as schema]
             [gosura.util :as util :refer [requiring-var!
-                                          transform-keys->camelCaseKeyword
                                           transform-keys->kebab-case-keyword update-existing]]
             [malli.core :as m]
             [malli.error :as me]))

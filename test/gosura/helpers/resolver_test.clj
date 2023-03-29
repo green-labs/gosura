@@ -130,7 +130,7 @@
           ctx          {:identity {:id "1"}}
           arg          {:intArg 1
                         :strArg "str"}
-          parent       {:myCol 1}
+          parent       {:my-col 1}
           empty-parent {}
           ok-result    (test-resolver-2 ctx arg parent)
           fail-result  (test-resolver-2 ctx arg empty-parent)]

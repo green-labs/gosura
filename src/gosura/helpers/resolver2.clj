@@ -9,9 +9,7 @@
                                              keys-not-found
                                              nullify-empty-string-arguments parse-fdecl]]
             [gosura.helpers.superlifter :refer [with-superlifter]]
-            [gosura.util :as util :refer [transform-keys->camelCaseKeyword
-                                          transform-keys->kebab-case-keyword
-                                          update-resolver-result]]
+            [gosura.util :as util :refer [transform-keys->kebab-case-keyword]]
             [promesa.core :as prom]
             [superlifter.api :as superlifter-api]
             [taoensso.timbre :as log]))
