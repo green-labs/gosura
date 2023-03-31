@@ -5,6 +5,7 @@
            com.taoensso/nippy                  {:mvn/version "3.2.0"}
            com.walmartlabs/lacinia             {:mvn/version "1.1"}
            com.taoensso/timbre                 {:mvn/version "6.0.2"}
+           com.google.guava/guava              {:mvn/version "31.1-jre"}
            failjure/failjure                   {:mvn/version "2.2.0"}
            io.github.hlship/trace              {:git/url "https://github.com/jungwookim/trace"
                                                 :git/sha "27e0faf04fa865d902730da9b944053445f0be7d"}
