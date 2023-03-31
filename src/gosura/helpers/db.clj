@@ -10,7 +10,7 @@
 
 (def ^:private col-with-table-name-pattern #"[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*")
 
-(defn- as-unqualified-kebab-maps
+(defn as-unqualified-kebab-maps
   [rs opts]
   (as-unqualified-modified-maps rs (assoc opts :label-fn cf/snake_case->kebab-case)))
 
