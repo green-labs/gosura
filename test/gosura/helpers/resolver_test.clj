@@ -98,7 +98,7 @@
           result (test-resolver ctx arg parent)]
       (is (= (-> result
                  :arg
-                 :userId) "1"))))
+                 :user-id) "1"))))
   (testing "arg/parent가 default True로 kebab-case 설정이 잘 동작한다"
     (let [ctx    {:identity {:id "1"}}
           arg    {:intArg 1
@@ -108,7 +108,7 @@
       (is (= @arg-in-resolver {:int-arg 1
                                :str-arg "str"
                                :user-id "1"}))))
-  (testing "return value return-camel-case? 설정이 잘 동작한다"
+  #_(testing "return value return-camel-case? 설정이 잘 동작한다"
     (let [ctx    {:identity {:id "1"}}
           arg    {:intArg 1
                   :strArg "str"}
@@ -130,15 +130,15 @@
           ctx          {:identity {:id "1"}}
           arg          {:intArg 1
                         :strArg "str"}
-          parent       {:myCol 1}
+          parent       {:my-col 1}
           empty-parent {}
           ok-result    (test-resolver-2 ctx arg parent)
           fail-result  (test-resolver-2 ctx arg empty-parent)]
       (is (= ok-result {:ctx    {:identity {:id "1"}}
-                        :arg    {:intArg 1
-                                 :strArg "str"
-                                 :userId "1"}
-                        :parent {:myCol 1}}))
+                        :arg    {:int-arg 1
+                                 :str-arg "str"
+                                 :user-id "1"}
+                        :parent {:my-col 1}}))
       (is (= (-> fail-result
                  :resolved-value
                  :data
@@ -160,10 +160,10 @@
           result (test-resolver-3 ctx arg parent)]
       (is (= result {:ctx    {:identity {:id "1"
                                          :cc "KR"}}
-                     :arg    {:intArg      1
-                              :strArg      "str"
-                              :userId      "1"
-                              :countryCode "KR"}
+                     :arg    {:int-arg      1
+                              :str-arg      "str"
+                              :user-id      "1"
+                              :country-code "KR"}
                      :parent {}}))))
   (testing "auth 설정이 false를 반환해도 잘 동작한다"
     (let [_      (gosura-resolver2/defresolver test-resolver-4
@@ -204,7 +204,7 @@
           parent {}
           result (test-resolver-6 ctx arg parent)]
       (is (= (-> result
-                 :arg) {:testCol "1"}))))
+                 :arg) {:test-col "1"}))))
   (testing "잘못된 형식의 id가 입력되었을 때 decode-ids-by-keys가 nil을 넘겨준다"
     (let [_      (gosura-resolver2/defresolver test-resolver-7
                    {:decode-ids-by-keys [:test-col]}
@@ -217,7 +217,7 @@
           parent {}
           result (test-resolver-7 ctx arg parent)]
       (is (= (-> result
-                 :arg) {:testCol nil}))))
+                 :arg) {:test-col nil}))))
   (testing "에러가 던져졌을 때 GraphQL errors를 반환한다"
     (with-redefs [taoensso.timbre/-log! (fn [& args])]
       (let [_            (gosura-resolver2/defresolver test-resolver-8

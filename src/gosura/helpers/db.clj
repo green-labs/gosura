@@ -1,13 +1,18 @@
 (ns gosura.helpers.db
   (:require [clojure.set]
             [clojure.string]
+            [gosura.helpers.case-format :as cf]
             [honey.sql :as honeysql]
             [honey.sql.helpers :as sql-helper]
             [net.lewisship.trace :refer [trace]]
             [next.jdbc :as jdbc]
-            [next.jdbc.result-set :as rs]))
+            [next.jdbc.result-set :as rs :refer [as-unqualified-modified-maps]]))
 
 (def ^:private col-with-table-name-pattern #"[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*")
+
+(defn as-unqualified-kebab-maps
+  [rs opts]
+  (as-unqualified-modified-maps rs (assoc opts :label-fn cf/snake_case->kebab-case)))
 
 (defn col-with-table-name?
   [col-name]
@@ -228,23 +233,41 @@
 
 (defn unqualified-kebab-fetch!
   [ds qs]
-  (fetch! ds qs {:builder-fn rs/as-unqualified-kebab-maps}))
+  (fetch! ds qs {:builder-fn   as-unqualified-kebab-maps
+                 :column-fn    cf/kebab-case-keyword->snake_case_keyword
+                 :table-fn     cf/kebab-case-keyword->snake_case_keyword
+                 :label-fn     cf/snake_case_keyword->kebab-case-keyword
+                 :qualifier-fn cf/snake_case_keyword->kebab-case-keyword}))
 
 (defmacro unqualified-kebab-fetch2!
   [ds qs]
   `(let [sql# (honeysql/format ~qs honey-sql-format-options)]
      (trace :sql (format-query sql#))
-     (jdbc/execute! ~ds sql# (merge {:timeout query-timeout} {:builder-fn rs/as-unqualified-kebab-maps}))))
+     (jdbc/execute! ~ds sql# (merge {:timeout query-timeout}
+                                    {:builder-fn   as-unqualified-kebab-maps
+                                     :column-fn    cf/kebab-case-keyword->snake_case_keyword
+                                     :table-fn     cf/kebab-case-keyword->snake_case_keyword
+                                     :label-fn     cf/snake_case_keyword->kebab-case-keyword
+                                     :qualifier-fn cf/snake_case_keyword->kebab-case-keyword}))))
 
 (defn unqualified-kebab-fetch-one!
   [ds qs]
-  (fetch-one! ds qs {:builder-fn rs/as-unqualified-kebab-maps}))
+  (fetch-one! ds qs {:builder-fn   as-unqualified-kebab-maps
+                     :column-fn    cf/kebab-case-keyword->snake_case_keyword
+                     :table-fn     cf/kebab-case-keyword->snake_case_keyword
+                     :label-fn     cf/snake_case_keyword->kebab-case-keyword
+                     :qualifier-fn cf/snake_case_keyword->kebab-case-keyword}))
 
 (defmacro unqualified-kebab-fetch-one2!
   [ds qs]
   `(let [sql# (honeysql/format (sql-helper/limit ~qs 1) honey-sql-format-options)]
      (trace :sql (format-query sql#))
-     (jdbc/execute-one! ~ds sql# (merge {:timeout query-timeout} {:builder-fn rs/as-unqualified-kebab-maps}))))
+     (jdbc/execute-one! ~ds sql# (merge {:timeout query-timeout}
+                                        {:builder-fn   as-unqualified-kebab-maps
+                                         :column-fn    cf/kebab-case-keyword->snake_case_keyword
+                                         :table-fn     cf/kebab-case-keyword->snake_case_keyword
+                                         :label-fn     cf/snake_case_keyword->kebab-case-keyword
+                                         :qualifier-fn cf/snake_case_keyword->kebab-case-keyword}))))
 
 (defn insert-one
   "db
