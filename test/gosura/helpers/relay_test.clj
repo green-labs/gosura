@@ -24,10 +24,10 @@
 (deftest encode-node-id-test
   (testing "encode-node-id 를 실행하면 node 맵에 :id 키가 추가된다."
     (let [node {:node-type :test, :db-id 1}]
-      (is (= (gosura-relay/encode-node-id {:node-type :test, :db-id 1})
+      (is (= (gosura-relay/encode-node-id node)
              (assoc node :id "dGVzdDox"))))
-    (let [node {:node-type :test, :db-id 1}]
-      (is (= (gosura-relay/encode-node-id {:node-type :test, :db-id (biginteger 1)})
+    (let [node {:node-type :test, :db-id (biginteger 1)}]
+      (is (= (gosura-relay/encode-node-id node)
              (assoc node :id "dGVzdDox")))))
   (testing "encode-node-id에 전달되는 값은 map이어야 한다"
     (let [data "data"]
