@@ -300,6 +300,21 @@
          (map #(relay/build-node % node-type post-process-row))
          (relay/build-connection order-by page-direction page-size cursor-id))))
 
+(defn sort-rows
+  "커넥션 리졸버에서 정렬을 직접 해야 하는 경우 실행.
+
+  사용이 필요한 사례
+    슈퍼페처를 사용하는 커넥션 리졸버인 경우,
+    요청마다 정렬 옵션 인자의 설정이 달라, 슈퍼페처에서 일괄 정렬을 수행할 수 없다.
+    그러므로 페치 후에 리졸버에서 정렬한다."
+  [order-by order-direction rows]
+  (let [order-by (if (ifn? order-by)
+                   (juxt order-by :id)
+                   :id)]
+    (if (= order-direction :desc)
+      (reverse (sort-by order-by rows))
+      (sort-by order-by rows))))
+
 (defn resolve-connection-by-fk
   "Lacinia 리졸버로서 config 설정에 따라 목록 조회 쿼리를 처리한다.
 
@@ -323,6 +338,7 @@
                       (nullify-empty-string-arguments [:after :before]))
         parent-id (-> parent :id relay/decode-global-id->db-id)
         {:keys [order-by
+                order-direction
                 page-direction
                 page-size
                 cursor-id]
@@ -335,6 +351,8 @@
       (-> (superlifter-api/enqueue! db-key (superfetcher superfetch-id superfetch-arguments))
           (prom/then (fn [rows]
                        (->> rows
+                            ;; 슈퍼페처에서 page-options가 적용되지 않으므로 직접 정렬한다.
+                            (sort-rows order-by order-direction)
                             (map #(relay/build-node % node-type post-process-row))
                             (relay/build-connection order-by page-direction page-size cursor-id))))))))
 
